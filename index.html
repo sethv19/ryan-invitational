@@ -5,9 +5,20 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Ryan's Invitational</title>
-<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
+<script>
+window.onerror = function(msg,src,line,col,err){
+  document.body.innerHTML = '<div style="padding:30px;font-family:monospace;color:#FF8080;background:#07080f;min-height:100vh">'
+    + '<div style="color:#FF6B35;font-size:16px;margin-bottom:16px">RYAN'S INVITATIONAL</div>'
+    + '<div style="font-size:11px;margin-bottom:8px">Error: '+msg+'</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">Line: '+line+' Col: '+col+'</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px">'+src+'</div>'
+    + '</div>';
+  return true;
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.2/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=DM+Mono:wght@400;500&family=Montserrat:wght@600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
@@ -22,7 +33,7 @@ select option{background:#111;color:#fff}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
+<script type="text/babel" data-presets="env,react">
 var useState = React.useState;
 var useEffect = React.useEffect;
 
@@ -763,23 +774,9 @@ return (
       <div style={{fontFamily:MO,fontSize:8,letterSpacing:4,color:"#FF6B35",marginBottom:1}}>LAS VEGAS - BACHELOR PARTY</div>
       <div style={{fontFamily:DI,fontSize:20,letterSpacing:3}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
     </div>
-    <div style={{display:"flex",gap:8,flexShrink:0}}>
-      <button onClick={function(){
-        var html = document.documentElement.outerHTML;
-        var blob = new Blob([html], {type:"text/html"});
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.href = url;
-        a.download = "ryans_invitational.html";
-        a.click();
-        URL.revokeObjectURL(url);
-      }} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
-        SAVE
-      </button>
-      <button onClick={function(){ setShowRules(true); }} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
-        RULES
-      </button>
-    </div>
+    <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
+      RULES
+    </button>
   </div>
 
   {showRules&&(
