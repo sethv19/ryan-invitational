@@ -7,14 +7,19 @@
 <title>Ryan's Invitational</title>
 <script>
 window.onerror = function(msg,src,line,col,err){
-  document.body.innerHTML = '<div style="padding:30px;font-family:monospace;color:#FF8080;background:#07080f;min-height:100vh">'
-    + '<div style="color:#FF6B35;font-size:16px;margin-bottom:16px">RYAN'S INVITATIONAL</div>'
-    + '<div style="font-size:11px;margin-bottom:8px">Error: '+msg+'</div>'
-    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">Line: '+line+' Col: '+col+'</div>'
-    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px">'+src+'</div>'
-    + '</div>';
+  var d = document.createElement('div');
+  d.style = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#07080f;color:#FF8080;font-family:monospace;padding:20px;overflow:auto;z-index:99999;font-size:11px';
+  d.innerHTML = '<div style="color:#FF6B35;font-size:14px;margin-bottom:12px">JS ERROR</div>'
+    + '<b>'+msg+'</b><br><br>'
+    + 'Line: '+line+'<br>'
+    + 'Source: '+(src||'').split('/').pop()+'<br><br>'
+    + (err&&err.stack ? err.stack.slice(0,800) : '');
+  document.body.appendChild(d);
   return true;
 };
+window.addEventListener('unhandledrejection',function(e){
+  window.onerror(e.reason&&e.reason.message||String(e.reason),'promise',0,0,e.reason);
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
@@ -33,7 +38,7 @@ select option{background:#111;color:#fff}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" data-presets="env,react">
+<script type="text/babel">
 var useState = React.useState;
 var useEffect = React.useEffect;
 
@@ -1227,7 +1232,11 @@ return (
 );
 }
 
+try {
 ReactDOM.createRoot(document.getElementById(‘root’)).render(React.createElement(App));
+} catch(e) {
+document.getElementById(‘root’).innerHTML = ‘<div style="padding:20px;font-family:monospace;color:#FF8080;font-size:11px"><b style="color:#FF6B35">ERROR:</b><br>’ + e.message + ‘<br><br>’ + (e.stack||’’).slice(0,500) + ‘</div>’;
+}
 </script>
 
 </body>
