@@ -5,8 +5,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Ryan's Invitational</title>
-<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=DM+Mono:wght@400;500&family=Montserrat:wght@600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
@@ -21,15 +22,7 @@ select option{background:#111;color:#fff}
 </head>
 <body>
 <div id="root"></div>
-<div id="loading" style="position:fixed;inset:0;background:#07080f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:monospace">
-  <div style="color:#FF6B35;font-size:14px;letter-spacing:3px;margin-bottom:12px">RYAN'S INVITATIONAL</div>
-  <div style="color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:2px">LOADING...</div>
-</div>
-<script>
-window.__clearLoad = function(){ var el=document.getElementById("loading"); if(el) el.style.display="none"; };
-</script>
-<script>
-
+<script type="text/babel">
 var useState = React.useState;
 var useEffect = React.useEffect;
 
@@ -169,7 +162,6 @@ return bet.result;
 
 // ── App ────────────────────────────────────────────────────────────────────
 function App() {
-useEffect(function(){ if(window.__clearLoad) window.__clearLoad(); }, []);
 var MO = “‘DM Mono’,monospace”;
 var DI = “‘Oswald’,sans-serif”;
 var BO = “‘Montserrat’,sans-serif”;
@@ -440,7 +432,14 @@ function handleClick(){
 toggleSt({id:id,label:label,ml:ml,gid:gid,gLabel:gLabel,type:type});
 }
 return (
-React.createElement(“button”,{onClick:(handleClick),style:({display:“flex”,flexDirection:“column”,alignItems:“center”,padding:“10px 6px”,borderRadius:8,cursor:“pointer”,gap:2,border:“none”,background:sel?“rgba(255,107,53,0.2)”:“rgba(255,255,255,0.06)”,outline:sel?“2px solid #FF6B35”:“2px solid transparent”,transition:“all 0.15s”,minWidth:0,width:“100%”})},React.createElement(“span”,{style:({fontFamily:MO,fontSize:7,color:sel?”#FF6B35”:“rgba(255,255,255,0.4)”,letterSpacing:1})},label),React.createElement(“span”,{style:({fontFamily:DI,fontSize:17,color:ml<0?”#4ECDC4”:”#FBBF24”,lineHeight:1})},fml(ml)),React.createElement(“span”,{style:({fontFamily:MO,fontSize:6,color:“rgba(255,255,255,0.25)”,letterSpacing:1})},“STRAIGHT”))
+<button
+onClick={handleClick}
+style={{display:“flex”,flexDirection:“column”,alignItems:“center”,padding:“10px 6px”,borderRadius:8,cursor:“pointer”,gap:2,border:“none”,background:sel?“rgba(255,107,53,0.2)”:“rgba(255,255,255,0.06)”,outline:sel?“2px solid #FF6B35”:“2px solid transparent”,transition:“all 0.15s”,minWidth:0,width:“100%”}}
+>
+<span style={{fontFamily:MO,fontSize:7,color:sel?”#FF6B35”:“rgba(255,255,255,0.4)”,letterSpacing:1}}>{label}</span>
+<span style={{fontFamily:DI,fontSize:17,color:ml<0?”#4ECDC4”:”#FBBF24”,lineHeight:1}}>{fml(ml)}</span>
+<span style={{fontFamily:MO,fontSize:6,color:“rgba(255,255,255,0.25)”,letterSpacing:1}}>STRAIGHT</span>
+</button>
 );
 }
 
@@ -455,11 +454,27 @@ var rows = [
 {team:t2, ml:o.ml2, sp:o.sfav===2?”-”+o.spread:”+”+o.spread, spk:“sp2”, mlk:“ml2”, ouId:game.id+”*ouu”, ouLabel:“U “+o.ou}
 ];
 return (
-React.createElement(“div”,null,React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:6,marginBottom:10,paddingBottom:8,borderBottom:“1px solid rgba(255,255,255,0.07)”})},React.createElement(“div”,null),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1})},“MONEYLINE”),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1})},“SPREAD”),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1})},“TOTAL”)),rows.map(function(row,ri){
+<div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:6,marginBottom:10,paddingBottom:8,borderBottom:“1px solid rgba(255,255,255,0.07)”}}>
+<div/>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1}}>MONEYLINE</div>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1}}>SPREAD</div>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,textAlign:“center”,letterSpacing:1}}>TOTAL</div>
+</div>
+{rows.map(function(row,ri){
 return (
-React.createElement(“div”,{key:(ri),style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:6,marginBottom:6})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6})},React.createElement(“div”,{style:({width:6,height:6,borderRadius:“50%”,background:row.team.color,flexShrink:0})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:12,letterSpacing:1,color:”#fff”})},row.team.label)),React.createElement(BetBtn,{id:(game.id+”*”+row.mlk),label:(row.team.label),ml:(row.ml),gid:(game.id),gLabel:(gl+”: “+row.team.label+” ML”),type:(game.type)}),React.createElement(BetBtn,{id:(game.id+”*”+row.spk),label:(row.sp),ml:(-110),gid:(game.id),gLabel:(gl+”: “+row.team.label+” “+row.sp),type:(game.type)}),React.createElement(BetBtn,{id:(row.ouId),label:(row.ouLabel),ml:(-110),gid:(game.id),gLabel:(gl+”: “+row.ouLabel),type:(game.type)}))
+<div key={ri} style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:6,marginBottom:6}}>
+<div style={{display:“flex”,alignItems:“center”,gap:6}}>
+<div style={{width:6,height:6,borderRadius:“50%”,background:row.team.color,flexShrink:0}}/>
+<span style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:”#fff”}}>{row.team.label}</span>
+</div>
+<BetBtn id={game.id+”*”+row.mlk} label={row.team.label} ml={row.ml} gid={game.id} gLabel={gl+”: “+row.team.label+” ML”} type={game.type}/>
+<BetBtn id={game.id+”*”+row.spk} label={row.sp} ml={-110} gid={game.id} gLabel={gl+”: “+row.team.label+” “+row.sp} type={game.type}/>
+<BetBtn id={row.ouId} label={row.ouLabel} ml={-110} gid={game.id} gLabel={gl+”: “+row.ouLabel} type={game.type}/>
+</div>
 );
-}))
+})}
+</div>
 );
 }
 
@@ -472,7 +487,15 @@ var labelColor = sel ? (dir===“over”?”#A8FF78”:”#FF6B35”) : (isBlock
 var labelText = sel ? “ADDED” : (isBlocked ? “BLOCKED” : (dir===“over”?“OVER”:“UNDER”));
 function handleClick(){ togglePa(leg); }
 return (
-React.createElement(“button”,{onClick:(handleClick),disabled:(isBlocked),style:({padding:“9px 4px”,borderRadius:6,cursor:isBlocked?“not-allowed”:“pointer”,border:“none”,background:bg,outline:“1.5px solid “+outlineColor,opacity:isBlocked?0.4:1,display:“flex”,flexDirection:“column”,alignItems:“center”,gap:2,width:“100%”})},React.createElement(“span”,{style:({fontFamily:MO,fontSize:6,color:labelColor,letterSpacing:1})},labelText),React.createElement(“span”,{style:({fontFamily:DI,fontSize:15,color:ml<0?”#4ECDC4”:”#FBBF24”})},fml(ml)),React.createElement(“span”,{style:({fontFamily:MO,fontSize:6,color:“rgba(255,255,255,0.25)”,letterSpacing:1})},dir===“over”?“O”:“U”,line))
+<button
+onClick={handleClick}
+disabled={isBlocked}
+style={{padding:“9px 4px”,borderRadius:6,cursor:isBlocked?“not-allowed”:“pointer”,border:“none”,background:bg,outline:“1.5px solid “+outlineColor,opacity:isBlocked?0.4:1,display:“flex”,flexDirection:“column”,alignItems:“center”,gap:2,width:“100%”}}
+>
+<span style={{fontFamily:MO,fontSize:6,color:labelColor,letterSpacing:1}}>{labelText}</span>
+<span style={{fontFamily:DI,fontSize:15,color:ml<0?”#4ECDC4”:”#FBBF24”}}>{fml(ml)}</span>
+<span style={{fontFamily:MO,fontSize:6,color:“rgba(255,255,255,0.25)”,letterSpacing:1}}>{dir===“over”?“O”:“U”} {line}</span>
+</button>
 );
 }
 
@@ -481,9 +504,19 @@ var game = props.game;
 var t1=getTeam(game.t1), t2=getTeam(game.t2), gl=game.full;
 var teams = [t1,t2];
 return (
-React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,200,100,0.5)”,letterSpacing:1,marginBottom:12,padding:“6px 10px”,background:“rgba(255,184,0,0.05)”,borderRadius:6,border:“1px solid rgba(255,184,0,0.1)”})},“Props go to your PARLAY slip. One prop per player. Max 6 legs.”),teams.map(function(team){
+<div>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,200,100,0.5)”,letterSpacing:1,marginBottom:12,padding:“6px 10px”,background:“rgba(255,184,0,0.05)”,borderRadius:6,border:“1px solid rgba(255,184,0,0.1)”}}>
+Props go to your PARLAY slip. One prop per player. Max 6 legs.
+</div>
+{teams.map(function(team){
 return (
-React.createElement(“div”,{key:(team.id),style:({marginBottom:16})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6,marginBottom:8})},React.createElement(“div”,{style:({width:6,height:6,borderRadius:“50%”,background:team.color})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:11,letterSpacing:2,color:team.color})},team.label),React.createElement(“div”,{style:({flex:1,height:1,background:team.color+“20”,marginLeft:4})})),team.players.map(function(name){
+<div key={team.id} style={{marginBottom:16}}>
+<div style={{display:“flex”,alignItems:“center”,gap:6,marginBottom:8}}>
+<div style={{width:6,height:6,borderRadius:“50%”,background:team.color}}/>
+<span style={{fontFamily:DI,fontSize:11,letterSpacing:2,color:team.color}}>{team.label}</span>
+<div style={{flex:1,height:1,background:team.color+“20”,marginLeft:4}}/>
+</div>
+{team.players.map(function(name){
 var pl = getPL(name,game.type);
 var stats = [
 {key:“pts”,label:“Points”,  line:pl.pts, oML:pl.pO.o, uML:pl.pO.u},
@@ -491,25 +524,43 @@ var stats = [
 {key:“ast”,label:“Assists”, line:pl.ast, oML:pl.aO.o, uML:pl.aO.u}
 ];
 return (
-React.createElement(“div”,{key:(name),style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”,marginBottom:8})},React.createElement(“div”,{style:({padding:“8px 12px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,background:team.color+“08”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:1,color:”#fff”})},name)),React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“6px 12px 0”,gap:4})},stats.map(function(s){
+<div key={name} style={{background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”,marginBottom:8}}>
+<div style={{padding:“8px 12px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,background:team.color+“08”}}>
+<span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:”#fff”}}>{name}</span>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“6px 12px 0”,gap:4}}>
+{stats.map(function(s){
 return (
-React.createElement(“div”,{key:(s.key),style:({textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,letterSpacing:1,marginBottom:2})},s.label.toUpperCase()),React.createElement(“div”,{style:({fontFamily:DI,fontSize:13,color:team.color})},s.line))
+<div key={s.key} style={{textAlign:“center”}}>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.3)”,letterSpacing:1,marginBottom:2}}>{s.label.toUpperCase()}</div>
+<div style={{fontFamily:DI,fontSize:13,color:team.color}}>{s.line}</div>
+</div>
 );
-})),React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“4px 8px”,gap:4})},stats.map(function(s){
+})}
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“4px 8px”,gap:4}}>
+{stats.map(function(s){
 var oid = game.id+”*prop*”+name+”_”+s.key+”*over”;
 var oleg = {id:oid,label:name+” O”+s.line+” “+s.label,ml:s.oML,gid:game.id,gLabel:gl+”: “+name+” O”+s.line+” “+s.label,type:game.type};
 var obl = !haPa(oid) ? paBlock(oleg) : null;
-return React.createElement(PropBtn,{key:(oid),id:(oid),leg:(oleg),sel:(haPa(oid)),blocked:(obl),dir:“over”,ml:(s.oML),line:(s.line)});
-})),React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“0 8px 8px”,gap:4})},stats.map(function(s){
+return <PropBtn key={oid} id={oid} leg={oleg} sel={haPa(oid)} blocked={obl} dir="over" ml={s.oML} line={s.line}/>;
+})}
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,padding:“0 8px 8px”,gap:4}}>
+{stats.map(function(s){
 var uid = game.id+”*prop*”+name+”*”+s.key+”_under”;
 var uleg = {id:uid,label:name+” U”+s.line+” “+s.label,ml:s.uML,gid:game.id,gLabel:gl+”: “+name+” U”+s.line+” “+s.label,type:game.type};
 var ubl = !haPa(uid) ? paBlock(uleg) : null;
-return React.createElement(PropBtn,{key:(uid),id:(uid),leg:(uleg),sel:(haPa(uid)),blocked:(ubl),dir:“under”,ml:(s.uML),line:(s.line)});
-})))
+return <PropBtn key={uid} id={uid} leg={uleg} sel={haPa(uid)} blocked={ubl} dir="under" ml={s.uML} line={s.line}/>;
+})}
+</div>
+</div>
 );
-}))
+})}
+</div>
 );
-}))
+})}
+</div>
 );
 }
 
@@ -518,42 +569,92 @@ var game = props.game;
 var allP = game.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players.map(function(p){ return {name:p,team:getTeam(tid)}; })); },[]);
 var cap = gameMax(game.id);
 return (
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”})},/* Game header */,React.createElement(“div”,{style:({padding:“10px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,background:“rgba(255,107,53,0.06)”})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,letterSpacing:1,color:”#FF6B35”})},game.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,letterSpacing:1})},“FIRST TO”,cap)),React.createElement(“div”,{style:({padding:“12px 14px”})},game.teams.map(function(tid){
+<div style={{background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”}}>
+{/* Game header */}
+<div style={{padding:“10px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,background:“rgba(255,107,53,0.06)”}}>
+<div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:”#FF6B35”}}>{game.label}</div>
+<div style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,letterSpacing:1}}>FIRST TO {cap}</div>
+</div>
+<div style={{padding:“12px 14px”}}>
+{game.teams.map(function(tid){
 var team = getTeam(tid);
 var teamPts = liveTP(game.id,team.id);
 var atCap = teamPts >= cap;
 return (
-React.createElement(“div”,{key:(tid),style:({marginBottom:14})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6,marginBottom:8,paddingBottom:6,borderBottom:“1px solid “+team.color+“25”})},React.createElement(“div”,{style:({width:7,height:7,borderRadius:“50%”,background:team.color})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:12,letterSpacing:2,color:team.color})},team.label),React.createElement(“div”,{style:({flex:1})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:20,color:atCap?”#A8FF78”:team.color,lineHeight:1})},teamPts),atCap&&React.createElement(“span”,{style:({fontFamily:MO,fontSize:7,color:”#A8FF78”,letterSpacing:1,background:“rgba(168,255,120,0.12)”,border:“1px solid rgba(168,255,120,0.3)”,borderRadius:4,padding:“1px 5px”})},“MAX”)),React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,marginBottom:6})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.22)”,letterSpacing:1})},“PLAYER”),[“PTS”,“REB”,“AST”].map(function(h){ return React.createElement(“div”,{key:(h),style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.22)”,textAlign:“center”,letterSpacing:1})},h); })),team.players.map(function(player){
+<div key={tid} style={{marginBottom:14}}>
+<div style={{display:“flex”,alignItems:“center”,gap:6,marginBottom:8,paddingBottom:6,borderBottom:“1px solid “+team.color+“25”}}>
+<div style={{width:7,height:7,borderRadius:“50%”,background:team.color}}/>
+<span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:team.color}}>{team.label}</span>
+<div style={{flex:1}}/>
+<span style={{fontFamily:DI,fontSize:20,color:atCap?”#A8FF78”:team.color,lineHeight:1}}>{teamPts}</span>
+{atCap&&<span style={{fontFamily:MO,fontSize:7,color:”#A8FF78”,letterSpacing:1,background:“rgba(168,255,120,0.12)”,border:“1px solid rgba(168,255,120,0.3)”,borderRadius:4,padding:“1px 5px”}}>MAX</span>}
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,marginBottom:6}}>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.22)”,letterSpacing:1}}>PLAYER</div>
+{[“PTS”,“REB”,“AST”].map(function(h){ return <div key={h} style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.22)”,textAlign:“center”,letterSpacing:1}}>{h}</div>; })}
+</div>
+{team.players.map(function(player){
 var s = getSt(game.id,player);
 var atPtsCap = atCap;
 return (
-React.createElement(“div”,{key:(player),style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,alignItems:“center”,padding:“6px 0”,borderTop:“1px solid rgba(255,255,255,0.04)”})},React.createElement(“div”,{style:({fontFamily:BO,fontSize:12,fontWeight:600,color:”#fff”})},player),[“pts”,“reb”,“ast”].map(function(f){
+<div key={player} style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,alignItems:“center”,padding:“6px 0”,borderTop:“1px solid rgba(255,255,255,0.04)”}}>
+<div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:”#fff”}}>{player}</div>
+{[“pts”,“reb”,“ast”].map(function(f){
 var blocked = f===“pts” && atPtsCap;
 return (
-React.createElement(“div”,{key:(f),style:({display:“flex”,alignItems:“center”,gap:3,justifyContent:“center”})},React.createElement(“button”,{onClick:(function(){ adjSt(game.id,team.id,player,f,-1); }),style:({width:22,height:22,borderRadius:“50%”,border:“1px solid rgba(255,255,255,0.12)”,background:“rgba(255,255,255,0.04)”,color:“rgba(255,255,255,0.4)”,fontSize:14,cursor:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”})},”-”),React.createElement(“span”,{style:({fontFamily:DI,fontSize:16,color:s[f]>0?team.color:“rgba(255,255,255,0.25)”,minWidth:18,textAlign:“center”})},s[f]),React.createElement(“button”,{onClick:(function(){ adjSt(game.id,team.id,player,f,1); }),disabled:(blocked),style:({width:22,height:22,borderRadius:“50%”,border:blocked?“1px solid rgba(255,255,255,0.06)”:“1px solid “+team.color+“40”,background:blocked?“rgba(255,255,255,0.03)”:team.color+“15”,color:blocked?“rgba(255,255,255,0.15)”:team.color,fontSize:14,cursor:blocked?“not-allowed”:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”})},”+”))
+<div key={f} style={{display:“flex”,alignItems:“center”,gap:3,justifyContent:“center”}}>
+<button onClick={function(){ adjSt(game.id,team.id,player,f,-1); }} style={{width:22,height:22,borderRadius:“50%”,border:“1px solid rgba(255,255,255,0.12)”,background:“rgba(255,255,255,0.04)”,color:“rgba(255,255,255,0.4)”,fontSize:14,cursor:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”}}>-</button>
+<span style={{fontFamily:DI,fontSize:16,color:s[f]>0?team.color:“rgba(255,255,255,0.25)”,minWidth:18,textAlign:“center”}}>{s[f]}</span>
+<button onClick={function(){ adjSt(game.id,team.id,player,f,1); }} disabled={blocked} style={{width:22,height:22,borderRadius:“50%”,border:blocked?“1px solid rgba(255,255,255,0.06)”:“1px solid “+team.color+“40”,background:blocked?“rgba(255,255,255,0.03)”:team.color+“15”,color:blocked?“rgba(255,255,255,0.15)”:team.color,fontSize:14,cursor:blocked?“not-allowed”:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”}}>+</button>
+</div>
 );
-}))
+})}
+</div>
 );
-}),React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,padding:“6px 0”,borderTop:“1px solid “+team.color+“20”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.25)”,letterSpacing:1,alignSelf:“center”})},“TOTAL”),[“pts”,“reb”,“ast”].map(function(f){
+})}
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr 1fr”,gap:4,padding:“6px 0”,borderTop:“1px solid “+team.color+“20”}}>
+<div style={{fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.25)”,letterSpacing:1,alignSelf:“center”}}>TOTAL</div>
+{[“pts”,“reb”,“ast”].map(function(f){
 var tot = team.players.reduce(function(s,p){ return s+getSt(game.id,p)[f]; }, 0);
-return React.createElement(“div”,{key:(f),style:({fontFamily:DI,fontSize:15,color:tot>0?team.color:“rgba(255,255,255,0.2)”,textAlign:“center”})},tot);
-})))
+return <div key={f} style={{fontFamily:DI,fontSize:15,color:tot>0?team.color:“rgba(255,255,255,0.2)”,textAlign:“center”}}>{tot}</div>;
+})}
+</div>
+</div>
 );
-})),/* Finalize / Reopen for RR games */,game.type===“rr”&&(
-React.createElement(“div”,{style:({padding:“10px 14px”,borderTop:“1px solid rgba(255,255,255,0.06)”})},(function(){
+})}
+</div>
+{/* Finalize / Reopen for RR games */}
+{game.type===“rr”&&(
+<div style={{padding:“10px 14px”,borderTop:“1px solid rgba(255,255,255,0.06)”}}>
+{(function(){
 var sc = rrSc[game.id] || {t1:0,t2:0,final:false};
 var t1=getTeam(game.teams[0]), t2=getTeam(game.teams[1]);
 var s1=liveTP(game.id,t1.id), s2=liveTP(game.id,t2.id);
 var canFinalize = !sc.final && s1!==s2;
 if(sc.final){
 return (
-React.createElement(“div”,{style:({display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:8})},React.createElement(“div”,{style:({width:6,height:6,borderRadius:“50%”,background:”#A8FF78”})}),React.createElement(“span”,{style:({fontFamily:MO,fontSize:9,color:”#A8FF78”,letterSpacing:1})},“FINAL:”,s1>s2?t1.label:t2.label,“wins”,s1>s2?s1:s2,”-”,s1>s2?s2:s1)),React.createElement(“button”,{onClick:(function(){ reopenRR(game.id); }),style:({background:“none”,border:“1px solid rgba(255,255,255,0.1)”,borderRadius:5,color:“rgba(255,255,255,0.3)”,fontFamily:MO,fontSize:9,padding:“3px 8px”,cursor:“pointer”})},“reopen”))
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
+<div style={{display:“flex”,alignItems:“center”,gap:8}}>
+<div style={{width:6,height:6,borderRadius:“50%”,background:”#A8FF78”}}/>
+<span style={{fontFamily:MO,fontSize:9,color:”#A8FF78”,letterSpacing:1}}>FINAL: {s1>s2?t1.label:t2.label} wins {s1>s2?s1:s2}-{s1>s2?s2:s1}</span>
+</div>
+<button onClick={function(){ reopenRR(game.id); }} style={{background:“none”,border:“1px solid rgba(255,255,255,0.1)”,borderRadius:5,color:“rgba(255,255,255,0.3)”,fontFamily:MO,fontSize:9,padding:“3px 8px”,cursor:“pointer”}}>reopen</button>
+</div>
 );
 }
 return (
-React.createElement(“button”,{onClick:(function(){ if(canFinalize) finalizeRR(game.id); }),disabled:(!canFinalize),style:({width:“100%”,padding:“11px”,borderRadius:8,cursor:canFinalize?“pointer”:“default”,background:canFinalize?“rgba(255,184,0,0.2)”:“rgba(255,255,255,0.04)”,border:canFinalize?“1px solid rgba(255,184,0,0.5)”:“1px solid rgba(255,255,255,0.08)”,color:canFinalize?”#FFB800”:“rgba(255,255,255,0.25)”,fontFamily:DI,fontSize:13,letterSpacing:2})},s1===s2&&s1>0?“TIED - KEEP PLAYING”:“FINALIZE RESULT”)
+<button
+onClick={function(){ if(canFinalize) finalizeRR(game.id); }}
+disabled={!canFinalize}
+style={{width:“100%”,padding:“11px”,borderRadius:8,cursor:canFinalize?“pointer”:“default”,background:canFinalize?“rgba(255,184,0,0.2)”:“rgba(255,255,255,0.04)”,border:canFinalize?“1px solid rgba(255,184,0,0.5)”:“1px solid rgba(255,255,255,0.08)”,color:canFinalize?”#FFB800”:“rgba(255,255,255,0.25)”,fontFamily:DI,fontSize:13,letterSpacing:2}}
+>
+{s1===s2&&s1>0?“TIED - KEEP PLAYING”:“FINALIZE RESULT”}
+</button>
 );
-})(),) )}”)
+})()}
+</div>
+)}
+</div>
 );
 }
 
@@ -581,154 +682,556 @@ if(gid===“sf2”) setFin(function(f){ return Object.assign({},f,{t2:null,w:nul
 }
 }
 return (
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:isFinal?“1px solid rgba(255,184,0,0.25)”:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”,marginBottom:12})},React.createElement(“div”,{style:({padding:“8px 14px”,borderBottom:“1px solid “+ac+“20”,background:ac+“06”,display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:ac})},label),React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.25)”})},“TO 7 - WIN BY 2”)),React.createElement(“div”,{style:({padding:“10px 14px”})},(!t1||!t2) ? (
-React.createElement(“div”,{style:({fontFamily:MO,fontSize:10,color:“rgba(255,255,255,0.2)”,textAlign:“center”,padding:“8px 0”})},rrDone?“Awaiting semifinal results”:“Complete round robin first”)
+<div style={{background:“rgba(255,255,255,0.04)”,border:isFinal?“1px solid rgba(255,184,0,0.25)”:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”,marginBottom:12}}>
+<div style={{padding:“8px 14px”,borderBottom:“1px solid “+ac+“20”,background:ac+“06”,display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
+<span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:ac}}>{label}</span>
+<span style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.25)”}}>TO 7 - WIN BY 2</span>
+</div>
+<div style={{padding:“10px 14px”}}>
+{(!t1||!t2) ? (
+<div style={{fontFamily:MO,fontSize:10,color:“rgba(255,255,255,0.2)”,textAlign:“center”,padding:“8px 0”}}>
+{rrDone?“Awaiting semifinal results”:“Complete round robin first”}
+</div>
 ) : (
-React.createElement(“div”,null,React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:8,marginBottom:4})},React.createElement(“div”,{style:({width:7,height:7,borderRadius:“50%”,background:t1.color,flexShrink:0})}),React.createElement(“div”,{style:({flex:1})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,color:match.w===t1.id?t1.color:”#fff”})},t1.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”})},t1.players.join(”, “))),match.w===t1.id && React.createElement(“span”,{style:({fontFamily:MO,fontSize:9,color:t1.color})},“wins”)),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.15)”,marginLeft:13,marginBottom:4})},“vs”),React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:8,marginBottom:12})},React.createElement(“div”,{style:({width:7,height:7,borderRadius:“50%”,background:t2.color,flexShrink:0})}),React.createElement(“div”,{style:({flex:1})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,color:match.w===t2.id?t2.color:”#fff”})},t2.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”})},t2.players.join(”, “))),match.w===t2.id && React.createElement(“span”,{style:({fontFamily:MO,fontSize:9,color:t2.color})},“wins”)),(open||match.w) && (
-React.createElement(“div”,{style:({padding:12,background:“rgba(0,0,0,0.3)”,borderRadius:10})},React.createElement(“div”,{style:({display:“flex”,justifyContent:“center”,alignItems:“center”,gap:16,marginBottom:8})},React.createElement(“div”,{style:({textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:t1.color,marginBottom:4})},t1.label),React.createElement(“span”,{style:({fontFamily:DI,fontSize:40,color:t1.color,lineHeight:1})},match.s1)),React.createElement(“span”,{style:({fontFamily:MO,fontSize:16,color:“rgba(255,255,255,0.2)”})},”-”),React.createElement(“div”,{style:({textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:t2.color,marginBottom:4})},t2.label),React.createElement(“span”,{style:({fontFamily:DI,fontSize:40,color:t2.color,lineHeight:1})},match.s2))),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.2)”,textAlign:“center”,marginBottom:10})},“Live from Scorekeeper tab”),match.w ? (
-React.createElement(“div”,{style:({display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,color:getTeam(match.w).color})},isFinal?“Champion: “:“Advances: “,getTeam(match.w).label),React.createElement(“button”,{onClick:(doUndo),style:({background:“none”,border:“1px solid rgba(255,255,255,0.1)”,borderRadius:5,color:“rgba(255,255,255,0.3)”,fontFamily:MO,fontSize:9,padding:“3px 7px”,cursor:“pointer”})},“reopen”))
+<div>
+<div style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:4}}>
+<div style={{width:7,height:7,borderRadius:“50%”,background:t1.color,flexShrink:0}}/>
+<div style={{flex:1}}>
+<div style={{fontFamily:DI,fontSize:14,color:match.w===t1.id?t1.color:”#fff”}}>{t1.label}</div>
+<div style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”}}>{t1.players.join(”, “)}</div>
+</div>
+{match.w===t1.id && <span style={{fontFamily:MO,fontSize:9,color:t1.color}}>wins</span>}
+</div>
+<div style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.15)”,marginLeft:13,marginBottom:4}}>vs</div>
+<div style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:12}}>
+<div style={{width:7,height:7,borderRadius:“50%”,background:t2.color,flexShrink:0}}/>
+<div style={{flex:1}}>
+<div style={{fontFamily:DI,fontSize:14,color:match.w===t2.id?t2.color:”#fff”}}>{t2.label}</div>
+<div style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”}}>{t2.players.join(”, “)}</div>
+</div>
+{match.w===t2.id && <span style={{fontFamily:MO,fontSize:9,color:t2.color}}>wins</span>}
+</div>
+{(open||match.w) && (
+<div style={{padding:12,background:“rgba(0,0,0,0.3)”,borderRadius:10}}>
+<div style={{display:“flex”,justifyContent:“center”,alignItems:“center”,gap:16,marginBottom:8}}>
+<div style={{textAlign:“center”}}>
+<div style={{fontFamily:MO,fontSize:8,color:t1.color,marginBottom:4}}>{t1.label}</div>
+<span style={{fontFamily:DI,fontSize:40,color:t1.color,lineHeight:1}}>{match.s1}</span>
+</div>
+<span style={{fontFamily:MO,fontSize:16,color:“rgba(255,255,255,0.2)”}}>-</span>
+<div style={{textAlign:“center”}}>
+<div style={{fontFamily:MO,fontSize:8,color:t2.color,marginBottom:4}}>{t2.label}</div>
+<span style={{fontFamily:DI,fontSize:40,color:t2.color,lineHeight:1}}>{match.s2}</span>
+</div>
+</div>
+<div style={{fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.2)”,textAlign:“center”,marginBottom:10}}>Live from Scorekeeper tab</div>
+{match.w ? (
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
+<span style={{fontFamily:DI,fontSize:13,color:getTeam(match.w).color}}>
+{isFinal?“Champion: “:“Advances: “}{getTeam(match.w).label}
+</span>
+<button onClick={doUndo} style={{background:“none”,border:“1px solid rgba(255,255,255,0.1)”,borderRadius:5,color:“rgba(255,255,255,0.3)”,fontFamily:MO,fontSize:9,padding:“3px 7px”,cursor:“pointer”}}>reopen</button>
+</div>
 ) : (
-React.createElement(“button”,{onClick:(doFinal),disabled:(!canDone),style:({width:“100%”,padding:10,borderRadius:8,cursor:canDone?“pointer”:“default”,background:canDone?“rgba(255,184,0,0.2)”:“rgba(255,255,255,0.04)”,border:canDone?“1px solid rgba(255,184,0,0.5)”:“1px solid rgba(255,255,255,0.08)”,color:canDone?”#FFB800”:“rgba(255,255,255,0.25)”,fontFamily:DI,fontSize:13,letterSpacing:2})},canDone?“FINALIZE”:(match.s1===match.s2&&match.s1>0?“TIED - KEEP PLAYING”:“FINALIZE”))
-))
-),!open&&!match.w&&(
-React.createElement(“button”,{onClick:(function(){ onToggleOpen(); }),style:({width:“100%”,padding:“8px”,borderRadius:8,cursor:“pointer”,background:“rgba(255,255,255,0.06)”,border:“1px solid rgba(255,255,255,0.1)”,color:“rgba(255,255,255,0.45)”,fontFamily:DI,fontSize:11,letterSpacing:2,marginTop:4})},“SCORE”)
-))
-),”)”)
+<button
+onClick={doFinal}
+disabled={!canDone}
+style={{width:“100%”,padding:10,borderRadius:8,cursor:canDone?“pointer”:“default”,background:canDone?“rgba(255,184,0,0.2)”:“rgba(255,255,255,0.04)”,border:canDone?“1px solid rgba(255,184,0,0.5)”:“1px solid rgba(255,255,255,0.08)”,color:canDone?”#FFB800”:“rgba(255,255,255,0.25)”,fontFamily:DI,fontSize:13,letterSpacing:2}}
+>
+{canDone?“FINALIZE”:(match.s1===match.s2&&match.s1>0?“TIED - KEEP PLAYING”:“FINALIZE”)}
+</button>
+)}
+</div>
+)}
+{!open&&!match.w&&(
+<button onClick={function(){ onToggleOpen(); }} style={{width:“100%”,padding:“8px”,borderRadius:8,cursor:“pointer”,background:“rgba(255,255,255,0.06)”,border:“1px solid rgba(255,255,255,0.1)”,color:“rgba(255,255,255,0.45)”,fontFamily:DI,fontSize:11,letterSpacing:2,marginTop:4}}>SCORE</button>
+)}
+</div>
+)}
+</div>
+</div>
 );
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────
 return (
-React.createElement(“div”,{style:({minHeight:“100vh”,background:”#07080f”,color:”#fff”,maxWidth:480,margin:“0 auto”})},React.createElement(“div”,{style:({padding:“16px 16px 10px”,background:“rgba(0,0,0,0.6)”,borderBottom:“1px solid rgba(255,255,255,0.06)”,position:“sticky”,top:0,zIndex:200,backdropFilter:“blur(20px)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,letterSpacing:4,color:”#FF6B35”,marginBottom:1})},“LAS VEGAS - BACHELOR PARTY”),React.createElement(“div”,{style:({fontFamily:DI,fontSize:20,letterSpacing:3})},“RYAN’S React.createElement(“span”,{style:”,{color:”,#FF6B35”},”:true},“INVITATIONAL”)”)),React.createElement(“button”,{onClick:(function(){ setShowRules(true); }),style:({flexShrink:0,background:“rgba(255,255,255,0.07)”,border:“1px solid rgba(255,255,255,0.12)”,borderRadius:8,color:“rgba(255,255,255,0.7)”,fontFamily:MO,fontSize:9,letterSpacing:1,padding:“6px 10px”,cursor:“pointer”})},“RULES”)),showRules&&(
-React.createElement(“div”,{style:({position:“fixed”,inset:0,zIndex:500,display:“flex”,flexDirection:“column”,maxWidth:480,margin:“0 auto”,left:“50%”,transform:“translateX(-50%)”,width:“100%”})},React.createElement(“div”,{onClick:(function(){ setShowRules(false); }),style:({position:“absolute”,inset:0,background:“rgba(0,0,0,0.75)”,backdropFilter:“blur(6px)”})}),React.createElement(“div”,{style:({position:“relative”,margin:“auto 0”,background:”#0d0e1a”,borderRadius:16,overflow:“hidden”,border:“1px solid rgba(255,255,255,0.1)”,maxHeight:“85vh”,display:“flex”,flexDirection:“column”})},React.createElement(“div”,{style:({padding:“14px 18px”,borderBottom:“1px solid rgba(255,255,255,0.08)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,background:“rgba(255,107,53,0.08)”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:16,letterSpacing:2,color:”#FF6B35”})},“RULES & FORMAT”),React.createElement(“button”,{onClick:(function(){ setShowRules(false); }),style:({background:“none”,border:“none”,color:“rgba(255,255,255,0.4)”,cursor:“pointer”,fontSize:20,lineHeight:1,padding:“0 2px”})},“x”)),React.createElement(“div”,{style:({overflowY:“auto”,padding:“18px”})},React.createElement(“div”,{style:({marginBottom:22})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#FFB800”,marginBottom:12,display:“flex”,alignItems:“center”,gap:8})},React.createElement(“span”,{style:({fontSize:15})},”🏀”),“FORMAT”),[
-{label:“Round Robin”,desc:“6 sequential games. First team to 3 points wins. Each team plays 2 games and gets 1 bye.”},
-{label:“Advancement”,desc:“Top 4 teams by record (points scored as tiebreaker) advance to the single-elimination bracket.”},
-{label:“Bracket”,desc:“Semifinal and Championship games are first to 7 points. If tied at 6-6, play continues — win by 2.”},
-].map(function(item,i){
-return (
-React.createElement(“div”,{key:(i),style:({marginBottom:12,paddingLeft:10,borderLeft:“2px solid rgba(255,184,0,0.3)”})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:12,letterSpacing:1,color:”#fff”,marginBottom:3})},item.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.5)”,lineHeight:1.6})},item.desc))
-);
-})),React.createElement(“div”,{style:({height:1,background:“rgba(255,255,255,0.07)”,marginBottom:22})}),React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#4ECDC4”,marginBottom:12,display:“flex”,alignItems:“center”,gap:8})},React.createElement(“span”,{style:({fontSize:15})},”📋”),“RULES”),[
-“Check the ball after each score.”,
-“Pass the ball in to begin each possession.”,
-“Possession switches after each made bucket or when the opposing team grabs a defensive rebound.”,
-“After grabbing a defensive rebound, the team must take the ball back out to the 3-point line before scoring.”,
-“Fouls are called by the ref. Ref’s call is final.”,
-].map(function(rule,i){
-return (
-React.createElement(“div”,{key:(i),style:({display:“flex”,gap:10,marginBottom:10,alignItems:“flex-start”})},React.createElement(“div”,{style:({width:20,height:20,borderRadius:“50%”,background:“rgba(78,205,196,0.15)”,border:“1px solid rgba(78,205,196,0.3)”,display:“flex”,alignItems:“center”,justifyContent:“center”,flexShrink:0,marginTop:1})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:11,color:”#4ECDC4”})},i+1)),React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.6)”,lineHeight:1.6,paddingTop:2})},rule))
-);
-}))),React.createElement(“div”,{style:({padding:“12px 18px”,borderTop:“1px solid rgba(255,255,255,0.07)”})},React.createElement(“button”,{onClick:(function(){ setShowRules(false); }),style:({width:“100%”,padding:“12px”,borderRadius:8,background:“rgba(255,107,53,0.15)”,border:“1px solid rgba(255,107,53,0.3)”,color:”#FF6B35”,fontFamily:DI,fontSize:13,letterSpacing:2,cursor:“pointer”})},“GOT IT”))))
-),React.createElement(“div”,{style:({position:“fixed”,bottom:0,left:“50%”,transform:“translateX(-50%)”,width:“100%”,maxWidth:480,background:“rgba(4,4,12,0.98)”,borderTop:“1px solid rgba(255,255,255,0.07)”,display:“flex”,zIndex:200,backdropFilter:“blur(20px)”})},TABS.map(function(t,i){
-return (
-React.createElement(“button”,{key:(i),onClick:(function(){ setTab(i); }),style:({flex:1,padding:“8px 2px 6px”,background:“none”,border:“none”,cursor:“pointer”,display:“flex”,flexDirection:“column”,alignItems:“center”,gap:1,position:“relative”})},React.createElement(“span”,{style:({fontSize:16})},TAB_ICONS[i]),React.createElement(“span”,{style:({fontFamily:MO,fontSize:6,letterSpacing:1,color:tab===i?”#FF6B35”:“rgba(255,255,255,0.28)”,textTransform:“uppercase”})},t),tab===i&&React.createElement(“div”,{style:({position:“absolute”,bottom:0,left:“50%”,transform:“translateX(-50%)”,width:20,height:2,background:”#FF6B35”,borderRadius:1})}),i===0&&totalLegs>0&&tab!==0&&React.createElement(“div”,{style:({position:“absolute”,top:6,right:“18%”,width:15,height:15,borderRadius:“50%”,background:”#FF6B35”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontFamily:DI,fontSize:9,color:”#fff”})},totalLegs))
-);
-})),React.createElement(“div”,{style:({padding:“0 0 90px”})},tab===0&&(
-React.createElement(“div”,null,React.createElement(“div”,{style:({padding:“12px 12px 0”,overflowX:“auto”,display:“flex”,gap:6,scrollbarWidth:“none”,WebkitOverflowScrolling:“touch”})},bGames.map(function(g){
-var active = g.id===(bGame||(bGames[0]&&bGames[0].id));
-return (
-React.createElement(“button”,{key:(g.id),onClick:(function(){ setBGame(g.id); setBView(“lines”); }),style:({flexShrink:0,padding:“7px 14px”,borderRadius:20,cursor:“pointer”,fontFamily:DI,fontSize:12,letterSpacing:1,border:“none”,background:active?”#FF6B35”:“rgba(255,255,255,0.08)”,color:active?”#fff”:“rgba(255,255,255,0.5)”})},g.label)
-);
-})),selG&&(
-React.createElement(“div”,null,React.createElement(“div”,{style:({padding:“14px 14px 10px”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,letterSpacing:2,marginBottom:6})},selG.full.toUpperCase(),”-”,selG.type===“rr”?“FIRST TO 3”:“FIRST TO 7, WIN BY 2”,”- MAX $”,selG.max),React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:10})},React.createElement(“div”,{style:({flex:1})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6})},React.createElement(“div”,{style:({width:8,height:8,borderRadius:“50%”,background:getTeam(selG.t1).color})}),React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t1).color})},getTeam(selG.t1).label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.35)”})},getTeam(selG.t1).players.join(”, “))))),React.createElement(“span”,{style:({fontFamily:MO,fontSize:10,color:“rgba(255,255,255,0.2)”})},“vs”),React.createElement(“div”,{style:({flex:1,display:“flex”,justifyContent:“flex-end”})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6})},React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t2).color,textAlign:“right”})},getTeam(selG.t2).label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.35)”,textAlign:“right”})},getTeam(selG.t2).players.join(”, “))),React.createElement(“div”,{style:({width:8,height:8,borderRadius:“50%”,background:getTeam(selG.t2).color})}))))),React.createElement(“div”,{style:({display:“flex”,borderBottom:“1px solid rgba(255,255,255,0.07)”})},React.createElement(“button”,{onClick:(function(){ setBView(“lines”); }),style:({flex:1,padding:“10px”,background:“none”,border:“none”,cursor:“pointer”,fontFamily:DI,fontSize:12,letterSpacing:2,color:bView===“lines”?”#fff”:“rgba(255,255,255,0.35)”,borderBottom:bView===“lines”?“2px solid #FF6B35”:“2px solid transparent”})},“GAME LINES”),React.createElement(“button”,{onClick:(function(){ setBView(“props”); }),style:({flex:1,padding:“10px”,background:“none”,border:“none”,cursor:“pointer”,fontFamily:DI,fontSize:12,letterSpacing:2,color:bView===“props”?”#fff”:“rgba(255,255,255,0.35)”,borderBottom:bView===“props”?“2px solid #FF6B35”:“2px solid transparent”})},“PLAYER PROPS”)),React.createElement(“div”,{style:({padding:“14px 12px”})},bView===“lines”&&React.createElement(GameLines,{game:(selG)}),bView===“props”&&React.createElement(PlayerProps,{game:(selG)})))
-),totalLegs>0&&(
-React.createElement(“div”,{style:({position:“fixed”,bottom:56,left:“50%”,transform:“translateX(-50%)”,width:“100%”,maxWidth:480,zIndex:150})},!slipOpen&&(
-React.createElement(“button”,{onClick:(function(){ setSlipOpen(true); }),style:({width:“100%”,padding:“12px 16px”,background:”#FF6B35”,border:“none”,cursor:“pointer”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,boxShadow:“0 -4px 24px rgba(255,107,53,0.4)”})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:10})},React.createElement(“div”,{style:({width:22,height:22,borderRadius:“50%”,background:“rgba(0,0,0,0.25)”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontFamily:DI,fontSize:12,color:”#fff”})},totalLegs),React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#fff”})},“BET SLIP”)),React.createElement(“span”,{style:({fontFamily:DI,fontSize:12,color:“rgba(255,255,255,0.8)”})},“VIEW”))
-),slipOpen&&(
-React.createElement(“div”,{style:({background:”#0d0e1a”,borderTop:“2px solid #FF6B35”,maxHeight:“80vh”,overflowY:“auto”})},React.createElement(“div”,{style:({padding:“12px 16px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,borderBottom:“1px solid rgba(255,255,255,0.08)”,position:“sticky”,top:0,background:”#0d0e1a”,zIndex:10})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:14,letterSpacing:2,color:”#fff”})},“BET SLIP (”,totalLegs,”)”),React.createElement(“div”,{style:({display:“flex”,gap:8})},React.createElement(“button”,{onClick:(function(){ setStSlip([]); setPaSlip([]); }),style:({fontFamily:MO,fontSize:8,color:“rgba(255,100,100,0.7)”,background:“rgba(255,80,80,0.1)”,border:“1px solid rgba(255,80,80,0.2)”,borderRadius:4,padding:“3px 8px”,cursor:“pointer”})},“CLEAR”),React.createElement(“button”,{onClick:(function(){ setSlipOpen(false); }),style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.4)”,background:“rgba(255,255,255,0.06)”,border:“1px solid rgba(255,255,255,0.1)”,borderRadius:4,padding:“3px 8px”,cursor:“pointer”})},“HIDE”))),React.createElement(“div”,{style:({padding:“12px 16px”})},stSlip.length>0&&(
-React.createElement(“div”,{style:({marginBottom:16})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,letterSpacing:3,color:“rgba(255,255,255,0.35)”,marginBottom:8})},“STRAIGHT BETS - GAME LINES”),stSlip.map(function(leg,i){
-return (
-React.createElement(“div”,{key:(leg.id),style:({display:“flex”,alignItems:“flex-start”,justifyContent:“space-between”,padding:“10px 0”,borderBottom:“1px solid rgba(255,255,255,0.05)”})},React.createElement(“div”,{style:({flex:1,minWidth:0})},React.createElement(“div”,{style:({fontFamily:BO,fontSize:12,fontWeight:600,color:”#fff”,lineHeight:1.4})},leg.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”,marginTop:2})},leg.gLabel)),React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:10,flexShrink:0,marginLeft:10})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:17,color:leg.ml<0?”#4ECDC4”:”#FBBF24”})},fml(leg.ml)),React.createElement(“button”,{onClick:(function(){ setStSlip(function(s){ return s.filter(function(*,j){ return j!==i; }); }); }),style:({background:“none”,border:“none”,color:“rgba(255,255,255,0.2)”,cursor:“pointer”,fontSize:16,lineHeight:1,padding:2})},“x”)))
-);
-}))
-),paSlip.length>0&&(
-React.createElement(“div”,{style:({marginBottom:16})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,letterSpacing:3,color:“rgba(255,184,0,0.6)”,marginBottom:8})},“PROP PARLAY -”,paSlip.length,“LEG”,paSlip.length>1?“S”:””),React.createElement(“div”,{style:({background:“rgba(255,184,0,0.04)”,border:“1px solid rgba(255,184,0,0.12)”,borderRadius:8,padding:“4px 0”,marginBottom:8})},paSlip.map(function(leg,i){
-return (
-React.createElement(“div”,{key:(leg.id),style:({display:“flex”,alignItems:“flex-start”,justifyContent:“space-between”,padding:“8px 12px”,borderBottom:i<paSlip.length-1?“1px solid rgba(255,184,0,0.08)”:“none”})},React.createElement(“div”,{style:({flex:1,minWidth:0})},React.createElement(“div”,{style:({fontFamily:BO,fontSize:12,fontWeight:600,color:”#fff”,lineHeight:1.4})},leg.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”,marginTop:2})},leg.gLabel)),React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:10,flexShrink:0,marginLeft:10})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:17,color:leg.ml<0?”#4ECDC4”:”#FBBF24”})},fml(leg.ml)),React.createElement(“button”,{onClick:(function(){ setPaSlip(function(s){ return s.filter(function(*,j){ return j!==i; }); }); }),style:({background:“none”,border:“none”,color:“rgba(255,255,255,0.2)”,cursor:“pointer”,fontSize:16,lineHeight:1,padding:2})},“x”)))
-);
-})),paSlip.length>1&&(
-React.createElement(“div”,{style:({display:“flex”,justifyContent:“space-between”,alignItems:“center”,padding:“6px 0”,marginBottom:4})},React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.35)”,letterSpacing:1})},“COMBINED ODDS”),React.createElement(“span”,{style:({fontFamily:DI,fontSize:20,color:”#FFB800”})},parlayOdds(paSlip)))
-),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.2)”})},“Props only - Max 4 legs - One prop per player”))
-),React.createElement(“div”,{style:({marginBottom:12})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,letterSpacing:2,marginBottom:8})},“STAKE - MAX $”,maxA),React.createElement(“div”,{style:({display:“flex”,gap:6})},amts.map(function(a){
-return React.createElement(“button”,{key:(a),onClick:(function(){ setSlipAmt(a); }),style:({flex:1,padding:“10px 4px”,borderRadius:8,cursor:“pointer”,background:slipAmt===a?“rgba(255,107,53,0.25)”:“rgba(255,255,255,0.06)”,border:slipAmt===a?“1px solid #FF6B35”:“1px solid rgba(255,255,255,0.08)”,fontFamily:DI,fontSize:15,color:slipAmt===a?”#FF6B35”:“rgba(255,255,255,0.5)”})},”$”,a);
-}))),slipAmt&&(
-React.createElement(“div”,{style:({display:“flex”,gap:8,marginBottom:12})},stSlip.length>0&&(
-React.createElement(“div”,{style:({flex:1,padding:“10px 8px”,background:“rgba(255,255,255,0.04)”,borderRadius:8,textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.25)”,marginBottom:3})},“STRAIGHT WIN”),React.createElement(“div”,{style:({fontFamily:DI,fontSize:16,color:”#A8FF78”})},”$”,stSlip.reduce(function(s,l){ return s+parseFloat(mlPay(l.ml,slipAmt)); }, 0).toFixed(2)),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.2)”})},stSlip.length,“bet”,stSlip.length>1?“s”:””,“x $”,slipAmt))
-),paSlip.length>0&&(
-React.createElement(“div”,{style:({flex:1,padding:“10px 8px”,background:“rgba(255,184,0,0.06)”,border:“1px solid rgba(255,184,0,0.15)”,borderRadius:8,textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,184,0,0.5)”,marginBottom:3})},“PARLAY WIN”),React.createElement(“div”,{style:({fontFamily:DI,fontSize:16,color:”#FFB800”})},”$”,parlayWin(paSlip,slipAmt)),React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:“rgba(255,255,255,0.2)”})},“1 parlay x $”,slipAmt))
-))
-),React.createElement(“div”,{style:({marginBottom:12})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,letterSpacing:2,marginBottom:6})},“WHO’S BETTING?”),React.createElement(“select”,{value:(bettor),onChange:(function(e){ setBettor(e.target.value); }),style:({width:“100%”,padding:“11px 12px”,background:“rgba(255,255,255,0.06)”,border:“1px solid rgba(255,255,255,0.12)”,borderRadius:8,fontFamily:MO,fontSize:12,boxSizing:“border-box”,cursor:“pointer”})},React.createElement(“option”,{value:””},“Select player…”),ALL_PLAYERS.map(function(p){
-var blocked = !!blockedBettors[p];
-return React.createElement(“option”,{key:(p),value:(p),disabled:(blocked)},p,blocked?” (playing)”:””);
-})),bettorIsBlocked&&(
-React.createElement(“div”,{style:({marginTop:6,fontFamily:MO,fontSize:8,color:”#FF8080”,letterSpacing:1})},bettor,“is playing in one of these games and can’t bet on it.”)
-)),React.createElement(“button”,{onClick:(lockBets),disabled:(!slipAmt||!bettor||!!bettorIsBlocked),style:({width:“100%”,padding:“14px”,borderRadius:10,cursor:slipAmt&&bettor&&!bettorIsBlocked?“pointer”:“default”,background:slipAmt&&bettor&&!bettorIsBlocked?”#FF6B35”:“rgba(255,255,255,0.06)”,border:“none”,fontFamily:DI,fontSize:15,letterSpacing:2,color:slipAmt&&bettor&&!bettorIsBlocked?”#fff”:“rgba(255,255,255,0.2)”})},“PLACE”,stSlip.length>0&&paSlip.length>0?“BETS + PARLAY”:stSlip.length>0?“BET”+(stSlip.length>1?“S”:””):“PARLAY”)))
-))
-),bets.length>0&&(
-React.createElement(“div”,{style:({padding:“12px 12px 0”})},React.createElement(“button”,{onClick:(function(){ setShowLedger(function(p){ return !p; }); }),style:({width:“100%”,padding:“10px 14px”,borderRadius:10,cursor:“pointer”,background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:12,letterSpacing:2,color:”#FFB800”})},“BET LEDGER -”,bets.length,“BETS”),React.createElement(“span”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.3)”})},showLedger?“HIDE”:“SHOW”)),showLedger&&(
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,overflow:“hidden”,marginTop:8})},React.createElement(“div”,{style:({padding:“8px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“div”,{style:({display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,gap:8,flex:1})},[{l:“WAGERED”,v:”$”+totW,c:”#FF6B35”},{l:“PAYOUTS”,v:”$”+totP.toFixed(2),c:”#A8FF78”},{l:“BOOK P/L”,v:”$”+(bets.filter(function(b){ return b.result===“loss”; }).reduce(function(s,b){ return s+b.amt; },0)-bets.filter(function(b){ return b.result===“win”; }).reduce(function(s,b){ return s+parseFloat(b.toWin); },0)).toFixed(2),c:”#FFB800”}].map(function(s,i){
-return React.createElement(“div”,{key:(i),style:({textAlign:“center”})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:6,color:“rgba(255,255,255,0.25)”,marginBottom:2})},s.l),React.createElement(“div”,{style:({fontFamily:DI,fontSize:16,color:s.c})},s.v));
-})),React.createElement(“button”,{onClick:(function(){ setBets([]); }),style:({fontFamily:MO,fontSize:8,color:“rgba(255,100,100,0.7)”,background:“rgba(255,80,80,0.1)”,border:“1px solid rgba(255,80,80,0.2)”,borderRadius:4,padding:“3px 8px”,cursor:“pointer”,marginLeft:12,flexShrink:0})},“CLEAR”)),bets.map(function(b,i){
-return (
-React.createElement(“div”,{key:(b.id),style:({padding:“10px 14px”,borderBottom:i<bets.length-1?“1px solid rgba(255,255,255,0.04)”:“none”})},React.createElement(“div”,{style:({display:“flex”,justifyContent:“space-between”,marginBottom:3})},React.createElement(“div”,null,React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,color:”#fff”})},b.bettor),React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.25)”,marginLeft:8})},b.ts)),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,padding:“2px 7px”,borderRadius:4,background:b.result===“win”?“rgba(168,255,120,0.15)”:b.result===“loss”?“rgba(255,100,100,0.15)”:“rgba(255,184,0,0.1)”,color:b.result===“win”?”#A8FF78”:b.result===“loss”?”#FF8080”:”#FFB800”,alignSelf:“center”})},b.result.toUpperCase())),React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.28)”,marginBottom:3})},b.game),React.createElement(“div”,{style:({display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“span”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.55)”,flex:1,marginRight:8,lineHeight:1.4})},b.pick),React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,flexShrink:0})},React.createElement(“span”,{style:({color:”#FF6B35”})},”$”,b.amt),React.createElement(“span”,{style:({color:“rgba(255,255,255,0.2)”,margin:“0 4px”})},“to”),React.createElement(“span”,{style:({color:b.result===“loss”?”#FF8080”:”#A8FF78”})},”$”,b.toWin))),b.result===“win”&&React.createElement(“div”,{style:({marginTop:3,fontFamily:MO,fontSize:8,color:”#A8FF78”})},“Collect $”,(parseFloat(b.toWin)+b.amt).toFixed(2)),b.result===“loss”&&React.createElement(“div”,{style:({marginTop:3,fontFamily:MO,fontSize:8,color:”#FF8080”})},“Lost $”,b.amt))
-);
-}))
-))
-))
-),tab===1&&(
-React.createElement(“div”,null,React.createElement(“div”,{style:({padding:“12px 12px 0”,overflowX:“auto”,display:“flex”,gap:6,scrollbarWidth:“none”,WebkitOverflowScrolling:“touch”})},skGames.map(function(g){
-var active = g.id===skSel;
-var shortLabel = g.type===“rr” ? “G”+GNUM[g.id] : g.type===“se” ? (g.id===“sf1”?“SF1”:“SF2”) : “Final”;
-return (
-React.createElement(“button”,{key:(g.id),onClick:(function(){ setSkSel(skSel===g.id?null:g.id); }),style:({flexShrink:0,padding:“7px 14px”,borderRadius:20,cursor:“pointer”,fontFamily:DI,fontSize:12,letterSpacing:1,border:“none”,background:active?”#FF6B35”:“rgba(255,255,255,0.08)”,color:active?”#fff”:“rgba(255,255,255,0.5)”})},shortLabel)
-);
-})),React.createElement(“div”,{style:({padding:“14px 12px”})},!skSel&&(
-React.createElement(“div”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.25)”,letterSpacing:2,textAlign:“center”,marginTop:20})},“SELECT A GAME ABOVE TO TRACK STATS”)
-),skSel&&(function(){
-var game = skGames.find(function(g){ return g.id===skSel; });
-if(!game) return null;
-var isLocked = (game.type===“se”&&!rrDone)||(game.type===“final”&&(!fin.t1||!fin.t2));
-if(isLocked){
-return (
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,padding:“28px 16px”,textAlign:“center”})},React.createElement(“div”,{style:({fontSize:28,marginBottom:10})},”🔒”),React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,letterSpacing:2,color:“rgba(255,255,255,0.35)”})},game.type===“se”?“UNLOCKS AFTER ROUND ROBIN”:“UNLOCKS AFTER SEMIFINALS”))
-);
-}
-return React.createElement(SkPanel,{game:(game)});
-})()))
-),tab===2&&(
-React.createElement(“div”,{style:({padding:“14px 12px”})},React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,marginBottom:14,overflow:“hidden”})},React.createElement(“div”,{style:({padding:“8px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,display:“flex”,justifyContent:“space-between”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#FF6B35”})},“STANDINGS”),React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,alignSelf:“center”})},rrDoneN,”/”,ALL_GAMES.length,“GAMES FINAL”)),standings.map(function(t,i){
-return (
-React.createElement(“div”,{key:(t.id),style:({padding:“9px 14px”,borderBottom:i<4?“1px solid rgba(255,255,255,0.04)”:“none”,display:“flex”,alignItems:“center”,gap:10,background:i<4?t.color+“07”:“transparent”})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:18,color:i<4?t.color:“rgba(255,255,255,0.2)”,minWidth:22,textAlign:“center”})},i+1),React.createElement(“div”,{style:({flex:1})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,letterSpacing:1,color:i<4?”#fff”:“rgba(255,255,255,0.35)”})},t.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.28)”})},t.players.join(”, “))),React.createElement(“div”,{style:({textAlign:“right”})},React.createElement(“div”,{style:({fontFamily:DI,fontSize:14,color:i<4?t.color:“rgba(255,255,255,0.28)”})},t.w,”-”,t.l),React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.28)”})},t.pf,“pts”)),i===3&&React.createElement(“div”,{style:({fontFamily:MO,fontSize:7,color:”#FFB800”,background:“rgba(255,184,0,0.1)”,border:“1px solid rgba(255,184,0,0.2)”,borderRadius:3,padding:“1px 5px”,flexShrink:0})},“CUT”))
-);
-}),React.createElement(“div”,{style:({padding:“6px 14px”,borderTop:“1px solid rgba(255,255,255,0.04)”})},React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.18)”})},“1 court - 6 sequential games - ~54 min”))),SCHEDULE.map(function(round){
-return (
-React.createElement(“div”,{key:(round.round),style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,marginBottom:12,overflow:“hidden”})},React.createElement(“div”,{style:({padding:“8px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”,display:“flex”,justifyContent:“space-between”,background:“rgba(255,184,0,0.04)”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#FFB800”})},“ROUND”,round.round),React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.3)”,alignSelf:“center”})},“BYE:”,getTeam(round.bye).label)),round.games.map(function(game,gi){
-var t1=getTeam(game.t1), t2=getTeam(game.t2);
-var sc=rrSc[game.id], done=sc&&sc.final;
-var s1=sc?sc.t1:0, s2=sc?sc.t2:0;
-return (
-React.createElement(“div”,{key:(game.id),style:({padding:“12px 14px”,borderBottom:gi===0?“1px solid rgba(255,255,255,0.04)”:“none”,display:“flex”,alignItems:“center”,gap:10})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.22)”,minWidth:20,flexShrink:0})},“G”,GNUM[game.id]),React.createElement(“div”,{style:({flex:1})},React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6,marginBottom:4})},React.createElement(“div”,{style:({width:6,height:6,borderRadius:“50%”,background:t1.color,flexShrink:0})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s1>s2?t1.color:”#fff”})},t1.label),done&&s1>s2&&React.createElement(“span”,{style:({fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1})},“W”)),React.createElement(“div”,{style:({display:“flex”,alignItems:“center”,gap:6})},React.createElement(“div”,{style:({width:6,height:6,borderRadius:“50%”,background:t2.color,flexShrink:0})}),React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s2>s1?t2.color:”#fff”})},t2.label),done&&s2>s1&&React.createElement(“span”,{style:({fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1})},“W”))),React.createElement(“div”,{style:({flexShrink:0,textAlign:“right”})},done ? (
-React.createElement(“div”,{style:({fontFamily:DI,fontSize:28,lineHeight:1})},React.createElement(“span”,{style:({color:s1>s2?t1.color:“rgba(255,255,255,0.4)”})},s1),React.createElement(“span”,{style:({color:“rgba(255,255,255,0.18)”,fontSize:14,margin:“0 5px”})},”-”),React.createElement(“span”,{style:({color:s2>s1?t2.color:“rgba(255,255,255,0.4)”})},s2))
-) : (
-React.createElement(“span”,{style:({fontFamily:MO,fontSize:8,color:“rgba(255,255,255,0.2)”,letterSpacing:1})},“PENDING”)
-)))
-);
-}),”) ); })) )}”,tab===3&&(
-React.createElement(“div”,{style:({padding:“14px 12px”})},!rrDone&&(
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,padding:“16px”,textAlign:“center”,marginBottom:14})},React.createElement(“div”,{style:({fontFamily:MO,fontSize:10,color:“rgba(255,255,255,0.3)”,letterSpacing:2})},“COMPLETE ROUND ROBIN TO SEED BRACKET”),React.createElement(“div”,{style:({fontFamily:DI,fontSize:12,color:“rgba(255,255,255,0.2)”,marginTop:6})},rrDoneN,”/”,ALL_GAMES.length,“games complete”))
-),rrDone&&(
-React.createElement(“div”,{style:({background:“rgba(255,255,255,0.04)”,border:“1px solid rgba(255,255,255,0.08)”,borderRadius:12,marginBottom:14,overflow:“hidden”})},React.createElement(“div”,{style:({padding:“8px 14px”,borderBottom:“1px solid rgba(255,255,255,0.06)”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:13,letterSpacing:2,color:”#FF6B35”})},“TOP CUT SEEDS”)),standings.slice(0,4).map(function(t,i){
-return (
-React.createElement(“div”,{key:(t.id),style:({padding:“8px 14px”,borderBottom:i<3?“1px solid rgba(255,255,255,0.04)”:“none”,display:“flex”,justifyContent:“space-between”,alignItems:“center”})},React.createElement(“div”,{style:({display:“flex”,gap:10,alignItems:“center”})},React.createElement(“span”,{style:({fontFamily:DI,fontSize:16,color:t.color})},”#”,i+1),React.createElement(“div”,null,React.createElement(“div”,{style:({fontFamily:DI,fontSize:13,color:”#fff”})},t.label),React.createElement(“div”,{style:({fontFamily:MO,fontSize:9,color:“rgba(255,255,255,0.3)”})},t.players.join(”, “)))),React.createElement(“div”,{style:({fontFamily:DI,fontSize:12,color:t.color})},t.w,”-”,t.l,”-”,t.pf,“pts”))
-);
-}))
-),React.createElement(BracketGame,{label:“SEMIFINAL 1 - #1 vs #4”,match:(sf1),setMatch:(setSf1),gid:“sf1”,isFinal:(false),open:(bracketOpen.sf1),onToggleOpen:(function(){ toggleBracketOpen(“sf1”); })}),React.createElement(BracketGame,{label:“SEMIFINAL 2 - #2 vs #3”,match:(sf2),setMatch:(setSf2),gid:“sf2”,isFinal:(false),open:(bracketOpen.sf2),onToggleOpen:(function(){ toggleBracketOpen(“sf2”); })}),React.createElement(BracketGame,{label:“CHAMPIONSHIP”,match:(fin),setMatch:(setFin),gid:“fin”,isFinal:(true),open:(bracketOpen.fin),onToggleOpen:(function(){ toggleBracketOpen(“fin”); })}))
-))
+<div style={{minHeight:“100vh”,background:”#07080f”,color:”#fff”,maxWidth:480,margin:“0 auto”}}>
+
+```
+  <div style={{padding:"16px 16px 10px",background:"rgba(0,0,0,0.6)",borderBottom:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:0,zIndex:200,backdropFilter:"blur(20px)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+    <div>
+      <div style={{fontFamily:MO,fontSize:8,letterSpacing:4,color:"#FF6B35",marginBottom:1}}>LAS VEGAS - BACHELOR PARTY</div>
+      <div style={{fontFamily:DI,fontSize:20,letterSpacing:3}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
+    </div>
+    <div style={{display:"flex",gap:8,flexShrink:0}}>
+      <button onClick={function(){
+        var html = document.documentElement.outerHTML;
+        var blob = new Blob([html], {type:"text/html"});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "ryans_invitational.html";
+        a.click();
+        URL.revokeObjectURL(url);
+      }} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
+        SAVE
+      </button>
+      <button onClick={function(){ setShowRules(true); }} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
+        RULES
+      </button>
+    </div>
+  </div>
+
+  {showRules&&(
+    <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto",left:"50%",transform:"translateX(-50%)",width:"100%"}}>
+      <div onClick={function(){ setShowRules(false); }} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)"}}/>
+      <div style={{position:"relative",margin:"auto 0",background:"#0d0e1a",borderRadius:16,overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,107,53,0.08)"}}>
+          <span style={{fontFamily:DI,fontSize:16,letterSpacing:2,color:"#FF6B35"}}>RULES & FORMAT</span>
+          <button onClick={function(){ setShowRules(false); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:20,lineHeight:1,padding:"0 2px"}}>x</button>
+        </div>
+        <div style={{overflowY:"auto",padding:"18px"}}>
+
+          <div style={{marginBottom:22}}>
+            <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:15}}>&#x1F3C0;</span> FORMAT
+            </div>
+            {[
+              {label:"Round Robin",desc:"6 sequential games. First team to 3 points wins. Each team plays 2 games and gets 1 bye."},
+              {label:"Advancement",desc:"Top 4 teams by record (points scored as tiebreaker) advance to the single-elimination bracket."},
+              {label:"Bracket",desc:"Semifinal and Championship games are first to 7 points. If tied at 6-6, play continues — win by 2."},
+            ].map(function(item,i){
+              return (
+                <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
+                  <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:3}}>{item.label}</div>
+                  <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:22}}/>
+
+          <div>
+            <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#4ECDC4",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:15}}>&#x1F4CB;</span> RULES
+            </div>
+            {[
+              "Check the ball after each score.",
+              "Pass the ball in to begin each possession.",
+              "Possession switches after each made bucket or when the opposing team grabs a defensive rebound.",
+              "After grabbing a defensive rebound, the team must take the ball back out to the 3-point line before scoring.",
+              "Fouls are called by the ref. Ref's call is final.",
+            ].map(function(rule,i){
+              return (
+                <div key={i} style={{display:"flex",gap:10,marginBottom:10,alignItems:"flex-start"}}>
+                  <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(78,205,196,0.15)",border:"1px solid rgba(78,205,196,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                    <span style={{fontFamily:DI,fontSize:11,color:"#4ECDC4"}}>{i+1}</span>
+                  </div>
+                  <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.6)",lineHeight:1.6,paddingTop:2}}>{rule}</div>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+        <div style={{padding:"12px 18px",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+          <button onClick={function(){ setShowRules(false); }} style={{width:"100%",padding:"12px",borderRadius:8,background:"rgba(255,107,53,0.15)",border:"1px solid rgba(255,107,53,0.3)",color:"#FF6B35",fontFamily:DI,fontSize:13,letterSpacing:2,cursor:"pointer"}}>GOT IT</button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"rgba(4,4,12,0.98)",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",zIndex:200,backdropFilter:"blur(20px)"}}>
+    {TABS.map(function(t,i){
+      return (
+        <button key={i} onClick={function(){ setTab(i); }} style={{flex:1,padding:"8px 2px 6px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1,position:"relative"}}>
+          <span style={{fontSize:16}}>{TAB_ICONS[i]}</span>
+          <span style={{fontFamily:MO,fontSize:6,letterSpacing:1,color:tab===i?"#FF6B35":"rgba(255,255,255,0.28)",textTransform:"uppercase"}}>{t}</span>
+          {tab===i&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:20,height:2,background:"#FF6B35",borderRadius:1}}/>}
+          {i===0&&totalLegs>0&&tab!==0&&<div style={{position:"absolute",top:6,right:"18%",width:15,height:15,borderRadius:"50%",background:"#FF6B35",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:9,color:"#fff"}}>{totalLegs}</div>}
+        </button>
+      );
+    })}
+  </div>
+
+  <div style={{padding:"0 0 90px"}}>
+
+    {tab===0&&(
+      <div>
+        <div style={{padding:"12px 12px 0",overflowX:"auto",display:"flex",gap:6,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+          {bGames.map(function(g){
+            var active = g.id===(bGame||(bGames[0]&&bGames[0].id));
+            return (
+              <button key={g.id} onClick={function(){ setBGame(g.id); setBView("lines"); }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
+                {g.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {selG&&(
+          <div>
+            <div style={{padding:"14px 14px 10px"}}>
+              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
+                {selG.full.toUpperCase()} - {selG.type==="rr"?"FIRST TO 3":"FIRST TO 7, WIN BY 2"} - MAX ${selG.max}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t1).color}}/>
+                    <div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t1).color}}>{getTeam(selG.t1).label}</div>
+                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)"}}>{getTeam(selG.t1).players.join(", ")}</div>
+                    </div>
+                  </div>
+                </div>
+                <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)"}}>vs</span>
+                <div style={{flex:1,display:"flex",justifyContent:"flex-end"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t2).color,textAlign:"right"}}>{getTeam(selG.t2).label}</div>
+                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"right"}}>{getTeam(selG.t2).players.join(", ")}</div>
+                    </div>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t2).color}}/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+              <button onClick={function(){ setBView("lines"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="lines"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="lines"?"2px solid #FF6B35":"2px solid transparent"}}>GAME LINES</button>
+              <button onClick={function(){ setBView("props"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="props"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="props"?"2px solid #FF6B35":"2px solid transparent"}}>PLAYER PROPS</button>
+            </div>
+            <div style={{padding:"14px 12px"}}>
+              {bView==="lines"&&<GameLines game={selG}/>}
+              {bView==="props"&&<PlayerProps game={selG}/>}
+            </div>
+          </div>
+        )}
+
+        {totalLegs>0&&(
+          <div style={{position:"fixed",bottom:56,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,zIndex:150}}>
+            {!slipOpen&&(
+              <button onClick={function(){ setSlipOpen(true); }} style={{width:"100%",padding:"12px 16px",background:"#FF6B35",border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 -4px 24px rgba(255,107,53,0.4)"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:12,color:"#fff"}}>{totalLegs}</div>
+                  <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>BET SLIP</span>
+                </div>
+                <span style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.8)"}}>VIEW</span>
+              </button>
+            )}
+            {slipOpen&&(
+              <div style={{background:"#0d0e1a",borderTop:"2px solid #FF6B35",maxHeight:"80vh",overflowY:"auto"}}>
+                <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"sticky",top:0,background:"#0d0e1a",zIndex:10}}>
+                  <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"#fff"}}>BET SLIP ({totalLegs})</span>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={function(){ setStSlip([]); setPaSlip([]); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>CLEAR</button>
+                    <button onClick={function(){ setSlipOpen(false); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>HIDE</button>
+                  </div>
+                </div>
+                <div style={{padding:"12px 16px"}}>
+                  {stSlip.length>0&&(
+                    <div style={{marginBottom:16}}>
+                      <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"rgba(255,255,255,0.35)",marginBottom:8}}>STRAIGHT BETS - GAME LINES</div>
+                      {stSlip.map(function(leg,i){
+                        return (
+                          <div key={leg.id} style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff",lineHeight:1.4}}>{leg.label}</div>
+                              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginTop:2}}>{leg.gLabel}</div>
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:10}}>
+                              <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
+                              <button onClick={function(){ setStSlip(function(s){ return s.filter(function(_,j){ return j!==i; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:16,lineHeight:1,padding:2}}>x</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {paSlip.length>0&&(
+                    <div style={{marginBottom:16}}>
+                      <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"rgba(255,184,0,0.6)",marginBottom:8}}>PROP PARLAY - {paSlip.length} LEG{paSlip.length>1?"S":""}</div>
+                      <div style={{background:"rgba(255,184,0,0.04)",border:"1px solid rgba(255,184,0,0.12)",borderRadius:8,padding:"4px 0",marginBottom:8}}>
+                        {paSlip.map(function(leg,i){
+                          return (
+                            <div key={leg.id} style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",padding:"8px 12px",borderBottom:i<paSlip.length-1?"1px solid rgba(255,184,0,0.08)":"none"}}>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff",lineHeight:1.4}}>{leg.label}</div>
+                                <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginTop:2}}>{leg.gLabel}</div>
+                              </div>
+                              <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:10}}>
+                                <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
+                                <button onClick={function(){ setPaSlip(function(s){ return s.filter(function(_,j){ return j!==i; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:16,lineHeight:1,padding:2}}>x</button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {paSlip.length>1&&(
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",marginBottom:4}}>
+                          <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1}}>COMBINED ODDS</span>
+                          <span style={{fontFamily:DI,fontSize:20,color:"#FFB800"}}>{parlayOdds(paSlip)}</span>
+                        </div>
+                      )}
+                      <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Props only - Max 4 legs - One prop per player</div>
+                    </div>
+                  )}
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:8}}>STAKE - MAX ${maxA}</div>
+                    <div style={{display:"flex",gap:6}}>
+                      {amts.map(function(a){
+                        return <button key={a} onClick={function(){ setSlipAmt(a); }} style={{flex:1,padding:"10px 4px",borderRadius:8,cursor:"pointer",background:slipAmt===a?"rgba(255,107,53,0.25)":"rgba(255,255,255,0.06)",border:slipAmt===a?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",fontFamily:DI,fontSize:15,color:slipAmt===a?"#FF6B35":"rgba(255,255,255,0.5)"}}>${a}</button>;
+                      })}
+                    </div>
+                  </div>
+                  {slipAmt&&(
+                    <div style={{display:"flex",gap:8,marginBottom:12}}>
+                      {stSlip.length>0&&(
+                        <div style={{flex:1,padding:"10px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8,textAlign:"center"}}>
+                          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",marginBottom:3}}>STRAIGHT WIN</div>
+                          <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${stSlip.reduce(function(s,l){ return s+parseFloat(mlPay(l.ml,slipAmt)); }, 0).toFixed(2)}</div>
+                          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>{stSlip.length} bet{stSlip.length>1?"s":""} x ${slipAmt}</div>
+                        </div>
+                      )}
+                      {paSlip.length>0&&(
+                        <div style={{flex:1,padding:"10px 8px",background:"rgba(255,184,0,0.06)",border:"1px solid rgba(255,184,0,0.15)",borderRadius:8,textAlign:"center"}}>
+                          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,184,0,0.5)",marginBottom:3}}>PARLAY WIN</div>
+                          <div style={{fontFamily:DI,fontSize:16,color:"#FFB800"}}>${parlayWin(paSlip,slipAmt)}</div>
+                          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>1 parlay x ${slipAmt}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>WHO'S BETTING?</div>
+                    <select value={bettor} onChange={function(e){ setBettor(e.target.value); }} style={{width:"100%",padding:"11px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:MO,fontSize:12,boxSizing:"border-box",cursor:"pointer"}}>
+                      <option value="">Select player...</option>
+                      {ALL_PLAYERS.map(function(p){
+                        var blocked = !!blockedBettors[p];
+                        return <option key={p} value={p} disabled={blocked}>{p}{blocked?" (playing)":""}</option>;
+                      })}
+                    </select>
+                    {bettorIsBlocked&&(
+                      <div style={{marginTop:6,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
+                        {bettor} is playing in one of these games and can't bet on it.
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={lockBets}
+                    disabled={!slipAmt||!bettor||!!bettorIsBlocked}
+                    style={{width:"100%",padding:"14px",borderRadius:10,cursor:slipAmt&&bettor&&!bettorIsBlocked?"pointer":"default",background:slipAmt&&bettor&&!bettorIsBlocked?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:slipAmt&&bettor&&!bettorIsBlocked?"#fff":"rgba(255,255,255,0.2)"}}
+                  >
+                    PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {bets.length>0&&(
+          <div style={{padding:"12px 12px 0"}}>
+            <button onClick={function(){ setShowLedger(function(p){ return !p; }); }} style={{width:"100%",padding:"10px 14px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:"#FFB800"}}>BET LEDGER - {bets.length} BETS</span>
+              <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{showLedger?"HIDE":"SHOW"}</span>
+            </button>
+            {showLedger&&(
+              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginTop:8}}>
+                <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,flex:1}}>
+                    {[{l:"WAGERED",v:"$"+totW,c:"#FF6B35"},{l:"PAYOUTS",v:"$"+totP.toFixed(2),c:"#A8FF78"},{l:"BOOK P/L",v:"$"+(bets.filter(function(b){ return b.result==="loss"; }).reduce(function(s,b){ return s+b.amt; },0)-bets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin); },0)).toFixed(2),c:"#FFB800"}].map(function(s,i){
+                      return <div key={i} style={{textAlign:"center"}}><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",marginBottom:2}}>{s.l}</div><div style={{fontFamily:DI,fontSize:16,color:s.c}}>{s.v}</div></div>;
+                    })}
+                  </div>
+                  <button onClick={function(){ setBets([]); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer",marginLeft:12,flexShrink:0}}>CLEAR</button>
+                </div>
+                {bets.map(function(b,i){
+                  return (
+                    <div key={b.id} style={{padding:"10px 14px",borderBottom:i<bets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                        <div>
+                          <span style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{b.bettor}</span>
+                          <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",marginLeft:8}}>{b.ts}</span>
+                        </div>
+                        <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800",alignSelf:"center"}}>{b.result.toUpperCase()}</div>
+                      </div>
+                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginBottom:3}}>{b.game}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.55)",flex:1,marginRight:8,lineHeight:1.4}}>{b.pick}</span>
+                        <span style={{fontFamily:DI,fontSize:13,flexShrink:0}}>
+                          <span style={{color:"#FF6B35"}}>${b.amt}</span>
+                          <span style={{color:"rgba(255,255,255,0.2)",margin:"0 4px"}}>to</span>
+                          <span style={{color:b.result==="loss"?"#FF8080":"#A8FF78"}}>${b.toWin}</span>
+                        </span>
+                      </div>
+                      {b.result==="win"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#A8FF78"}}>Collect ${(parseFloat(b.toWin)+b.amt).toFixed(2)}</div>}
+                      {b.result==="loss"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#FF8080"}}>Lost ${b.amt}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
+    {tab===1&&(
+      <div>
+        <div style={{padding:"12px 12px 0",overflowX:"auto",display:"flex",gap:6,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+        {skGames.map(function(g){
+            var active = g.id===skSel;
+            var shortLabel = g.type==="rr" ? "G"+GNUM[g.id] : g.type==="se" ? (g.id==="sf1"?"SF1":"SF2") : "Final";
+            return (
+              <button key={g.id} onClick={function(){ setSkSel(skSel===g.id?null:g.id); }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
+                {shortLabel}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{padding:"14px 12px"}}>
+          {!skSel&&(
+            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:2,textAlign:"center",marginTop:20}}>SELECT A GAME ABOVE TO TRACK STATS</div>
+          )}
+          {skSel&&(function(){
+            var game = skGames.find(function(g){ return g.id===skSel; });
+            if(!game) return null;
+            var isLocked = (game.type==="se"&&!rrDone)||(game.type==="final"&&(!fin.t1||!fin.t2));
+            if(isLocked){
+              return (
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
+                  <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
+                  <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>
+                    {game.type==="se"?"UNLOCKS AFTER ROUND ROBIN":"UNLOCKS AFTER SEMIFINALS"}
+                  </div>
+                </div>
+              );
+            }
+            return <SkPanel game={game}/>;
+          })()}
+        </div>
+      </div>
+    )}
+
+    {tab===2&&(
+      <div style={{padding:"14px 12px"}}>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+          <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FF6B35"}}>STANDINGS</span>
+            <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",alignSelf:"center"}}>{rrDoneN}/{ALL_GAMES.length} GAMES FINAL</span>
+          </div>
+          {standings.map(function(t,i){
+            return (
+              <div key={t.id} style={{padding:"9px 14px",borderBottom:i<4?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",alignItems:"center",gap:10,background:i<4?t.color+"07":"transparent"}}>
+                <div style={{fontFamily:DI,fontSize:18,color:i<4?t.color:"rgba(255,255,255,0.2)",minWidth:22,textAlign:"center"}}>{i+1}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:i<4?"#fff":"rgba(255,255,255,0.35)"}}>{t.label}</div>
+                  <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.28)"}}>{t.players.join(", ")}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontFamily:DI,fontSize:14,color:i<4?t.color:"rgba(255,255,255,0.28)"}}>{t.w}-{t.l}</div>
+                  <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.28)"}}>{t.pf} pts</div>
+                </div>
+                {i===3&&<div style={{fontFamily:MO,fontSize:7,color:"#FFB800",background:"rgba(255,184,0,0.1)",border:"1px solid rgba(255,184,0,0.2)",borderRadius:3,padding:"1px 5px",flexShrink:0}}>CUT</div>}
+              </div>
+            );
+          })}
+          <div style={{padding:"6px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+            <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.18)"}}>1 court - 6 sequential games - ~54 min</span>
+          </div>
+        </div>
+        {SCHEDULE.map(function(round){
+          return (
+            <div key={round.round} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:12,overflow:"hidden"}}>
+              <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",background:"rgba(255,184,0,0.04)"}}>
+                <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>ROUND {round.round}</span>
+                <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",alignSelf:"center"}}>BYE: {getTeam(round.bye).label}</span>
+              </div>
+              {round.games.map(function(game,gi){
+                var t1=getTeam(game.t1), t2=getTeam(game.t2);
+                var sc=rrSc[game.id], done=sc&&sc.final;
+                var s1=sc?sc.t1:0, s2=sc?sc.t2:0;
+                return (
+                  <div key={game.id} style={{padding:"12px 14px",borderBottom:gi===0?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.22)",minWidth:20,flexShrink:0}}>G{GNUM[game.id]}</div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                        <div style={{width:6,height:6,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
+                        <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s1>s2?t1.color:"#fff"}}>{t1.label}</span>
+                        {done&&s1>s2&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>W</span>}
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <div style={{width:6,height:6,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
+                        <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s2>s1?t2.color:"#fff"}}>{t2.label}</span>
+                        {done&&s2>s1&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>W</span>}
+                      </div>
+                    </div>
+                    <div style={{flexShrink:0,textAlign:"right"}}>
+                      {done ? (
+                        <div style={{fontFamily:DI,fontSize:28,lineHeight:1}}>
+                          <span style={{color:s1>s2?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
+                          <span style={{color:"rgba(255,255,255,0.18)",fontSize:14,margin:"0 5px"}}>-</span>
+                          <span style={{color:s2>s1?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
+                        </div>
+                      ) : (
+                        <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    {tab===3&&(
+      <div style={{padding:"14px 12px"}}>
+        {!rrDone&&(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"16px",textAlign:"center",marginBottom:14}}>
+            <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>COMPLETE ROUND ROBIN TO SEED BRACKET</div>
+            <div style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.2)",marginTop:6}}>{rrDoneN} / {ALL_GAMES.length} games complete</div>
+          </div>
+        )}
+        {rrDone&&(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+            <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+              <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FF6B35"}}>TOP CUT SEEDS</span>
+            </div>
+            {standings.slice(0,4).map(function(t,i){
+              return (
+                <div key={t.id} style={{padding:"8px 14px",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    <span style={{fontFamily:DI,fontSize:16,color:t.color}}>#{i+1}</span>
+                    <div>
+                      <div style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{t.label}</div>
+                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.players.join(", ")}</div>
+                    </div>
+                  </div>
+                  <div style={{fontFamily:DI,fontSize:12,color:t.color}}>{t.w}-{t.l} - {t.pf}pts</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <BracketGame label="SEMIFINAL 1 - #1 vs #4" match={sf1} setMatch={setSf1} gid="sf1" isFinal={false} open={bracketOpen.sf1} onToggleOpen={function(){ toggleBracketOpen("sf1"); }}/>
+        <BracketGame label="SEMIFINAL 2 - #2 vs #3" match={sf2} setMatch={setSf2} gid="sf2" isFinal={false} open={bracketOpen.sf2} onToggleOpen={function(){ toggleBracketOpen("sf2"); }}/>
+        <BracketGame label="CHAMPIONSHIP" match={fin} setMatch={setFin} gid="fin" isFinal={true} open={bracketOpen.fin} onToggleOpen={function(){ toggleBracketOpen("fin"); }}/>
+      </div>
+    )}
+
+  </div>
+</div>
+```
+
 );
 }
 
 ReactDOM.createRoot(document.getElementById(‘root’)).render(React.createElement(App));
-
 </script>
+
 </body>
 </html>
