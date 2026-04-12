@@ -238,8 +238,6 @@ function App() {
   var amtS = useState(null); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
   var ledgerS = useState(false); var showLedger = ledgerS[0]; var setShowLedger = ledgerS[1];
   var rulesS = useState(false); var showRules = rulesS[0]; var setShowRules = rulesS[1];
-  var bracketOpenS = useState({sf1:false,sf2:false,fin:false}); var bracketOpen=bracketOpenS[0]; var setBracketOpen=bracketOpenS[1];
-  function toggleBracketOpen(gid){ setBracketOpen(function(p){ var n={}; n[gid]=!p[gid]; return Object.assign({},p,n); }); }
   useEffect(function(){ store.set("rr",rrSc); }, [rrSc]);
   useEffect(function(){ store.set("sf1",sf1); }, [sf1]);
   useEffect(function(){ store.set("sf2",sf2); }, [sf2]);
@@ -255,11 +253,25 @@ function App() {
     return 3;
   }
   function adjSt(gid,teamId,p,f,d){
-    // Only enforce cap on pts increments
     if(f==="pts" && d>0){
       var cap = gameMax(gid);
       var curTeamPts = liveTP(gid,teamId);
-      if(curTeamPts >= cap) return; // at max — block
+      if(curTeamPts >= cap){
+        if(gid==="sf1"||gid==="sf2"||gid==="fin"){
+          // Find the other team's id directly from state
+          var matchState = gid==="sf1" ? sf1 : gid==="sf2" ? sf2 : fin;
+          var otherTeamId = matchState.t1===teamId ? matchState.t2 : matchState.t1;
+          var otherPts = otherTeamId ? liveTP(gid,otherTeamId) : 0;
+          // Allow continued scoring if both teams at cap-1 or more and no one leads by 2
+          if(otherPts >= cap-1 && curTeamPts-otherPts < 2){
+            // overtime — fall through to allow
+          } else {
+            return; // capped
+          }
+        } else {
+          return; // RR cap
+        }
+      }
     }
     setPStats(function(prev){
       var k = skKey(gid,p);
@@ -268,6 +280,40 @@ function App() {
       next[f] = Math.max(0, c[f]+d);
       return Object.assign({}, prev, {[k]: Object.assign({},c,next)});
     });
+  }
+  function resetGame(gid){
+    var teams = skGames.find(function(g){ return g.id===gid; });
+    if(!teams) return;
+    var allPlayers = teams.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players); },[]);
+    setPStats(function(prev){
+      var next = Object.assign({},prev);
+      allPlayers.forEach(function(p){
+        next[skKey(gid,p)] = {pts:0,reb:0,ast:0};
+      });
+      return next;
+    });
+    // Reopen the RR game if finalized
+    if(rrSc[gid]&&rrSc[gid].final){
+      reopenRR(gid);
+    }
+    // If this is an RR game, also wipe SF and Final — standings are no longer valid
+    var isRR = ALL_GAMES.some(function(g){ return g.id===gid; });
+    if(isRR){
+      var emptyMatch = {t1:null,t2:null,s1:0,s2:0,w:null};
+      setSf1(emptyMatch);
+      setSf2(emptyMatch);
+      setFin(emptyMatch);
+      // Also clear SF/Final player stats
+      ["sf1","sf2","fin"].forEach(function(bid){
+        setPStats(function(prev){
+          var next = Object.assign({},prev);
+          ALL_PLAYERS.forEach(function(p){
+            next[skKey(bid,p)] = {pts:0,reb:0,ast:0};
+          });
+          return next;
+        });
+      });
+    }
   }
   function liveTP(gid,tid){
     return getTeam(tid).players.reduce(function(s,p){ return s+(pStats[skKey(gid,p)]&&pStats[skKey(gid,p)].pts||0); }, 0);
@@ -373,11 +419,11 @@ function App() {
   if(fin.t1&&fin.t2) skGames.push({id:"fin",label:"Final: "+getTeam(fin.t1).label+" vs "+getTeam(fin.t2).label,teams:[fin.t1,fin.t2],type:"final"});
 
   var bGames = ALL_GAMES.map(function(g){
-    return {id:g.id,label:"G"+GNUM[g.id],full:"Game "+GNUM[g.id],t1:g.t1,t2:g.t2,type:"rr",max:5};
+    return {id:g.id,label:"G"+GNUM[g.id],full:"Game "+GNUM[g.id],t1:g.t1,t2:g.t2,type:"rr",max:10};
   });
   if(sf1.t1) bGames.push({id:"sf1",label:"SF1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,type:"se",max:10});
   if(sf2.t1) bGames.push({id:"sf2",label:"SF2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,type:"se",max:10});
-  if(fin.t1&&fin.t2) bGames.push({id:"fin",label:"Final",full:"Championship",t1:fin.t1,t2:fin.t2,type:"final",max:20});
+  if(fin.t1&&fin.t2) bGames.push({id:"fin",label:"Final",full:"Championship",t1:fin.t1,t2:fin.t2,type:"final",max:10});
 
   var selG = bGames.find(function(g){ return g.id===bGame; }) || bGames[0];
 
@@ -387,7 +433,12 @@ function App() {
   var totalLegs = stSlip.length + paSlip.length;
 
   function paBlock(leg){
-    if(paSlip.length>=4 && !haPa(leg.id)) return "MAX 4 LEGS";
+    if(paSlip.length>=3 && !haPa(leg.id)) return "MAX 3 LEGS";
+    // All parlay legs must be from the same game
+    if(paSlip.length>0 && !haPa(leg.id)){
+      var existingGame = paSlip[0].gid;
+      if(leg.gid !== existingGame) return "SAME GAME ONLY";
+    }
     var idx = leg.id.indexOf("_prop_");
     if(idx>=0){
       var after = leg.id.slice(idx+6);
@@ -411,7 +462,6 @@ function App() {
       setStSlip(function(s){ return s.filter(function(l){ return l.id!==leg.id; }); });
     } else {
       setStSlip(function(s){ return s.concat([leg]); });
-      setSlipOpen(true);
     }
   }
   function togglePa(leg){
@@ -443,8 +493,31 @@ function App() {
 
   var bettorIsBlocked = bettor && blockedBettors[bettor];
 
+  // Check if bettor already has 2 parlays on this same game (max 2 per person per game)
+  var parlayGameId = paSlip.length > 0 ? paSlip[0].gid : null;
+  var bettorParlayCount = bettor && parlayGameId ? bets.filter(function(b){
+    return b.isParlay && b.bettor===bettor && b.legs && b.legs.length>0 && b.legs[0].gid===parlayGameId;
+  }).length : 0;
+  var bettorHasParlay = bettorParlayCount >= 2;
+
   function lockBets(){
     if(!bettor||!slipAmt) return;
+    if(paSlip.length && bettorHasParlay) return;
+    // Block if parlay legs span multiple games
+    if(paSlip.length>0){
+      var parlayGid = paSlip[0].gid;
+      var crossGame = paSlip.some(function(l){ return l.gid!==parlayGid; });
+      if(crossGame) return;
+    }
+    // Block if any game in the slip has started or finalized
+    var allLegs = stSlip.concat(paSlip);
+    var gameStarted = allLegs.some(function(leg){
+      var gid = leg.gid;
+      var fin2 = (rrSc[gid]&&rrSc[gid].final)||(gid==="sf1"&&!!sf1.w)||(gid==="sf2"&&!!sf2.w)||(gid==="fin"&&!!fin.w);
+      var hasStats = ALL_PLAYERS.some(function(p){ var s=pStats[skKey(gid,p)]; return s&&(s.pts>0||s.reb>0||s.ast>0); });
+      return fin2||hasStats;
+    });
+    if(gameStarted) return;
     // Build current game results inline
     var gr = {};
     ALL_GAMES.forEach(function(g){
@@ -475,7 +548,7 @@ function App() {
   var totW = bets.reduce(function(s,b){ return s+b.amt; }, 0);
   var totP = bets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; }, 0);
   var maxA = selG ? selG.max : 5;
-  var amts = maxA===5 ? [1,2,3,5] : maxA===10 ? [2,5,10] : [5,10,15,20];
+  var amts = [1,5,10];
 
   // ── Sub-components ─────────────────────────────────────────────────────────
   function BetBtn(props) {
@@ -559,7 +632,7 @@ function App() {
     return (
       <div>
         <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,200,100,0.5)",letterSpacing:1,marginBottom:12,padding:"6px 10px",background:"rgba(255,184,0,0.05)",borderRadius:6,border:"1px solid rgba(255,184,0,0.1)"}}>
-          Props go to your PARLAY slip. One prop per player. Max 6 legs.
+          Same-game parlay only. Max 3 legs.
         </div>
         {teams.map(function(team){
           return (
@@ -621,9 +694,82 @@ function App() {
     var game = props.game;
     var allP = game.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players.map(function(p){ return {name:p,team:getTeam(tid)}; })); },[]);
     var cap = gameMax(game.id);
+
+    function renderFinalizeBar(){
+      var t1=getTeam(game.teams[0]), t2=getTeam(game.teams[1]);
+      var s1=liveTP(game.id,t1.id), s2=liveTP(game.id,t2.id);
+      var isBracket = game.type==="se"||game.type==="final";
+      function hasWinner(){
+        if(!isBracket) return s1!==s2 && (s1>=cap||s2>=cap);
+        if(s1>=cap && s1-s2>=2) return true;
+        if(s2>=cap && s2-s1>=2) return true;
+        return false;
+      }
+      var alreadyFinal = (game.type==="rr" && rrSc[game.id]&&rrSc[game.id].final)
+        || (game.id==="sf1"&&!!sf1.w)
+        || (game.id==="sf2"&&!!sf2.w)
+        || (game.id==="fin"&&!!fin.w);
+      var winner = hasWinner() ? (s1>s2?t1:t2) : null;
+      var canFinalize = !alreadyFinal && !!winner;
+      function doFinalize(){
+        if(!canFinalize) return;
+        var w = s1>s2?t1.id:t2.id;
+        if(game.type==="rr"){
+          finalizeRR(game.id);
+        } else if(game.id==="sf1"){
+          setSf1(function(mm){ return Object.assign({},mm,{w:w}); });
+          setFin(function(f){ return Object.assign({},f,{t1:w}); });
+        } else if(game.id==="sf2"){
+          setSf2(function(mm){ return Object.assign({},mm,{w:w}); });
+          setFin(function(f){ return Object.assign({},f,{t2:w}); });
+        } else if(game.id==="fin"){
+          setFin(function(mm){ return Object.assign({},mm,{w:w}); });
+        }
+      }
+      function doReopen(){
+        if(game.type==="rr"){
+          reopenRR(game.id);
+        } else if(game.id==="sf1"){
+          setSf1(function(mm){ return Object.assign({},mm,{w:null}); });
+          setFin(function(f){ return Object.assign({},f,{t1:null,w:null}); });
+        } else if(game.id==="sf2"){
+          setSf2(function(mm){ return Object.assign({},mm,{w:null}); });
+          setFin(function(f){ return Object.assign({},f,{t2:null,w:null}); });
+        } else if(game.id==="fin"){
+          setFin(function(mm){ return Object.assign({},mm,{w:null}); });
+        }
+      }
+      var tied = isBracket && s1===s2 && s1>=6;
+      var statusMsg = alreadyFinal
+        ? "FINAL: "+(s1>s2?t1.label:t2.label)+" wins "+Math.max(s1,s2)+"-"+Math.min(s1,s2)
+        : tied ? "TIED AT "+s1+" - KEEP PLAYING"
+        : canFinalize ? null
+        : isBracket ? "FIRST TO "+cap+" (WIN BY 2)" : "FIRST TO "+cap;
+      if(alreadyFinal){
+        return (
+          <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
+              <span style={{fontFamily:MO,fontSize:9,color:"#A8FF78",letterSpacing:1}}>{statusMsg}</span>
+            </div>
+            <button onClick={doReopen} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 8px",cursor:"pointer"}}>reopen</button>
+          </div>
+        );
+      }
+      return (
+        <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+          {!canFinalize&&statusMsg&&(
+            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>
+          )}
+          <button onClick={doFinalize} disabled={!canFinalize} style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}>
+            FINALIZE RESULT
+          </button>
+        </div>
+      );
+    }
     return (
       <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden"}}>
-        {/* Game header */}
+        
         <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,107,53,0.06)"}}>
           <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:"#FF6B35"}}>{game.label}</div>
           <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>FIRST TO {cap}</div>
@@ -632,7 +778,12 @@ function App() {
           {game.teams.map(function(tid){
             var team = getTeam(tid);
             var teamPts = liveTP(game.id,team.id);
-            var atCap = teamPts >= cap;
+            var isBracketGame = game.id==="sf1"||game.id==="sf2"||game.id==="fin";
+            var otherTid = game.teams.find(function(t){ return t!==tid; });
+            var otherPts = otherTid ? liveTP(game.id,otherTid) : 0;
+            // In bracket OT (both >= cap-1, lead < 2), don't treat as capped
+            var inOvertime = isBracketGame && teamPts>=cap-1 && otherPts>=cap-1 && Math.abs(teamPts-otherPts)<2;
+            var atCap = teamPts >= cap && !inOvertime;
             return (
               <div key={tid} style={{marginBottom:14}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8,paddingBottom:6,borderBottom:"1px solid "+team.color+"25"}}>
@@ -676,132 +827,8 @@ function App() {
             );
           })}
         </div>
-        {/* Finalize / Reopen for RR games */}
-        {game.type==="rr"&&(
-          <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-            {(function(){
-              var sc = rrSc[game.id] || {t1:0,t2:0,final:false};
-              var t1=getTeam(game.teams[0]), t2=getTeam(game.teams[1]);
-              var s1=liveTP(game.id,t1.id), s2=liveTP(game.id,t2.id);
-              var canFinalize = !sc.final && s1!==s2;
-              if(sc.final){
-                return (
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
-                      <span style={{fontFamily:MO,fontSize:9,color:"#A8FF78",letterSpacing:1}}>FINAL: {s1>s2?t1.label:t2.label} wins {s1>s2?s1:s2}-{s1>s2?s2:s1}</span>
-                    </div>
-                    <button onClick={function(){ reopenRR(game.id); }} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 8px",cursor:"pointer"}}>reopen</button>
-                  </div>
-                );
-              }
-              return (
-                <button
-                  onClick={function(){ if(canFinalize) finalizeRR(game.id); }}
-                  disabled={!canFinalize}
-                  style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}
-                >
-                  {s1===s2&&s1>0?"TIED - KEEP PLAYING":"FINALIZE RESULT"}
-                </button>
-              );
-            })()}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function BracketGame(props) {
-    var label=props.label, match=props.match, setMatch=props.setMatch, gid=props.gid, isFinal=props.isFinal;
-    var open=props.open, onToggleOpen=props.onToggleOpen;
-    var t1 = match.t1 ? getTeam(match.t1) : null;
-    var t2 = match.t2 ? getTeam(match.t2) : null;
-    var ac = isFinal ? "#FFB800" : "#A78BFA";
-    var canDone = t1&&t2&&!match.w&&match.s1!==match.s2;
-    function doFinal(){
-      if(!canDone) return;
-      var w = match.s1>match.s2 ? match.t1 : match.t2;
-      setMatch(function(m){ return Object.assign({},m,{w:w}); });
-      if(!isFinal){
-        if(gid==="sf1") setFin(function(f){ return Object.assign({},f,{t1:w}); });
-        if(gid==="sf2") setFin(function(f){ return Object.assign({},f,{t2:w}); });
-      }
-    }
-    function doUndo(){
-      setMatch(function(m){ return Object.assign({},m,{w:null}); });
-      if(!isFinal){
-        if(gid==="sf1") setFin(function(f){ return Object.assign({},f,{t1:null,w:null}); });
-        if(gid==="sf2") setFin(function(f){ return Object.assign({},f,{t2:null,w:null}); });
-      }
-    }
-    return (
-      <div style={{background:"rgba(255,255,255,0.04)",border:isFinal?"1px solid rgba(255,184,0,0.25)":"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginBottom:12}}>
-        <div style={{padding:"8px 14px",borderBottom:"1px solid "+ac+"20",background:ac+"06",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:ac}}>{label}</span>
-          <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)"}}>TO 7 - WIN BY 2</span>
-        </div>
-        <div style={{padding:"10px 14px"}}>
-          {(!t1||!t2) ? (
-            <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)",textAlign:"center",padding:"8px 0"}}>
-              {rrDone?"Awaiting semifinal results":"Complete round robin first"}
-            </div>
-          ) : (
-            <div>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                <div style={{width:7,height:7,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:DI,fontSize:14,color:match.w===t1.id?t1.color:"#fff"}}>{t1.label}</div>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)"}}>{t1.players.join(", ")}</div>
-                </div>
-                {match.w===t1.id && <span style={{fontFamily:MO,fontSize:9,color:t1.color}}>wins</span>}
-              </div>
-              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.15)",marginLeft:13,marginBottom:4}}>vs</div>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                <div style={{width:7,height:7,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:DI,fontSize:14,color:match.w===t2.id?t2.color:"#fff"}}>{t2.label}</div>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)"}}>{t2.players.join(", ")}</div>
-                </div>
-                {match.w===t2.id && <span style={{fontFamily:MO,fontSize:9,color:t2.color}}>wins</span>}
-              </div>
-              {(open||match.w) && (
-                <div style={{padding:12,background:"rgba(0,0,0,0.3)",borderRadius:10}}>
-                  <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:16,marginBottom:8}}>
-                    <div style={{textAlign:"center"}}>
-                      <div style={{fontFamily:MO,fontSize:8,color:t1.color,marginBottom:4}}>{t1.label}</div>
-                      <span style={{fontFamily:DI,fontSize:40,color:t1.color,lineHeight:1}}>{match.s1}</span>
-                    </div>
-                    <span style={{fontFamily:MO,fontSize:16,color:"rgba(255,255,255,0.2)"}}>-</span>
-                    <div style={{textAlign:"center"}}>
-                      <div style={{fontFamily:MO,fontSize:8,color:t2.color,marginBottom:4}}>{t2.label}</div>
-                      <span style={{fontFamily:DI,fontSize:40,color:t2.color,lineHeight:1}}>{match.s2}</span>
-                    </div>
-                  </div>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",textAlign:"center",marginBottom:10}}>Live from Scorekeeper tab</div>
-                  {match.w ? (
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontFamily:DI,fontSize:13,color:getTeam(match.w).color}}>
-                        {isFinal?"Champion: ":"Advances: "}{getTeam(match.w).label}
-                      </span>
-                      <button onClick={doUndo} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 7px",cursor:"pointer"}}>reopen</button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={doFinal}
-                      disabled={!canDone}
-                      style={{width:"100%",padding:10,borderRadius:8,cursor:canDone?"pointer":"default",background:canDone?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canDone?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canDone?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}
-                    >
-                      {canDone?"FINALIZE":(match.s1===match.s2&&match.s1>0?"TIED - KEEP PLAYING":"FINALIZE")}
-                    </button>
-                  )}
-                </div>
-              )}
-              {!open&&!match.w&&(
-                <button onClick={function(){ onToggleOpen(); }} style={{width:"100%",padding:"8px",borderRadius:8,cursor:"pointer",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.45)",fontFamily:DI,fontSize:11,letterSpacing:2,marginTop:4}}>SCORE</button>
-              )}
-            </div>
-          )}
-        </div>
+        
+        {renderFinalizeBar()}
       </div>
     );
   }
@@ -901,7 +928,10 @@ function App() {
               {bGames.map(function(g){
                 var active = g.id===(bGame||(bGames[0]&&bGames[0].id));
                 return (
-                  <button key={g.id} onClick={function(){ setBGame(g.id); setBView("lines"); }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
+                  <button key={g.id} onClick={function(){
+                    setStSlip([]); setPaSlip([]); setSlipOpen(false);
+                    setBGame(g.id); setBView("lines");
+                  }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
                     {g.label}
                   </button>
                 );
@@ -910,6 +940,73 @@ function App() {
 
             {selG&&(
               <div>
+                {bets.length>0&&(function(){
+                  var gid = selG.id;
+                  var gameBets = bets.filter(function(b){
+                    if(b.isParlay) return b.legs && b.legs.length>0 && b.legs[0].gid===gid;
+                    return b.gameId===gid;
+                  });
+                  if(!gameBets.length) return null;
+                  var gW = gameBets.reduce(function(s,b){ return s+b.amt; }, 0);
+                  var gP = gameBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; }, 0);
+                  var gBookPL = (gameBets.filter(function(b){ return b.result==="loss"; }).reduce(function(s,b){ return s+b.amt; },0) - gameBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin); },0)).toFixed(2);
+                  return (
+                    <div style={{padding:"10px 12px 0"}}>
+                      <button onClick={function(){ setShowLedger(function(p){ return !p; }); }} style={{width:"100%",padding:"10px 14px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:"#FFB800"}}>BET LEDGER - {gameBets.length} BET{gameBets.length!==1?"S":""}</span>
+                        <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{showLedger?"HIDE":"SHOW"}</span>
+                      </button>
+                      {showLedger&&(
+                        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginTop:8}}>
+                          <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                              {[{l:"WAGERED",v:"$"+gW,c:"#FF6B35"},{l:"PAYOUTS",v:"$"+gP.toFixed(2),c:"#A8FF78"},{l:"BOOK P/L",v:"$"+gBookPL,c:"#FFB800"}].map(function(s,i){
+                                return <div key={i} style={{textAlign:"center"}}><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",marginBottom:2}}>{s.l}</div><div style={{fontFamily:DI,fontSize:16,color:s.c}}>{s.v}</div></div>;
+                              })}
+                            </div>
+                          </div>
+                          {gameBets.map(function(b,i){
+                            // Determine if this bet's game has started (has stats) — block deletion if pending
+                            var betGid = b.isParlay && b.legs && b.legs.length>0 ? b.legs[0].gid : b.gameId;
+                            var gameHasStats = ALL_PLAYERS.some(function(p){
+                              var s = pStats[skKey(betGid,p)];
+                              return s && (s.pts>0||s.reb>0||s.ast>0);
+                            });
+                            var gameIsFinalized = (rrSc[betGid]&&rrSc[betGid].final)||(betGid==="sf1"&&!!sf1.w)||(betGid==="sf2"&&!!sf2.w)||(betGid==="fin"&&!!fin.w);
+                            var canDelete = !gameHasStats && !gameIsFinalized;
+                            return (
+                              <div key={b.id} style={{padding:"10px 14px",borderBottom:i<gameBets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                                  <div>
+                                    <span style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{b.bettor}</span>
+                                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",marginLeft:8}}>{b.ts}</span>
+                                  </div>
+                                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                    <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800"}}>{b.result.toUpperCase()}</div>
+                                    {canDelete
+                                      ? <button onClick={function(){ setBets(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>
+                                      : !gameIsFinalized && <span style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.15)",letterSpacing:1}}>LOCKED</span>
+                                    }
+                                  </div>
+                                </div>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                  <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.55)",flex:1,marginRight:8,lineHeight:1.4}}>{b.pick}</span>
+                                  <span style={{fontFamily:DI,fontSize:13,flexShrink:0}}>
+                                    <span style={{color:"#FF6B35"}}>${b.amt}</span>
+                                    <span style={{color:"rgba(255,255,255,0.2)",margin:"0 4px"}}>to</span>
+                                    <span style={{color:b.result==="loss"?"#FF8080":"#A8FF78"}}>${b.toWin}</span>
+                                  </span>
+                                </div>
+                                {b.result==="win"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#A8FF78"}}>Collect ${(parseFloat(b.toWin)+b.amt).toFixed(2)}</div>}
+                                {b.result==="loss"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#FF8080"}}>Lost ${b.amt}</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 <div style={{padding:"14px 14px 10px"}}>
                   <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
                     {selG.full.toUpperCase()} - {selG.type==="rr"?"FIRST TO 3":"FIRST TO 7, WIN BY 2"} - MAX ${selG.max}
@@ -941,8 +1038,34 @@ function App() {
                   <button onClick={function(){ setBView("props"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="props"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="props"?"2px solid #FF6B35":"2px solid transparent"}}>PLAYER PROPS</button>
                 </div>
                 <div style={{padding:"14px 12px"}}>
-                  {bView==="lines"&&<GameLines game={selG}/>}
-                  {bView==="props"&&<PlayerProps game={selG}/>}
+                  {(function(){
+                    // Lock betting once any stats are tracked OR game is finalized
+                    var gid = selG.id;
+                    var isFinalized = (rrSc[gid]&&rrSc[gid].final) || (gid==="sf1"&&!!sf1.w) || (gid==="sf2"&&!!sf2.w) || (gid==="fin"&&!!fin.w);
+                    var hasStats = ALL_PLAYERS.some(function(p){
+                      var s = pStats[skKey(gid,p)];
+                      return s && (s.pts>0||s.reb>0||s.ast>0);
+                    });
+                    if(isFinalized||hasStats){
+                      return (
+                        <div style={{textAlign:"center",padding:"24px 16px"}}>
+                          <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
+                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>
+                            {isFinalized?"GAME FINALIZED":"GAME IN PROGRESS"}
+                          </div>
+                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>
+                            {isFinalized?"Betting is closed for this game.":"Betting closes once scoring begins."}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div>
+                        {bView==="lines"&&<GameLines game={selG}/>}
+                        {bView==="props"&&<PlayerProps game={selG}/>}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -963,7 +1086,7 @@ function App() {
                     <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"sticky",top:0,background:"#0d0e1a",zIndex:10}}>
                       <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"#fff"}}>BET SLIP ({totalLegs})</span>
                       <div style={{display:"flex",gap:8}}>
-                        <button onClick={function(){ setStSlip([]); setPaSlip([]); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>CLEAR</button>
+                        <button onClick={function(){ setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>CLEAR</button>
                         <button onClick={function(){ setSlipOpen(false); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>HIDE</button>
                       </div>
                     </div>
@@ -1012,7 +1135,7 @@ function App() {
                               <span style={{fontFamily:DI,fontSize:20,color:"#FFB800"}}>{parlayOdds(paSlip)}</span>
                             </div>
                           )}
-                          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Props only - Max 4 legs - One prop per player</div>
+          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Same-game parlay only. Max 4 legs.</div>
                         </div>
                       )}
                       <div style={{marginBottom:12}}>
@@ -1047,7 +1170,12 @@ function App() {
                           <option value="">Select player...</option>
                           {ALL_PLAYERS.map(function(p){
                             var blocked = !!blockedBettors[p];
-                            return <option key={p} value={p} disabled={blocked}>{p}{blocked?" (playing)":""}</option>;
+                            var pParlayCount = parlayGameId ? bets.filter(function(b){
+                              return b.isParlay && b.bettor===p && b.legs && b.legs.length>0 && b.legs[0].gid===parlayGameId;
+                            }).length : 0;
+                            var maxParlays = pParlayCount >= 2;
+                            var label = blocked ? p+" (playing)" : maxParlays ? p+" (2 parlays placed)" : pParlayCount===1 ? p+" (1/2 parlays)" : p;
+                            return <option key={p} value={p} disabled={blocked||maxParlays}>{label}</option>;
                           })}
                         </select>
                         {bettorIsBlocked&&(
@@ -1055,11 +1183,16 @@ function App() {
                             {bettor} is playing in one of these games and can't bet on it.
                           </div>
                         )}
+                        {!bettorIsBlocked&&bettorHasParlay&&(
+                          <div style={{marginTop:6,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
+                            {bettor} has already placed 2 parlays on this game.
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={lockBets}
-                        disabled={!slipAmt||!bettor||!!bettorIsBlocked}
-                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:slipAmt&&bettor&&!bettorIsBlocked?"pointer":"default",background:slipAmt&&bettor&&!bettorIsBlocked?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:slipAmt&&bettor&&!bettorIsBlocked?"#fff":"rgba(255,255,255,0.2)"}}
+                        disabled={!slipAmt||!bettor||!!bettorIsBlocked||(paSlip.length>0&&!!bettorHasParlay)}
+                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"pointer":"default",background:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"#fff":"rgba(255,255,255,0.2)"}}
                       >
                         PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
                       </button>
@@ -1069,57 +1202,14 @@ function App() {
               </div>
             )}
 
-            {bets.length>0&&(
-              <div style={{padding:"12px 12px 0"}}>
-                <button onClick={function(){ setShowLedger(function(p){ return !p; }); }} style={{width:"100%",padding:"10px 14px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:"#FFB800"}}>BET LEDGER - {bets.length} BETS</span>
-                  <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{showLedger?"HIDE":"SHOW"}</span>
-                </button>
-                {showLedger&&(
-                  <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginTop:8}}>
-                    <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,flex:1}}>
-                        {[{l:"WAGERED",v:"$"+totW,c:"#FF6B35"},{l:"PAYOUTS",v:"$"+totP.toFixed(2),c:"#A8FF78"},{l:"BOOK P/L",v:"$"+(bets.filter(function(b){ return b.result==="loss"; }).reduce(function(s,b){ return s+b.amt; },0)-bets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin); },0)).toFixed(2),c:"#FFB800"}].map(function(s,i){
-                          return <div key={i} style={{textAlign:"center"}}><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",marginBottom:2}}>{s.l}</div><div style={{fontFamily:DI,fontSize:16,color:s.c}}>{s.v}</div></div>;
-                        })}
-                      </div>
-                      <button onClick={function(){ setBets([]); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer",marginLeft:12,flexShrink:0}}>CLEAR</button>
-                    </div>
-                    {bets.map(function(b,i){
-                      return (
-                        <div key={b.id} style={{padding:"10px 14px",borderBottom:i<bets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                            <div>
-                              <span style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{b.bettor}</span>
-                              <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",marginLeft:8}}>{b.ts}</span>
-                            </div>
-                            <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800",alignSelf:"center"}}>{b.result.toUpperCase()}</div>
-                          </div>
-                          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginBottom:3}}>{b.game}</div>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                            <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.55)",flex:1,marginRight:8,lineHeight:1.4}}>{b.pick}</span>
-                            <span style={{fontFamily:DI,fontSize:13,flexShrink:0}}>
-                              <span style={{color:"#FF6B35"}}>${b.amt}</span>
-                              <span style={{color:"rgba(255,255,255,0.2)",margin:"0 4px"}}>to</span>
-                              <span style={{color:b.result==="loss"?"#FF8080":"#A8FF78"}}>${b.toWin}</span>
-                            </span>
-                          </div>
-                          {b.result==="win"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#A8FF78"}}>Collect ${(parseFloat(b.toWin)+b.amt).toFixed(2)}</div>}
-                          {b.result==="loss"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#FF8080"}}>Lost ${b.amt}</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
         {tab===1&&(
           <div>
-            <div style={{padding:"12px 12px 0",overflowX:"auto",display:"flex",gap:6,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-            {skGames.map(function(g){
+            <div style={{padding:"12px 12px 0",display:"flex",alignItems:"center",gap:6}}>
+              <div style={{overflowX:"auto",display:"flex",gap:6,flex:1,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+              {skGames.map(function(g){
                 var active = g.id===skSel;
                 var shortLabel = g.type==="rr" ? "G"+GNUM[g.id] : g.type==="se" ? (g.id==="sf1"?"SF1":"SF2") : "Final";
                 return (
@@ -1128,6 +1218,12 @@ function App() {
                   </button>
                 );
               })}
+              </div>
+              {skSel&&(
+                <button onClick={function(){ resetGame(skSel); }} style={{flexShrink:0,padding:"7px 12px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
+                  RESET
+                </button>
+              )}
             </div>
             <div style={{padding:"14px 12px"}}>
               {!skSel&&(
@@ -1229,35 +1325,60 @@ function App() {
         {tab===3&&(
           <div style={{padding:"14px 12px"}}>
             {!rrDone&&(
-              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"16px",textAlign:"center",marginBottom:14}}>
+              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"20px 16px",textAlign:"center",marginBottom:12}}>
                 <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>COMPLETE ROUND ROBIN TO SEED BRACKET</div>
                 <div style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.2)",marginTop:6}}>{rrDoneN} / {ALL_GAMES.length} games complete</div>
               </div>
             )}
-            {rrDone&&(
-              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
-                <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-                  <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FF6B35"}}>TOP CUT SEEDS</span>
-                </div>
-                {standings.slice(0,4).map(function(t,i){
-                  return (
-                    <div key={t.id} style={{padding:"8px 14px",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-                        <span style={{fontFamily:DI,fontSize:16,color:t.color}}>#{i+1}</span>
-                        <div>
-                          <div style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{t.label}</div>
-                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{t.players.join(", ")}</div>
+            {[
+              {label:"SEMIFINAL 1",sublabel:"#1 vs #4",match:sf1,ac:"#A78BFA",isFinal:false},
+              {label:"SEMIFINAL 2",sublabel:"#2 vs #3",match:sf2,ac:"#A78BFA",isFinal:false},
+              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",isFinal:true},
+            ].map(function(row,ri){
+              var t1 = row.match.t1 ? getTeam(row.match.t1) : null;
+              var t2 = row.match.t2 ? getTeam(row.match.t2) : null;
+              var done = !!row.match.w;
+              var s1 = row.match.s1||0, s2 = row.match.s2||0;
+              return (
+                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(row.isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:12,overflow:"hidden"}}>
+                  <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:row.isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
+                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:row.ac}}>{row.label}</span>
+                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)"}}>{row.isFinal?"TO 7 - WIN BY 2":row.sublabel}</span>
+                  </div>
+                  {!t1||!t2 ? (
+                    <div style={{padding:"16px 14px",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>
+                      {rrDone ? "AWAITING SEMIFINAL RESULTS" : "PENDING ROUND ROBIN"}
+                    </div>
+                  ) : (
+                    <div style={{padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{flex:1}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                          <div style={{width:6,height:6,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
+                          <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t1.id?t1.color:"#fff"}}>{t1.label}</span>
+                          {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>{row.isFinal?"CHAMP":"W"}</span>}
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:6,height:6,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
+                          <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t2.id?t2.color:"#fff"}}>{t2.label}</span>
+                          {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>{row.isFinal?"CHAMP":"W"}</span>}
                         </div>
                       </div>
-                      <div style={{fontFamily:DI,fontSize:12,color:t.color}}>{t.w}-{t.l} - {t.pf}pts</div>
+                      <div style={{flexShrink:0,textAlign:"right"}}>
+                        {done ? (
+                          <div style={{fontFamily:DI,fontSize:28,lineHeight:1}}>
+                            <span style={{color:row.match.w===t1.id?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
+                            <span style={{color:"rgba(255,255,255,0.18)",fontSize:14,margin:"0 5px"}}>-</span>
+                            <span style={{color:row.match.w===t2.id?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
+                          </div>
+                        ) : (
+                          <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
+                        )}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-            <BracketGame label="SEMIFINAL 1 - #1 vs #4" match={sf1} setMatch={setSf1} gid="sf1" isFinal={false} open={bracketOpen.sf1} onToggleOpen={function(){ toggleBracketOpen("sf1"); }}/>
-            <BracketGame label="SEMIFINAL 2 - #2 vs #3" match={sf2} setMatch={setSf2} gid="sf2" isFinal={false} open={bracketOpen.sf2} onToggleOpen={function(){ toggleBracketOpen("sf2"); }}/>
-            <BracketGame label="CHAMPIONSHIP" match={fin} setMatch={setFin} gid="fin" isFinal={true} open={bracketOpen.fin} onToggleOpen={function(){ toggleBracketOpen("fin"); }}/>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
