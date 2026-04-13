@@ -130,7 +130,7 @@ function calcOdds(t1id,t2id,type){
   else if(diff>-3){ml1=145;ml2=-175;}
   else{ml1=230;ml2=-280;}
   var rr = type==="rr";
-  return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?4.5:12.5, sfav:diff>=0?1:2};
+  return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
   // rO/rU = reb over/under odds. Heavy over lean across the board — lots of bricks = lots of boards
@@ -197,8 +197,8 @@ function resolveB(bet,gr,statMap){
   if(id.slice(-4)==="_sp1") return sfav===1 ? ((s1-s2)>spread?"win":"loss") : ((s2-s1)<spread?"win":"loss");
   if(id.slice(-4)==="_sp2") return sfav===2 ? ((s2-s1)>spread?"win":"loss") : ((s1-s2)<spread?"win":"loss");
   var tot = s1+s2;
-  if(id.slice(-4)==="_ouo") return tot>ou?"win":"loss";
-  if(id.slice(-4)==="_ouu") return tot<ou?"win":"loss";
+  if(id.slice(-4)==="_ouo") return s1>ou?"win":"loss";
+  if(id.slice(-4)==="_ouu") return s2>ou?"win":"loss";
   if(id.indexOf("_prop_")>=0){
     var after2 = id.split("_prop_")[1];
     var dir2 = after2.slice(after2.lastIndexOf("_")+1);
@@ -577,7 +577,7 @@ function App() {
     var gl = game.full;
     var rows = [
       {team:t1, ml:o.ml1, sp:o.sfav===1?"-"+o.spread:"+"+o.spread, spk:"sp1", mlk:"ml1", ouId:game.id+"_ouo", ouLabel:"O "+o.ou},
-      {team:t2, ml:o.ml2, sp:o.sfav===2?"-"+o.spread:"+"+o.spread, spk:"sp2", mlk:"ml2", ouId:game.id+"_ouu", ouLabel:"U "+o.ou}
+      {team:t2, ml:o.ml2, sp:o.sfav===2?"-"+o.spread:"+"+o.spread, spk:"sp2", mlk:"ml2", ouId:game.id+"_ouu", ouLabel:"O "+o.ou}
     ];
     return (
       <div>
@@ -585,7 +585,7 @@ function App() {
           <div/>
           <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>MONEYLINE</div>
           <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>SPREAD</div>
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>TOTAL</div>
+          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>O/U</div>
         </div>
         {rows.map(function(row,ri){
           return (
