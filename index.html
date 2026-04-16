@@ -41,7 +41,7 @@ select option{background:#111;color:#fff}
 var useState = React.useState;
 var useEffect = React.useEffect;
 
-// ── Constants ──────────────────────────────────────────────────────────────
+//
 var TEAMS = [
   {id:1, label:"Team 1", players:["Jacob","Chappy","Dan"],    color:"#FF6B35"},
   {id:2, label:"Team 2", players:["Liam","Adam","Jack"],      color:"#4ECDC4"},
@@ -70,7 +70,7 @@ var PINS = {
 var TABS = ["Betting","Scorekeeper","Round Robin","Bracket"];
 var TAB_ICONS = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC0","\uD83C\uDFC6"];
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+//
 var lsGet = function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
 var lsSet = function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
 function fbSet(key, value){
@@ -105,7 +105,7 @@ function calcOdds(t1id,t2id,type){
   return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
-  // rO/rU = reb over/under odds. Heavy over lean across the board — lots of bricks = lots of boards
+  // rO/rU = reb over/under odds. Heavy over lean across the board   lots of bricks = lots of boards
   Jacob: {rr:{pts:1.5,reb:1.5,ast:1.5,pO:-150,pU:130,rO:-200,rU:165,aO:-120,aU:100},se:{pts:4.5,reb:3.5,ast:2.5,pO:-145,pU:125,rO:-210,rU:175,aO:-120,aU:100}},
   Nathan:{rr:{pts:1.5,reb:0.5,ast:1.5,pO:-135,pU:115,rO:-175,rU:145,aO:-125,aU:105},se:{pts:3.5,reb:1.5,ast:2.5,pO:-130,pU:110,rO:-185,rU:155,aO:-120,aU:100}},
   Liam:  {rr:{pts:1.5,reb:2.5,ast:0.5,pO:-130,pU:110,rO:-220,rU:180,aO:-110,aU:-110},se:{pts:3.5,reb:4.5,ast:0.5,pO:-125,pU:105,rO:-230,rU:190,aO:-110,aU:-110}},
@@ -185,7 +185,7 @@ function resolveB(bet,gr,statMap){
   return bet.result;
 }
 
-// ── App ────────────────────────────────────────────────────────────────────
+//
 function App() {
   var MO = "'DM Mono',monospace";
   var DI = "'Oswald',sans-serif";
@@ -216,7 +216,7 @@ function App() {
   var loginPinS = useState(""); var loginPin = loginPinS[0]; var setLoginPin = loginPinS[1];
   var loginErrS = useState(false); var loginErr = loginErrS[0]; var setLoginErr = loginErrS[1];
 
-  // ── Firebase Realtime Database listeners ───────────────────────────────────
+  //
   useEffect(function(){
     var db = window.__db;
     var keys = [
@@ -245,7 +245,7 @@ function App() {
   // loggedIn stays local per device
   useEffect(function(){ lsSet("loggedIn",loggedIn); }, [loggedIn]);
 
-  // ── Firebase write wrappers ─────────────────────────────────────────────────
+  //
   function setRrScFb(updater){ setRrSc(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("rr",next); return next; }); }
   function setSf1Fb(updater){ setSf1(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf1",next); return next; }); }
   function setSf2Fb(updater){ setSf2(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf2",next); return next; }); }
@@ -272,7 +272,7 @@ function App() {
           var otherPts = otherTeamId ? liveTP(gid,otherTeamId) : 0;
           // Allow continued scoring if both teams at cap-1 or more and no one leads by 2
           if(otherPts >= cap-1 && curTeamPts-otherPts < 2){
-            // overtime — fall through to allow
+            // overtime   fall through to allow
           } else {
             return; // capped
           }
@@ -304,7 +304,7 @@ function App() {
     if(rrSc[gid]&&rrSc[gid].final){
       reopenRR(gid);
     }
-    // If this is an RR game, also wipe SF and Final — standings are no longer valid
+    // If this is an RR game, also wipe SF and Final   standings are no longer valid
     var isRR = ALL_GAMES.some(function(g){ return g.id===gid; });
     if(isRR){
       var emptyMatch = {t1:null,t2:null,s1:0,s2:0,w:null};
@@ -426,7 +426,7 @@ function App() {
   skGames.push({id:"sf2",label:sf2.t1&&sf2.t2?"SF2: "+getTeam(sf2.t1).label+" vs "+getTeam(sf2.t2).label:"SF2: TBD vs TBD",teams:sf2.t1&&sf2.t2?[sf2.t1,sf2.t2]:[],type:"se",prereqLocked:!rrDone});
   skGames.push({id:"fin",label:fin.t1&&fin.t2?"Final: "+getTeam(fin.t1).label+" vs "+getTeam(fin.t2).label:"Final: TBD vs TBD",teams:fin.t1&&fin.t2?[fin.t1,fin.t2]:[],type:"final",prereqLocked:!(sf1.w&&sf2.w)});
 
-  // ── Betting helpers ────────────────────────────────────────────────────────
+  //
   function getPlayersInGame(gid){
     var rg = ALL_GAMES.find(function(g){ return g.id===gid; });
     if(rg) return getTeam(rg.t1).players.concat(getTeam(rg.t2).players);
@@ -521,7 +521,7 @@ function App() {
   var maxA = selG ? selG.max : 5;
   var amts = [1,5,10];
 
-  // ── Sub-components ─────────────────────────────────────────────────────────
+  //
   function BetBtn(props) {
     var id=props.id, label=props.label, ml=props.ml, gid=props.gid, gLabel=props.gLabel, type=props.type;
     var sel = hasSt(id);
@@ -802,7 +802,7 @@ function App() {
     );
   }
 
-  // ── Login ──────────────────────────────────────────────────────────────────
+  //
   function doLogin(){
     if(!loginName){ setLoginErr(true); return; }
     if(PINS[loginName]!==loginPin){ setLoginErr(true); return; }
@@ -864,7 +864,7 @@ function App() {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  //
   return (
     <div style={{minHeight:"100vh",background:"#07080f",color:"#fff",maxWidth:480,margin:"0 auto"}}>
 
