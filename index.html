@@ -71,6 +71,23 @@ select option{background:#111;color:#fff}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:2px}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyDyClw7_7KUTyQjqdJ2vAO6hqvJPBJZE8E",
+    authDomain: "ryan-invitational-2026.firebaseapp.com",
+    databaseURL: "https://ryan-invitational-2026-default-rtdb.firebaseio.com",
+    projectId: "ryan-invitational-2026",
+    storageBucket: "ryan-invitational-2026.firebasestorage.app",
+    messagingSenderId: "907924343689",
+    appId: "1:907924343689:web:8082699ce16a631e9cef58"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.__db = firebase.database();
+  window.__fbReady = true;
+  window.dispatchEvent(new Event("fb-ready"));
+</script>
 </head>
 <body>
 <div id="root"></div>
@@ -95,16 +112,26 @@ var SCHEDULE = [
 var ALL_GAMES = SCHEDULE.reduce(function(a,r){return a.concat(r.games);},[]);
 var GNUM = {};
 ALL_GAMES.forEach(function(g,i){ GNUM[g.id] = i+1; });
-var ALL_PLAYERS = ["Jacob","Chappy","Dan","Liam","Adam","Jack","Nathan","Seth","Jordan","Ryan","Cam","Tony","Joe","Thomas","Matthew"];
+var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
 var STRENGTH = {1:7.0, 2:6.7, 3:8.3, 4:7.0, 5:11.0};
+var PINS = {
+  Adam:"5083", Dan:"3687", Jack:"1799",
+  Jacob:"5377", Joaquin:"8692", Joe:"8451",
+  Jordan:"1036", Liam:"6189", Matthew:"1195",
+  Nathan:"6626", Cam:"9570", Chappy:"5304",
+  Ryan:"0278", Thomas:"9794", Tony:"8350",
+  Seth:"0386"
+};
 var TABS = ["Betting","Scorekeeper","Round Robin","Bracket"];
 var TAB_ICONS = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC0","\uD83C\uDFC6"];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-var store = {
-  get: function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
-  set: function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-};
+var lsGet = function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
+var lsSet = function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+function fbSet(key, value){
+  if(!window.__db) return;
+  window.__db.ref("state/" + key).set(JSON.stringify(value));
+}
 function getTeam(id){ return TEAMS.find(function(t){ return t.id===id; }); }
 function fml(ml){ return ml>0 ? "+"+ml : ""+ml; }
 function mlPay(ml,bet){ return ml>0 ? (bet*ml/100).toFixed(2) : (bet*100/Math.abs(ml)).toFixed(2); }
@@ -221,12 +248,13 @@ function App() {
   var CARD = {background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12};
 
   var tabS = useState(0); var tab = tabS[0]; var setTab = tabS[1];
-  var rrScS = useState(function(){ return store.get("rr")||{}; }); var rrSc = rrScS[0]; var setRrSc = rrScS[1];
-  var sf1S = useState(function(){ return store.get("sf1")||{t1:null,t2:null,s1:0,s2:0,w:null}; }); var sf1 = sf1S[0]; var setSf1 = sf1S[1];
-  var sf2S = useState(function(){ return store.get("sf2")||{t1:null,t2:null,s1:0,s2:0,w:null}; }); var sf2 = sf2S[0]; var setSf2 = sf2S[1];
-  var finS = useState(function(){ return store.get("fin")||{t1:null,t2:null,s1:0,s2:0,w:null}; }); var fin = finS[0]; var setFin = finS[1];
-  var betsS = useState(function(){ return store.get("bets")||[]; }); var bets = betsS[0]; var setBets = betsS[1];
-  var statS = useState(function(){ return store.get("pst")||{}; }); var pStats = statS[0]; var setPStats = statS[1];
+  var rrScS = useState({}); var rrSc = rrScS[0]; var setRrSc = rrScS[1];
+  var sf1S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf1 = sf1S[0]; var setSf1 = sf1S[1];
+  var sf2S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf2 = sf2S[0]; var setSf2 = sf2S[1];
+  var finS = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var fin = finS[0]; var setFin = finS[1];
+  var betsS = useState([]); var bets = betsS[0]; var setBets = betsS[1];
+  var statS = useState({}); var pStats = statS[0]; var setPStats = statS[1];
+  var dbReadyS = useState(false); var dbReady = dbReadyS[0]; var setDbReady = dbReadyS[1];
   var skSelS = useState(null); var skSel = skSelS[0]; var setSkSel = skSelS[1];
   var skTabS = useState(0); var skTab = skTabS[0]; var setSkTab = skTabS[1];
   var bGameS = useState(null); var bGame = bGameS[0]; var setBGame = bGameS[1];
@@ -234,16 +262,71 @@ function App() {
   var stSlipS = useState([]); var stSlip = stSlipS[0]; var setStSlip = stSlipS[1];
   var paSlipS = useState([]); var paSlip = paSlipS[0]; var setPaSlip = paSlipS[1];
   var slipOpenS = useState(false); var slipOpen = slipOpenS[0]; var setSlipOpen = slipOpenS[1];
-  var bettorS = useState(""); var bettor = bettorS[0]; var setBettor = bettorS[1];
   var amtS = useState(null); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
   var ledgerS = useState(false); var showLedger = ledgerS[0]; var setShowLedger = ledgerS[1];
   var rulesS = useState(false); var showRules = rulesS[0]; var setShowRules = rulesS[1];
-  useEffect(function(){ store.set("rr",rrSc); }, [rrSc]);
-  useEffect(function(){ store.set("sf1",sf1); }, [sf1]);
-  useEffect(function(){ store.set("sf2",sf2); }, [sf2]);
-  useEffect(function(){ store.set("fin",fin); }, [fin]);
-  useEffect(function(){ store.set("bets",bets); }, [bets]);
-  useEffect(function(){ store.set("pst",pStats); }, [pStats]);
+  var loggedInS = useState(function(){ return lsGet("loggedIn")||null; }); var loggedIn = loggedInS[0]; var setLoggedIn = loggedInS[1];
+  var bettor = loggedIn || "";
+  var skReadOnly = loggedIn!=="Seth" && loggedIn!=="Joaquin";
+  var loginNameS = useState(""); var loginName = loginNameS[0]; var setLoginName = loginNameS[1];
+  var loginPinS = useState(""); var loginPin = loginPinS[0]; var setLoginPin = loginPinS[1];
+  var loginErrS = useState(false); var loginErr = loginErrS[0]; var setLoginErr = loginErrS[1];
+
+  // ── Firebase Realtime Database listeners ───────────────────────────────────
+  useEffect(function(){
+    function setupListeners(){
+      var db = window.__db;
+      var keys = [
+        {k:"rr",    set:setRrSc,  def:{}},
+        {k:"sf1",   set:setSf1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+        {k:"sf2",   set:setSf2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+        {k:"fin",   set:setFin,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+        {k:"bets",  set:setBets,  def:[]},
+        {k:"pst",   set:setPStats,def:{}}
+      ];
+      var refs = keys.map(function(item){
+        var ref = db.ref("state/" + item.k);
+        ref.on("value", function(snap){
+          if(snap.exists()){
+            try{ item.set(JSON.parse(snap.val())); }catch(e){ item.set(item.def); }
+          } else {
+            item.set(item.def);
+          }
+        });
+        return ref;
+      });
+      setDbReady(true);
+      return refs;
+    }
+    function teardown(refs){
+      if(refs) refs.forEach(function(ref){ ref.off("value"); });
+    }
+    if(window.__fbReady){
+      var refs = setupListeners();
+      return function(){ teardown(refs); };
+    } else {
+      var refs = null;
+      var handler = function(){
+        refs = setupListeners();
+      };
+      window.addEventListener("fb-ready", handler, {once:true});
+      return function(){
+        window.removeEventListener("fb-ready", handler);
+        teardown(refs);
+      };
+    }
+  }, []);
+
+  // loggedIn stays local per device
+  useEffect(function(){ lsSet("loggedIn",loggedIn); }, [loggedIn]);
+
+  // ── Firebase write wrappers ─────────────────────────────────────────────────
+  function setRrScFb(updater){ setRrSc(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("rr",next); return next; }); }
+  function setSf1Fb(updater){ setSf1(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf1",next); return next; }); }
+  function setSf2Fb(updater){ setSf2(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf2",next); return next; }); }
+  function setFinFb(updater){ setFin(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("fin",next); return next; }); }
+  function setBetsFb(updater){ setBets(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("bets",next); return next; }); }
+  function setPStatsFb(updater){ setPStats(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("pst",next); return next; }); }
 
   function skKey(gid,p){ return gid+"__"+p; }
   function getSt(gid,p){ return pStats[skKey(gid,p)] || {pts:0,reb:0,ast:0}; }
@@ -273,7 +356,7 @@ function App() {
         }
       }
     }
-    setPStats(function(prev){
+    setPStatsFb(function(prev){
       var k = skKey(gid,p);
       var c = prev[k] || {pts:0,reb:0,ast:0};
       var next = {};
@@ -285,7 +368,7 @@ function App() {
     var teams = skGames.find(function(g){ return g.id===gid; });
     if(!teams) return;
     var allPlayers = teams.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players); },[]);
-    setPStats(function(prev){
+    setPStatsFb(function(prev){
       var next = Object.assign({},prev);
       allPlayers.forEach(function(p){
         next[skKey(gid,p)] = {pts:0,reb:0,ast:0};
@@ -300,12 +383,12 @@ function App() {
     var isRR = ALL_GAMES.some(function(g){ return g.id===gid; });
     if(isRR){
       var emptyMatch = {t1:null,t2:null,s1:0,s2:0,w:null};
-      setSf1(emptyMatch);
-      setSf2(emptyMatch);
-      setFin(emptyMatch);
+      setSf1Fb(emptyMatch);
+      setSf2Fb(emptyMatch);
+      setFinFb(emptyMatch);
       // Also clear SF/Final player stats
       ["sf1","sf2","fin"].forEach(function(bid){
-        setPStats(function(prev){
+        setPStatsFb(function(prev){
           var next = Object.assign({},prev);
           ALL_PLAYERS.forEach(function(p){
             next[skKey(bid,p)] = {pts:0,reb:0,ast:0};
@@ -340,11 +423,11 @@ function App() {
     }
     var resolved = bets.map(function(b){ return Object.assign({},b,{result:resolveB(b,gr,pStats)}); });
     var changed = resolved.some(function(b,i){ return b.result!==bets[i].result; });
-    if(changed) setBets(resolved);
+    if(changed) setBetsFb(resolved);
   }, [rrSc,sf1.w,sf2.w,fin.w,pStats]);
 
   function finalizeRR(gameId){
-    setRrSc(function(prev){
+    setRrScFb(function(prev){
       var cur = prev[gameId] || {t1:0,t2:0,final:false};
       var upd = {}; upd[gameId] = Object.assign({},cur,{final:true});
       return Object.assign({},prev,upd);
@@ -352,7 +435,7 @@ function App() {
   }
 
   function reopenRR(gameId){
-    setRrSc(function(prev){
+    setRrScFb(function(prev){
       var cur = prev[gameId] || {t1:0,t2:0,final:false};
       var upd = {}; upd[gameId] = Object.assign({},cur,{final:false});
       return Object.assign({},prev,upd);
@@ -362,7 +445,7 @@ function App() {
   useEffect(function(){
     ALL_GAMES.forEach(function(g){
       var s1=liveTP(g.id,g.t1), s2=liveTP(g.id,g.t2);
-      setRrSc(function(prev){
+      setRrScFb(function(prev){
         var cur = prev[g.id]||{t1:0,t2:0,final:false};
         if(cur.t1===s1&&cur.t2===s2) return prev;
         var upd = {}; upd[g.id] = Object.assign({},cur,{t1:s1,t2:s2});
@@ -374,19 +457,19 @@ function App() {
   useEffect(function(){
     if(sf1.t1&&sf1.t2){
       var s1=liveTP("sf1",sf1.t1), s2=liveTP("sf1",sf1.t2);
-      if(s1!==sf1.s1||s2!==sf1.s2) setSf1(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
+      if(s1!==sf1.s1||s2!==sf1.s2) setSf1Fb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
     }
   }, [pStats,sf1.t1,sf1.t2]);
   useEffect(function(){
     if(sf2.t1&&sf2.t2){
       var s1=liveTP("sf2",sf2.t1), s2=liveTP("sf2",sf2.t2);
-      if(s1!==sf2.s1||s2!==sf2.s2) setSf2(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
+      if(s1!==sf2.s1||s2!==sf2.s2) setSf2Fb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
     }
   }, [pStats,sf2.t1,sf2.t2]);
   useEffect(function(){
     if(fin.t1&&fin.t2){
       var s1=liveTP("fin",fin.t1), s2=liveTP("fin",fin.t2);
-      if(s1!==fin.s1||s2!==fin.s2) setFin(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
+      if(s1!==fin.s1||s2!==fin.s2) setFinFb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
     }
   }, [pStats,fin.t1,fin.t2]);
 
@@ -406,143 +489,106 @@ function App() {
   useEffect(function(){
     if(rrDone&&!sf1.t1){
       var s = standings;
-      setSf1({t1:s[0].id,t2:s[3].id,s1:0,s2:0,w:null});
-      setSf2({t1:s[1].id,t2:s[2].id,s1:0,s2:0,w:null});
+      setSf1Fb({t1:s[0].id,t2:s[3].id,s1:0,s2:0,w:null});
+      setSf2Fb({t1:s[1].id,t2:s[2].id,s1:0,s2:0,w:null});
     }
   }, [rrDone]);
 
   var skGames = ALL_GAMES.map(function(g){
     return {id:g.id,label:"G"+GNUM[g.id]+": "+getTeam(g.t1).label+" vs "+getTeam(g.t2).label,teams:[g.t1,g.t2],type:"rr"};
   });
-  if(sf1.t1) skGames.push({id:"sf1",label:"SF1: "+getTeam(sf1.t1).label+" vs "+getTeam(sf1.t2).label,teams:[sf1.t1,sf1.t2],type:"se"});
-  if(sf2.t1) skGames.push({id:"sf2",label:"SF2: "+getTeam(sf2.t1).label+" vs "+getTeam(sf2.t2).label,teams:[sf2.t1,sf2.t2],type:"se"});
-  if(fin.t1&&fin.t2) skGames.push({id:"fin",label:"Final: "+getTeam(fin.t1).label+" vs "+getTeam(fin.t2).label,teams:[fin.t1,fin.t2],type:"final"});
+  skGames.push({id:"sf1",label:sf1.t1&&sf1.t2?"SF1: "+getTeam(sf1.t1).label+" vs "+getTeam(sf1.t2).label:"SF1: TBD vs TBD",teams:sf1.t1&&sf1.t2?[sf1.t1,sf1.t2]:[],type:"se",prereqLocked:!rrDone});
+  skGames.push({id:"sf2",label:sf2.t1&&sf2.t2?"SF2: "+getTeam(sf2.t1).label+" vs "+getTeam(sf2.t2).label:"SF2: TBD vs TBD",teams:sf2.t1&&sf2.t2?[sf2.t1,sf2.t2]:[],type:"se",prereqLocked:!rrDone});
+  skGames.push({id:"fin",label:fin.t1&&fin.t2?"Final: "+getTeam(fin.t1).label+" vs "+getTeam(fin.t2).label:"Final: TBD vs TBD",teams:fin.t1&&fin.t2?[fin.t1,fin.t2]:[],type:"final",prereqLocked:!(sf1.w&&sf2.w)});
+
+  // ── Betting helpers ────────────────────────────────────────────────────────
+  function getPlayersInGame(gid){
+    var rg = ALL_GAMES.find(function(g){ return g.id===gid; });
+    if(rg) return getTeam(rg.t1).players.concat(getTeam(rg.t2).players);
+    if(gid==="sf1"&&sf1.t1&&sf1.t2) return getTeam(sf1.t1).players.concat(getTeam(sf1.t2).players);
+    if(gid==="sf2"&&sf2.t1&&sf2.t2) return getTeam(sf2.t1).players.concat(getTeam(sf2.t2).players);
+    if(gid==="fin"&&fin.t1&&fin.t2) return getTeam(fin.t1).players.concat(getTeam(fin.t2).players);
+    return [];
+  }
+  function isGameFinalized(gid){
+    return (rrSc[gid]&&rrSc[gid].final)||(gid==="sf1"&&!!sf1.w)||(gid==="sf2"&&!!sf2.w)||(gid==="fin"&&!!fin.w);
+  }
+  function isGameStarted(gid){
+    if(isGameFinalized(gid)) return true;
+    var players = getPlayersInGame(gid);
+    return players.some(function(p){ var s=pStats[skKey(gid,p)]; return s&&(s.pts>0||s.reb>0||s.ast>0); });
+  }
+  function isPlayerInGame(gid){
+    return getPlayersInGame(gid).indexOf(bettor)>=0;
+  }
 
   var bGames = ALL_GAMES.map(function(g){
-    return {id:g.id,label:"G"+GNUM[g.id],full:"Game "+GNUM[g.id],t1:g.t1,t2:g.t2,type:"rr",max:10};
+    return {id:g.id,full:"Game "+GNUM[g.id],t1:g.t1,t2:g.t2,type:"rr",
+      prereqLocked:false, playerLocked:isPlayerInGame(g.id)};
   });
-  if(sf1.t1) bGames.push({id:"sf1",label:"SF1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,type:"se",max:10});
-  if(sf2.t1) bGames.push({id:"sf2",label:"SF2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,type:"se",max:10});
-  if(fin.t1&&fin.t2) bGames.push({id:"fin",label:"Final",full:"Championship",t1:fin.t1,t2:fin.t2,type:"final",max:10});
+  bGames.push({id:"sf1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,type:"se",prereqLocked:!rrDone,playerLocked:!rrDone?false:isPlayerInGame("sf1")});
+  bGames.push({id:"sf2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,type:"se",prereqLocked:!rrDone,playerLocked:!rrDone?false:isPlayerInGame("sf2")});
+  bGames.push({id:"fin",full:"Championship",t1:fin.t1,t2:fin.t2,type:"final",prereqLocked:!(sf1.w&&sf2.w),playerLocked:(sf1.w&&sf2.w)?isPlayerInGame("fin"):false});
 
   var selG = bGames.find(function(g){ return g.id===bGame; }) || bGames[0];
 
-  // Slip helpers
   function hasSt(id){ return stSlip.some(function(l){ return l.id===id; }); }
   function haPa(id){ return paSlip.some(function(l){ return l.id===id; }); }
   var totalLegs = stSlip.length + paSlip.length;
+  // How many parlays has this bettor already placed for the parlay slip's game?
+  var parlaySlipGid = paSlip.length>0 ? paSlip[0].gid : null;
+  var existingParlayCount = parlaySlipGid ? bets.filter(function(b){
+    return b.isParlay && b.bettor===bettor && b.legs && b.legs.length>0 && b.legs[0].gid===parlaySlipGid;
+  }).length : 0;
+  var parlayAtLimit = parlaySlipGid && existingParlayCount >= 2;
 
   function paBlock(leg){
     if(paSlip.length>=3 && !haPa(leg.id)) return "MAX 3 LEGS";
-    // All parlay legs must be from the same game
-    if(paSlip.length>0 && !haPa(leg.id)){
-      var existingGame = paSlip[0].gid;
-      if(leg.gid !== existingGame) return "SAME GAME ONLY";
-    }
+    if(paSlip.length>0 && !haPa(leg.id) && paSlip[0].gid!==leg.gid) return "SAME GAME ONLY";
     var idx = leg.id.indexOf("_prop_");
     if(idx>=0){
       var after = leg.id.slice(idx+6);
-      var u1 = after.indexOf("_");
-      var u2 = after.indexOf("_",u1+1);
+      var u2 = after.indexOf("_", after.indexOf("_")+1);
       var pname = after.slice(0,u2);
       var dup = paSlip.some(function(l){
-        var li = l.id.indexOf("_prop_");
-        if(li<0) return false;
+        var li = l.id.indexOf("_prop_"); if(li<0) return false;
         var la = l.id.slice(li+6);
-        var lu2 = la.indexOf("_", la.indexOf("_")+1);
-        return la.slice(0,lu2)===pname && l.id!==leg.id;
+        return la.slice(0,la.indexOf("_",la.indexOf("_")+1))===pname && l.id!==leg.id;
       });
       if(dup && !haPa(leg.id)) return "ONE PROP PER PLAYER";
     }
     return null;
   }
+  function toggleSt(leg){ hasSt(leg.id)?setStSlip(function(s){return s.filter(function(l){return l.id!==leg.id;});}):setStSlip(function(s){return s.concat([leg]);}); }
+  function togglePa(leg){ if(haPa(leg.id)){setPaSlip(function(s){return s.filter(function(l){return l.id!==leg.id;});});return;} if(!paBlock(leg)) setPaSlip(function(s){return s.concat([leg]);}); }
 
-  function toggleSt(leg){
-    if(hasSt(leg.id)){
-      setStSlip(function(s){ return s.filter(function(l){ return l.id!==leg.id; }); });
-    } else {
-      setStSlip(function(s){ return s.concat([leg]); });
-    }
-  }
-  function togglePa(leg){
-    if(haPa(leg.id)){
-      setPaSlip(function(s){ return s.filter(function(l){ return l.id!==leg.id; }); });
-      return;
-    }
-    if(paBlock(leg)) return;
-    setPaSlip(function(s){ return s.concat([leg]); });
-  }
-
-  function getPlayersInGame(gameId){
-    // Returns all players involved in a given game (both teams)
-    var rrGame = ALL_GAMES.find(function(g){ return g.id===gameId; });
-    if(rrGame) return getTeam(rrGame.t1).players.concat(getTeam(rrGame.t2).players);
-    if(gameId==="sf1"&&sf1.t1&&sf1.t2) return getTeam(sf1.t1).players.concat(getTeam(sf1.t2).players);
-    if(gameId==="sf2"&&sf2.t1&&sf2.t2) return getTeam(sf2.t1).players.concat(getTeam(sf2.t2).players);
-    if(gameId==="fin"&&fin.t1&&fin.t2) return getTeam(fin.t1).players.concat(getTeam(fin.t2).players);
-    return [];
-  }
-
-  // Compute which players can't bet: union of all players in all games in the current slip
-  var blockedBettors = (function(){
-    var blocked = {};
-    stSlip.forEach(function(leg){ getPlayersInGame(leg.gid).forEach(function(p){ blocked[p]=true; }); });
-    paSlip.forEach(function(leg){ getPlayersInGame(leg.gid).forEach(function(p){ blocked[p]=true; }); });
-    return blocked;
-  })();
-
-  var bettorIsBlocked = bettor && blockedBettors[bettor];
-
-  // Check if bettor already has 2 parlays on this same game (max 2 per person per game)
-  var parlayGameId = paSlip.length > 0 ? paSlip[0].gid : null;
-  var bettorParlayCount = bettor && parlayGameId ? bets.filter(function(b){
-    return b.isParlay && b.bettor===bettor && b.legs && b.legs.length>0 && b.legs[0].gid===parlayGameId;
-  }).length : 0;
-  var bettorHasParlay = bettorParlayCount >= 2;
-
-  function lockBets(){
-    if(!bettor||!slipAmt) return;
-    if(paSlip.length && bettorHasParlay) return;
-    // Block if parlay legs span multiple games
-    if(paSlip.length>0){
-      var parlayGid = paSlip[0].gid;
-      var crossGame = paSlip.some(function(l){ return l.gid!==parlayGid; });
-      if(crossGame) return;
-    }
-    // Block if any game in the slip has started or finalized
-    var allLegs = stSlip.concat(paSlip);
-    var gameStarted = allLegs.some(function(leg){
-      var gid = leg.gid;
-      var fin2 = (rrSc[gid]&&rrSc[gid].final)||(gid==="sf1"&&!!sf1.w)||(gid==="sf2"&&!!sf2.w)||(gid==="fin"&&!!fin.w);
-      var hasStats = ALL_PLAYERS.some(function(p){ var s=pStats[skKey(gid,p)]; return s&&(s.pts>0||s.reb>0||s.ast>0); });
-      return fin2||hasStats;
-    });
-    if(gameStarted) return;
-    // Build current game results inline
+  function placeBets(){
+    if(!bettor || !slipAmt) return;
+    if(stSlip.length===0 && paSlip.length===0) return;
+    if(paSlip.length>0 && parlayAtLimit) return;
+    // Build game results for resolving
     var gr = {};
     ALL_GAMES.forEach(function(g){
-      var sc = rrSc[g.id]; if(!sc) return;
-      var o = calcOdds(g.t1,g.t2,"rr");
-      gr[g.id] = {s1:sc.t1,s2:sc.t2,spread:o.spread,ou:o.ou,sfav:o.sfav,final:!!sc.final};
+      var sc=rrSc[g.id]; if(!sc) return;
+      var o=calcOdds(g.t1,g.t2,"rr");
+      gr[g.id]={s1:sc.t1,s2:sc.t2,spread:o.spread,ou:o.ou,sfav:o.sfav,final:!!sc.final};
     });
-    if(sf1.t1&&sf1.t2){ var os1=calcOdds(sf1.t1,sf1.t2,"se"); gr["sf1"]={s1:sf1.s1,s2:sf1.s2,spread:os1.spread,ou:os1.ou,sfav:os1.sfav,final:!!sf1.w}; }
-    if(sf2.t1&&sf2.t2){ var os2=calcOdds(sf2.t1,sf2.t2,"se"); gr["sf2"]={s1:sf2.s1,s2:sf2.s2,spread:os2.spread,ou:os2.ou,sfav:os2.sfav,final:!!sf2.w}; }
-    if(fin.t1&&fin.t2){ var of=calcOdds(fin.t1,fin.t2,"final"); gr["fin"]={s1:fin.s1,s2:fin.s2,spread:of.spread,ou:of.ou,sfav:of.sfav,final:!!fin.w}; }
+    if(sf1.t1&&sf1.t2){var o1=calcOdds(sf1.t1,sf1.t2,"se");gr["sf1"]={s1:sf1.s1,s2:sf1.s2,spread:o1.spread,ou:o1.ou,sfav:o1.sfav,final:!!sf1.w};}
+    if(sf2.t1&&sf2.t2){var o2=calcOdds(sf2.t1,sf2.t2,"se");gr["sf2"]={s1:sf2.s1,s2:sf2.s2,spread:o2.spread,ou:o2.ou,sfav:o2.sfav,final:!!sf2.w};}
+    if(fin.t1&&fin.t2){var of=calcOdds(fin.t1,fin.t2,"final");gr["fin"]={s1:fin.s1,s2:fin.s2,spread:of.spread,ou:of.ou,sfav:of.sfav,final:!!fin.w};}
     var nb = [];
     stSlip.forEach(function(leg,i){
-      var tw = mlPay(leg.ml,slipAmt);
-      var b = {id:Date.now()+i,bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString(),gameType:leg.type||"rr"};
-      b.result = resolveB(b,gr,pStats);
-      nb.push(b);
+      var tw=mlPay(leg.ml,slipAmt);
+      var b={id:Date.now()+i,bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString(),gameType:leg.type||"rr"};
+      b.result=resolveB(b,gr,pStats); nb.push(b);
     });
-    if(paSlip.length){
-      var tw2 = parlayWin(paSlip,slipAmt);
-      var pb = {id:Date.now()+100,bettor:bettor,game:"PROP PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:paSlip,pick:paSlip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(paSlip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString(),gameType:"parlay"};
-      pb.result = resolveB(pb,gr,pStats);
-      nb.push(pb);
+    if(paSlip.length>0){
+      var tw2=parlayWin(paSlip,slipAmt);
+      var pb={id:Date.now()+100,bettor:bettor,game:"PROP PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:paSlip,pick:paSlip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(paSlip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString(),gameType:"parlay"};
+      pb.result=resolveB(pb,gr,pStats); nb.push(pb);
     }
-    setBets(function(p){ return p.concat(nb); });
-    setStSlip([]); setPaSlip([]); setSlipAmt(null); setBettor(""); setSlipOpen(false);
+    setBetsFb(function(p){ return p.concat(nb); });
+    setStSlip([]); setPaSlip([]); setSlipAmt(null); setSlipOpen(false);
   }
 
   var totW = bets.reduce(function(s,b){ return s+b.amt; }, 0);
@@ -576,27 +622,23 @@ function App() {
     var t2 = getTeam(game.t2);
     var gl = game.full;
     var rows = [
-      {team:t1, ml:o.ml1, sp:o.sfav===1?"-"+o.spread:"+"+o.spread, spk:"sp1", mlk:"ml1", ouId:game.id+"_ouo", ouLabel:"O "+o.ou},
-      {team:t2, ml:o.ml2, sp:o.sfav===2?"-"+o.spread:"+"+o.spread, spk:"sp2", mlk:"ml2", ouId:game.id+"_ouu", ouLabel:"O "+o.ou}
+      {team:t1, ml:o.ml1, mlk:"ml1"},
+      {team:t2, ml:o.ml2, mlk:"ml2"}
     ];
     return (
       <div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:10,paddingBottom:8,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10,paddingBottom:8,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
           <div/>
           <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>MONEYLINE</div>
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>SPREAD</div>
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>O/U</div>
         </div>
         {rows.map(function(row,ri){
           return (
-            <div key={ri} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:6}}>
+            <div key={ri} style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:6}}>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
                 <div style={{width:6,height:6,borderRadius:"50%",background:row.team.color,flexShrink:0}}/>
                 <span style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff"}}>{row.team.label}</span>
               </div>
               <BetBtn id={game.id+"_"+row.mlk} label={row.team.label} ml={row.ml} gid={game.id} gLabel={gl+": "+row.team.label+" ML"} type={game.type}/>
-              <BetBtn id={game.id+"_"+row.spk} label={row.sp} ml={-110} gid={game.id} gLabel={gl+": "+row.team.label+" "+row.sp} type={game.type}/>
-              <BetBtn id={row.ouId} label={row.ouLabel} ml={-110} gid={game.id} gLabel={gl+": "+row.ouLabel} type={game.type}/>
             </div>
           );
         })}
@@ -651,7 +693,7 @@ function App() {
                 ];
                 return (
                   <div key={name} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginBottom:8}}>
-                    <div style={{padding:"8px 12px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:team.color+"08"}}>
+                    <div style={{padding:"8px 12px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:team.color+"08",textAlign:"center"}}>
                       <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"#fff"}}>{name}</span>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",padding:"6px 12px 0",gap:4}}>
@@ -692,6 +734,7 @@ function App() {
 
   function SkPanel(props) {
     var game = props.game;
+    var readOnly = props.readOnly;
     var allP = game.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players.map(function(p){ return {name:p,team:getTeam(tid)}; })); },[]);
     var cap = gameMax(game.id);
 
@@ -717,26 +760,26 @@ function App() {
         if(game.type==="rr"){
           finalizeRR(game.id);
         } else if(game.id==="sf1"){
-          setSf1(function(mm){ return Object.assign({},mm,{w:w}); });
-          setFin(function(f){ return Object.assign({},f,{t1:w}); });
+          setSf1Fb(function(mm){ return Object.assign({},mm,{w:w}); });
+          setFinFb(function(f){ return Object.assign({},f,{t1:w}); });
         } else if(game.id==="sf2"){
-          setSf2(function(mm){ return Object.assign({},mm,{w:w}); });
-          setFin(function(f){ return Object.assign({},f,{t2:w}); });
+          setSf2Fb(function(mm){ return Object.assign({},mm,{w:w}); });
+          setFinFb(function(f){ return Object.assign({},f,{t2:w}); });
         } else if(game.id==="fin"){
-          setFin(function(mm){ return Object.assign({},mm,{w:w}); });
+          setFinFb(function(mm){ return Object.assign({},mm,{w:w}); });
         }
       }
       function doReopen(){
         if(game.type==="rr"){
           reopenRR(game.id);
         } else if(game.id==="sf1"){
-          setSf1(function(mm){ return Object.assign({},mm,{w:null}); });
-          setFin(function(f){ return Object.assign({},f,{t1:null,w:null}); });
+          setSf1Fb(function(mm){ return Object.assign({},mm,{w:null}); });
+          setFinFb(function(f){ return Object.assign({},f,{t1:null,w:null}); });
         } else if(game.id==="sf2"){
-          setSf2(function(mm){ return Object.assign({},mm,{w:null}); });
-          setFin(function(f){ return Object.assign({},f,{t2:null,w:null}); });
+          setSf2Fb(function(mm){ return Object.assign({},mm,{w:null}); });
+          setFinFb(function(f){ return Object.assign({},f,{t2:null,w:null}); });
         } else if(game.id==="fin"){
-          setFin(function(mm){ return Object.assign({},mm,{w:null}); });
+          setFinFb(function(mm){ return Object.assign({},mm,{w:null}); });
         }
       }
       var tied = isBracket && s1===s2 && s1>=6;
@@ -752,7 +795,7 @@ function App() {
               <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
               <span style={{fontFamily:MO,fontSize:9,color:"#A8FF78",letterSpacing:1}}>{statusMsg}</span>
             </div>
-            <button onClick={doReopen} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 8px",cursor:"pointer"}}>reopen</button>
+            {!readOnly&&<button onClick={doReopen} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 8px",cursor:"pointer"}}>reopen</button>}
           </div>
         );
       }
@@ -761,9 +804,7 @@ function App() {
           {!canFinalize&&statusMsg&&(
             <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>
           )}
-          <button onClick={doFinalize} disabled={!canFinalize} style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}>
-            FINALIZE RESULT
-          </button>
+          {!readOnly&&<button onClick={doFinalize} disabled={!canFinalize} style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}>FINALIZE RESULT</button>}
         </div>
       );
     }
@@ -805,6 +846,9 @@ function App() {
                       <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff"}}>{player}</div>
                       {["pts","reb","ast"].map(function(f){
                         var blocked = f==="pts" && atPtsCap;
+                        if(readOnly){
+                          return <div key={f} style={{fontFamily:DI,fontSize:16,color:s[f]>0?team.color:"rgba(255,255,255,0.25)",textAlign:"center"}}>{s[f]}</div>;
+                        }
                         return (
                           <div key={f} style={{display:"flex",alignItems:"center",gap:3,justifyContent:"center"}}>
                             <button onClick={function(){ adjSt(game.id,team.id,player,f,-1); }} style={{width:22,height:22,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.4)",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
@@ -833,18 +877,94 @@ function App() {
     );
   }
 
+  // ── Login ──────────────────────────────────────────────────────────────────
+  function doLogin(){
+    if(!loginName){ setLoginErr(true); return; }
+    if(PINS[loginName]!==loginPin){ setLoginErr(true); return; }
+    setLoggedIn(loginName);
+    setLoginErr(false);
+    setLoginPin("");
+  }
+
+  if(!dbReady){
+    return (
+      <div style={{minHeight:"100vh",background:"#07080f",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:14,letterSpacing:3,color:"rgba(255,255,255,0.3)"}}>CONNECTING...</div>
+        <div style={{width:32,height:32,border:"2px solid rgba(255,107,53,0.3)",borderTop:"2px solid #FF6B35",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+        <style>{"
+@keyframes spin{to{transform:rotate(360deg)}}
+"}</style>
+      </div>
+    );
+  }
+
+  if(!loggedIn){
+    return (
+      <div style={{minHeight:"100vh",background:"#07080f",color:"#fff",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 24px"}}>
+        <div style={{marginBottom:32,textAlign:"center"}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:4,color:"#FF6B35",marginBottom:6}}>LAS VEGAS - BACHELOR PARTY</div>
+          <div style={{fontFamily:"'Oswald',sans-serif",fontSize:28,letterSpacing:3}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
+        </div>
+        <div style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"24px 20px"}}>
+          <div style={{fontFamily:"'Oswald',sans-serif",fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.6)",marginBottom:20,textAlign:"center"}}>SIGN IN</div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>YOUR NAME</div>
+            <select
+              value={loginName}
+              onChange={function(e){ setLoginName(e.target.value); setLoginErr(false); setLoginPin(""); }}
+              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'Oswald',sans-serif",fontSize:14,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
+            >
+              <option value="">Select your name...</option>
+              {ALL_PLAYERS.map(function(p){ return <option key={p} value={p}>{p}</option>; })}
+              <option value="Joaquin">Joaquin</option>
+            </select>
+          </div>
+          <div style={{marginBottom:20}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>PIN</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:7,color:"rgba(255,255,255,0.2)"}}>last 4 digits of your phone number</div>
+            </div>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              value={loginPin}
+              onChange={function(e){ setLoginPin(e.target.value.replace(/\D/g,"")); setLoginErr(false); }}
+              onKeyDown={function(e){ if(e.key==="Enter") doLogin(); }}
+              placeholder="••••"
+              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:loginErr?"1px solid rgba(255,80,80,0.6)":"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'Oswald',sans-serif",fontSize:22,letterSpacing:8,textAlign:"center",boxSizing:"border-box"}}
+            />
+            {loginErr&&(
+              <div style={{marginTop:6,fontFamily:"'DM Mono',monospace",fontSize:8,color:"#FF8080",letterSpacing:1,textAlign:"center"}}>
+                {!loginName?"SELECT YOUR NAME FIRST":"INCORRECT PIN — TRY AGAIN"}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={doLogin}
+            style={{width:"100%",padding:"14px",borderRadius:10,cursor:"pointer",background:"#FF6B35",border:"none",fontFamily:"'Oswald',sans-serif",fontSize:15,letterSpacing:2,color:"#fff"}}
+          >
+            LET'S RUN IT
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{minHeight:"100vh",background:"#07080f",color:"#fff",maxWidth:480,margin:"0 auto"}}>
 
-      <div style={{padding:"16px 16px 10px",background:"rgba(0,0,0,0.6)",borderBottom:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:0,zIndex:200,backdropFilter:"blur(20px)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{padding:"10px 12px",background:"rgba(0,0,0,0.6)",borderBottom:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:0,zIndex:200,backdropFilter:"blur(20px)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{fontFamily:MO,fontSize:8,letterSpacing:4,color:"#FF6B35",marginBottom:1}}>LAS VEGAS - BACHELOR PARTY</div>
-          <div style={{fontFamily:DI,fontSize:20,letterSpacing:3}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
+          <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"#FF6B35",marginBottom:2}}>LAS VEGAS — BACHELOR PARTY</div>
+          <div style={{fontFamily:DI,fontSize:18,letterSpacing:2}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
         </div>
-        <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:9,letterSpacing:1,padding:"6px 10px",cursor:"pointer"}}>
-          RULES
-        </button>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:1}}>{loggedIn}</div>
+          <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:8,letterSpacing:1,padding:"5px 9px",cursor:"pointer"}}>RULES</button>
+          <button onClick={function(){ setLoggedIn(null); setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{flexShrink:0,background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:6,color:"rgba(255,120,120,0.7)",fontFamily:MO,fontSize:8,letterSpacing:1,padding:"5px 9px",cursor:"pointer"}}>OUT</button>
+        </div>
       </div>
 
       {showRules&&(
@@ -924,18 +1044,20 @@ function App() {
 
         {tab===0&&(
           <div>
-            <div style={{padding:"12px 12px 0",overflowX:"auto",display:"flex",gap:6,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-              {bGames.map(function(g){
-                var active = g.id===(bGame||(bGames[0]&&bGames[0].id));
-                return (
-                  <button key={g.id} onClick={function(){
-                    setStSlip([]); setPaSlip([]); setSlipOpen(false);
-                    setBGame(g.id); setBView("lines");
-                  }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
-                    {g.label}
-                  </button>
-                );
-              })}
+            <div style={{padding:"12px 12px 0"}}>
+              <select
+                value={bGame||(bGames[0]&&bGames[0].id)||""}
+                onChange={function(e){
+                  setStSlip([]); setPaSlip([]); setSlipOpen(false);
+                  setBGame(e.target.value); setBView("lines");
+                }}
+                style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
+              >
+                {bGames.map(function(g){
+                  var label = g.playerLocked ? "🚫 "+g.full : g.prereqLocked ? "🔒 "+g.full : g.full;
+                  return <option key={g.id} value={g.id}>{label}</option>;
+                })}
+              </select>
             </div>
 
             {selG&&(
@@ -966,14 +1088,10 @@ function App() {
                             </div>
                           </div>
                           {gameBets.map(function(b,i){
-                            // Determine if this bet's game has started (has stats) — block deletion if pending
                             var betGid = b.isParlay && b.legs && b.legs.length>0 ? b.legs[0].gid : b.gameId;
-                            var gameHasStats = ALL_PLAYERS.some(function(p){
-                              var s = pStats[skKey(betGid,p)];
-                              return s && (s.pts>0||s.reb>0||s.ast>0);
-                            });
-                            var gameIsFinalized = (rrSc[betGid]&&rrSc[betGid].final)||(betGid==="sf1"&&!!sf1.w)||(betGid==="sf2"&&!!sf2.w)||(betGid==="fin"&&!!fin.w);
-                            var canDelete = !gameHasStats && !gameIsFinalized;
+                            var gameStarted = isGameStarted(betGid);
+                            var isOwnBet = b.bettor === bettor;
+                            var canDelete = isOwnBet && !gameStarted;
                             return (
                               <div key={b.id} style={{padding:"10px 14px",borderBottom:i<gameBets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
                                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
@@ -983,10 +1101,7 @@ function App() {
                                   </div>
                                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                                     <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800"}}>{b.result.toUpperCase()}</div>
-                                    {canDelete
-                                      ? <button onClick={function(){ setBets(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>
-                                      : !gameIsFinalized && <span style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.15)",letterSpacing:1}}>LOCKED</span>
-                                    }
+                                    {canDelete && <button onClick={function(){ setBetsFb(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>}
                                   </div>
                                 </div>
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1011,27 +1126,35 @@ function App() {
                   <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
                     {selG.full.toUpperCase()} - {selG.type==="rr"?"FIRST TO 3":"FIRST TO 7, WIN BY 2"} - MAX ${selG.max}
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{flex:1}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t1).color}}/>
-                        <div>
-                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t1).color}}>{getTeam(selG.t1).label}</div>
-                          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)"}}>{getTeam(selG.t1).players.join(", ")}</div>
+                  {selG.t1&&selG.t2 ? (
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{flex:1}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t1).color}}/>
+                          <div>
+                            <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t1).color}}>{getTeam(selG.t1).label}</div>
+                            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)"}}>{getTeam(selG.t1).players.join(", ")}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)"}}>vs</span>
+                      <div style={{flex:1,display:"flex",justifyContent:"flex-end"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div>
+                            <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t2).color,textAlign:"right"}}>{getTeam(selG.t2).label}</div>
+                            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"right"}}>{getTeam(selG.t2).players.join(", ")}</div>
+                          </div>
+                          <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t2).color}}/>
                         </div>
                       </div>
                     </div>
-                    <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)"}}>vs</span>
-                    <div style={{flex:1,display:"flex",justifyContent:"flex-end"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <div>
-                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t2).color,textAlign:"right"}}>{getTeam(selG.t2).label}</div>
-                          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"right"}}>{getTeam(selG.t2).players.join(", ")}</div>
-                        </div>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t2).color}}/>
-                      </div>
+                  ) : (
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,padding:"6px 0"}}>
+                      <div style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"rgba(255,255,255,0.2)"}}>TBD</div>
+                      <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.12)"}}>vs</span>
+                      <div style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"rgba(255,255,255,0.2)"}}>TBD</div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
                   <button onClick={function(){ setBView("lines"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="lines"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="lines"?"2px solid #FF6B35":"2px solid transparent"}}>GAME LINES</button>
@@ -1039,22 +1162,38 @@ function App() {
                 </div>
                 <div style={{padding:"14px 12px"}}>
                   {(function(){
-                    // Lock betting once any stats are tracked OR game is finalized
                     var gid = selG.id;
-                    var isFinalized = (rrSc[gid]&&rrSc[gid].final) || (gid==="sf1"&&!!sf1.w) || (gid==="sf2"&&!!sf2.w) || (gid==="fin"&&!!fin.w);
-                    var hasStats = ALL_PLAYERS.some(function(p){
-                      var s = pStats[skKey(gid,p)];
-                      return s && (s.pts>0||s.reb>0||s.ast>0);
-                    });
-                    if(isFinalized||hasStats){
+                    // Lock if prerequisite games not done yet
+                    if(selG.prereqLocked){
+                      var prereqMsg = gid==="fin" ? "Complete both semifinals to unlock betting." : "Complete the round robin to unlock betting.";
+                      return (
+                        <div style={{textAlign:"center",padding:"24px 16px"}}>
+                          <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
+                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>BETTING LOCKED</div>
+                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>{prereqMsg}</div>
+                        </div>
+                      );
+                    }
+                    // Lock if logged-in player is competing in this game
+                    if(selG.playerLocked){
+                      return (
+                        <div style={{textAlign:"center",padding:"24px 16px"}}>
+                          <div style={{fontSize:28,marginBottom:10}}>🚫</div>
+                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>YOU'RE PLAYING IN THIS GAME</div>
+                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>No betting on your own games. No funny business.</div>
+                        </div>
+                      );
+                    }
+                    // Lock betting once game is started or finalized
+                    if(isGameStarted(gid)){
                       return (
                         <div style={{textAlign:"center",padding:"24px 16px"}}>
                           <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
                           <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>
-                            {isFinalized?"GAME FINALIZED":"GAME IN PROGRESS"}
+                            {isGameFinalized(gid)?"GAME FINALIZED":"GAME IN PROGRESS"}
                           </div>
                           <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>
-                            {isFinalized?"Betting is closed for this game.":"Betting closes once scoring begins."}
+                            {isGameFinalized(gid)?"Betting is closed for this game.":"Betting closes once scoring begins."}
                           </div>
                         </div>
                       );
@@ -1082,7 +1221,7 @@ function App() {
                   </button>
                 )}
                 {slipOpen&&(
-                  <div style={{background:"#0d0e1a",borderTop:"2px solid #FF6B35",maxHeight:"80vh",overflowY:"auto"}}>
+                  <div style={{background:"#0d0e1a",borderTop:"2px solid #FF6B35",maxHeight:"80vh",overflowY:"auto",paddingBottom:"16px"}}>
                     <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"sticky",top:0,background:"#0d0e1a",zIndex:10}}>
                       <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"#fff"}}>BET SLIP ({totalLegs})</span>
                       <div style={{display:"flex",gap:8}}>
@@ -1135,7 +1274,7 @@ function App() {
                               <span style={{fontFamily:DI,fontSize:20,color:"#FFB800"}}>{parlayOdds(paSlip)}</span>
                             </div>
                           )}
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Same-game parlay only. Max 4 legs.</div>
+          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Same-game parlay only · Max 3 legs · Max 2 parlays per game</div>
                         </div>
                       )}
                       <div style={{marginBottom:12}}>
@@ -1164,35 +1303,16 @@ function App() {
                           )}
                         </div>
                       )}
-                      <div style={{marginBottom:12}}>
-                        <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>WHO'S BETTING?</div>
-                        <select value={bettor} onChange={function(e){ setBettor(e.target.value); }} style={{width:"100%",padding:"11px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:MO,fontSize:12,boxSizing:"border-box",cursor:"pointer"}}>
-                          <option value="">Select player...</option>
-                          {ALL_PLAYERS.map(function(p){
-                            var blocked = !!blockedBettors[p];
-                            var pParlayCount = parlayGameId ? bets.filter(function(b){
-                              return b.isParlay && b.bettor===p && b.legs && b.legs.length>0 && b.legs[0].gid===parlayGameId;
-                            }).length : 0;
-                            var maxParlays = pParlayCount >= 2;
-                            var label = blocked ? p+" (playing)" : maxParlays ? p+" (2 parlays placed)" : pParlayCount===1 ? p+" (1/2 parlays)" : p;
-                            return <option key={p} value={p} disabled={blocked||maxParlays}>{label}</option>;
-                          })}
-                        </select>
-                        {bettorIsBlocked&&(
-                          <div style={{marginTop:6,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
-                            {bettor} is playing in one of these games and can't bet on it.
-                          </div>
-                        )}
-                        {!bettorIsBlocked&&bettorHasParlay&&(
-                          <div style={{marginTop:6,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
-                            {bettor} has already placed 2 parlays on this game.
-                          </div>
-                        )}
-                      </div>
+                      
+                      {parlayAtLimit&&paSlip.length>0&&(
+                        <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
+                          Max 2 parlays per game reached for this game.
+                        </div>
+                      )}
                       <button
-                        onClick={lockBets}
-                        disabled={!slipAmt||!bettor||!!bettorIsBlocked||(paSlip.length>0&&!!bettorHasParlay)}
-                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"pointer":"default",background:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:slipAmt&&bettor&&!bettorIsBlocked&&!(paSlip.length>0&&bettorHasParlay)?"#fff":"rgba(255,255,255,0.2)"}}
+                        onClick={placeBets}
+                        disabled={!slipAmt||(paSlip.length>0&&parlayAtLimit)}
+                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"pointer":"default",background:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"#fff":"rgba(255,255,255,0.2)"}}
                       >
                         PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
                       </button>
@@ -1207,32 +1327,29 @@ function App() {
 
         {tab===1&&(
           <div>
-            <div style={{padding:"12px 12px 0",display:"flex",alignItems:"center",gap:6}}>
-              <div style={{overflowX:"auto",display:"flex",gap:6,flex:1,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-              {skGames.map(function(g){
-                var active = g.id===skSel;
-                var shortLabel = g.type==="rr" ? "G"+GNUM[g.id] : g.type==="se" ? (g.id==="sf1"?"SF1":"SF2") : "Final";
-                return (
-                  <button key={g.id} onClick={function(){ setSkSel(skSel===g.id?null:g.id); }} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:1,border:"none",background:active?"#FF6B35":"rgba(255,255,255,0.08)",color:active?"#fff":"rgba(255,255,255,0.5)"}}>
-                    {shortLabel}
-                  </button>
-                );
-              })}
-              </div>
-              {skSel&&(
-                <button onClick={function(){ resetGame(skSel); }} style={{flexShrink:0,padding:"7px 12px",borderRadius:20,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
+            <div style={{padding:"12px 12px 0",display:"flex",alignItems:"center",gap:8}}>
+              <select
+                value={skSel||(skGames[0]&&skGames[0].id)||""}
+                onChange={function(e){ setSkSel(e.target.value); }}
+                style={{flex:1,padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
+              >
+                {skGames.map(function(g){
+                  var shortLabel = g.type==="rr" ? "Game "+GNUM[g.id] : g.type==="se" ? (g.id==="sf1"?"Semifinal 1":"Semifinal 2") : "Championship";
+                  var label = g.prereqLocked ? "🔒 "+shortLabel : shortLabel;
+                  return <option key={g.id} value={g.id}>{label}</option>;
+                })}
+              </select>
+              {skSel&&!skReadOnly&&(
+                <button onClick={function(){ resetGame(skSel); }} style={{flexShrink:0,padding:"10px 12px",borderRadius:10,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
                   RESET
                 </button>
               )}
             </div>
             <div style={{padding:"14px 12px"}}>
-              {!skSel&&(
-                <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:2,textAlign:"center",marginTop:20}}>SELECT A GAME ABOVE TO TRACK STATS</div>
-              )}
-              {skSel&&(function(){
-                var game = skGames.find(function(g){ return g.id===skSel; });
+              {(function(){
+                var game = skGames.find(function(g){ return g.id===(skSel||(skGames[0]&&skGames[0].id)); });
                 if(!game) return null;
-                var isLocked = (game.type==="se"&&!rrDone)||(game.type==="final"&&(!fin.t1||!fin.t2));
+                var isLocked = !!game.prereqLocked;
                 if(isLocked){
                   return (
                     <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
@@ -1243,7 +1360,7 @@ function App() {
                     </div>
                   );
                 }
-                return <SkPanel game={game}/>;
+                return <SkPanel game={game} readOnly={skReadOnly}/>;
               })()}
             </div>
           </div>
