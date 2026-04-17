@@ -49,16 +49,11 @@ var TEAMS = [
   {id:4, label:"Team 4", players:["Ryan","Cam","Tony"],       color:"#34D399"},
   {id:5, label:"Team 5", players:["Joe","Thomas","Matthew"],  color:"#FBBF24"},
 ];
-var SCHEDULE = [
-  {round:1, games:[{id:"r1g1",t1:1,t2:2},{id:"r1g2",t1:3,t2:4}], bye:5},
-  {round:2, games:[{id:"r2g1",t1:1,t2:3},{id:"r2g2",t1:2,t2:5}], bye:4},
-  {round:3, games:[{id:"r3g1",t1:2,t2:4},{id:"r3g2",t1:3,t2:5}], bye:1},
-];
-var ALL_GAMES = SCHEDULE.reduce(function(a,r){return a.concat(r.games);},[]);
-var GNUM = {};
-ALL_GAMES.forEach(function(g,i){ GNUM[g.id] = i+1; });
+// Format: Play-In 1 -> winner bye to SF1, loser to PI2 -> winner SF2, loser out
+// Play-In and Semifinal games first to 5 win by 2. Final first to 7 win by 2.
 var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
 var STRENGTH = {1:7.0, 2:6.7, 3:8.3, 4:7.0, 5:11.0};
+var GAME_CAP = {pi1:5, pi2:5, sf1:5, sf2:5, fin:7};
 var PINS = {
   Adam:"77ec867e21dc93a51d37bf42d435d1ac9c9688f8f071375feedd6a0863a536c7",
   Dan:"2fbf317387d52ebc9838265c45838977ed49681ed17cd8f0542a7d963958ca55",
@@ -77,8 +72,10 @@ var PINS = {
   Tony:"ae53a424384a3eee3b5a0147e239c05bbdc6767d6f1827e95e4545beccc67d1c",
   Seth:"3d3e74d0148d98b4405ebf4ece8d07d0fde42e1012e7419f367e8a55b7d04429"
 };
-var TABS = ["Betting","Scorekeeper","Round Robin","Bracket"];
-var TAB_ICONS = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC0","\uD83C\uDFC6"];
+var TABS = ["Betting","Scorekeeper","Bracket","Profile"];
+var TABS_SETH = ["Betting","Scorekeeper","Bracket","Profile","Admin"];
+var TAB_ICONS = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC6","\uD83D\uDC64"];
+var TAB_ICONS_SETH = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC6","\uD83D\uDC64","\uD83D\uDD12"];
 
 //
 var lsGet = function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
@@ -118,26 +115,26 @@ function calcOdds(t1id,t2id,type){
   return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
-  // rO/rU = reb over/under odds. Heavy over lean across the board   lots of bricks = lots of boards
-  Jacob: {rr:{pts:1.5,reb:1.5,ast:1.5,pO:-150,pU:130,rO:-200,rU:165,aO:-120,aU:100},se:{pts:4.5,reb:3.5,ast:2.5,pO:-145,pU:125,rO:-210,rU:175,aO:-120,aU:100}},
-  Nathan:{rr:{pts:1.5,reb:0.5,ast:1.5,pO:-135,pU:115,rO:-175,rU:145,aO:-125,aU:105},se:{pts:3.5,reb:1.5,ast:2.5,pO:-130,pU:110,rO:-185,rU:155,aO:-120,aU:100}},
-  Liam:  {rr:{pts:1.5,reb:2.5,ast:0.5,pO:-130,pU:110,rO:-220,rU:180,aO:-110,aU:-110},se:{pts:3.5,reb:4.5,ast:0.5,pO:-125,pU:105,rO:-230,rU:190,aO:-110,aU:-110}},
-  Ryan:  {rr:{pts:1.5,reb:0.5,ast:0.5,pO:-120,pU:100,rO:-165,rU:135,aO:-110,aU:-110},se:{pts:3.5,reb:1.5,ast:1.5,pO:-115,pU:-105,rO:-175,rU:145,aO:-110,aU:-110}},
-  Adam:  {rr:{pts:1.5,reb:0.5,ast:0.5,pO:-118,pU:100,rO:-160,rU:130,aO:-110,aU:-110},se:{pts:3.5,reb:1.5,ast:0.5,pO:-115,pU:-105,rO:-170,rU:140,aO:-110,aU:-110}},
-  Cam:   {rr:{pts:0.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-185,rU:155,aO:-110,aU:-110},se:{pts:2.5,reb:2.5,ast:1.5,pO:-110,pU:-110,rO:-195,rU:160,aO:-110,aU:-110}},
-  Chappy:{rr:{pts:1.5,reb:0.5,ast:0.5,pO:-115,pU:-105,rO:-155,rU:125,aO:-110,aU:-110},se:{pts:2.5,reb:1.5,ast:0.5,pO:-112,pU:-108,rO:-165,rU:135,aO:-110,aU:-110}},
-  Thomas:{rr:{pts:0.5,reb:0.5,ast:0.5,pO:-115,pU:-105,rO:-150,rU:120,aO:-110,aU:-110},se:{pts:2.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-160,rU:130,aO:-110,aU:-110}},
-  Seth:  {rr:{pts:1.5,reb:1.5,ast:0.5,pO:-118,pU:100,rO:-190,rU:158,aO:-110,aU:-110},se:{pts:2.5,reb:2.5,ast:0.5,pO:-115,pU:-105,rO:-200,rU:165,aO:-110,aU:-110}},
-  Joe:   {rr:{pts:0.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-180,rU:150,aO:-110,aU:-110},se:{pts:2.5,reb:2.5,ast:0.5,pO:-110,pU:-110,rO:-190,rU:158,aO:-110,aU:-110}},
-  Tony:  {rr:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},se:{pts:1.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-155,rU:125,aO:-110,aU:-110}},
-  Jack:  {rr:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},se:{pts:1.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-155,rU:125,aO:-110,aU:-110}},
-  Dan:   {rr:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},se:{pts:1.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-150,rU:120,aO:-110,aU:-110}},
-  Jordan:{rr:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-140,rU:110,aO:-110,aU:-110},se:{pts:1.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-150,rU:120,aO:-110,aU:-110}},
-  Matthew:{rr:{pts:0.5,reb:0.5,ast:0.5,pO:100,pU:-120,rO:-140,rU:110,aO:-110,aU:-110},se:{pts:1.5,reb:0.5,ast:0.5,pO:105,pU:-125,rO:-150,rU:120,aO:-110,aU:-110}}
+  // pi = play-in/semi lines (first to 5), fin = championship lines (first to 7)
+  Jacob: {pi:{pts:2.5,reb:2.5,ast:1.5,pO:-150,pU:130,rO:-200,rU:165,aO:-120,aU:100}, fin:{pts:3.5,reb:3.5,ast:2.5,pO:-145,pU:125,rO:-205,rU:170,aO:-120,aU:100}},
+  Nathan:{pi:{pts:2.5,reb:1.5,ast:1.5,pO:-135,pU:115,rO:-175,rU:145,aO:-125,aU:105}, fin:{pts:3.5,reb:1.5,ast:2.5,pO:-130,pU:110,rO:-180,rU:150,aO:-122,aU:102}},
+  Liam:  {pi:{pts:2.5,reb:3.5,ast:0.5,pO:-130,pU:110,rO:-220,rU:180,aO:-110,aU:-110},fin:{pts:3.5,reb:4.5,ast:1.5,pO:-125,pU:105,rO:-225,rU:185,aO:-110,aU:-110}},
+  Ryan:  {pi:{pts:2.5,reb:1.5,ast:0.5,pO:-120,pU:100,rO:-165,rU:135,aO:-110,aU:-110},fin:{pts:3.5,reb:1.5,ast:1.5,pO:-115,pU:-105,rO:-170,rU:140,aO:-110,aU:-110}},
+  Adam:  {pi:{pts:2.5,reb:1.5,ast:0.5,pO:-118,pU:100,rO:-160,rU:130,aO:-110,aU:-110},fin:{pts:3.5,reb:1.5,ast:0.5,pO:-115,pU:-105,rO:-165,rU:135,aO:-110,aU:-110}},
+  Cam:   {pi:{pts:1.5,reb:2.5,ast:0.5,pO:-110,pU:-110,rO:-185,rU:155,aO:-110,aU:-110},fin:{pts:2.5,reb:2.5,ast:1.5,pO:-110,pU:-110,rO:-190,rU:158,aO:-110,aU:-110}},
+  Chappy:{pi:{pts:2.5,reb:1.5,ast:0.5,pO:-115,pU:-105,rO:-155,rU:125,aO:-110,aU:-110},fin:{pts:2.5,reb:1.5,ast:0.5,pO:-112,pU:-108,rO:-160,rU:130,aO:-110,aU:-110}},
+  Thomas:{pi:{pts:1.5,reb:0.5,ast:0.5,pO:-115,pU:-105,rO:-150,rU:120,aO:-110,aU:-110},fin:{pts:2.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-155,rU:125,aO:-110,aU:-110}},
+  Seth:  {pi:{pts:2.5,reb:2.5,ast:0.5,pO:-118,pU:100,rO:-190,rU:158,aO:-110,aU:-110}, fin:{pts:2.5,reb:2.5,ast:0.5,pO:-115,pU:-105,rO:-195,rU:162,aO:-110,aU:-110}},
+  Joe:   {pi:{pts:1.5,reb:2.5,ast:0.5,pO:-110,pU:-110,rO:-180,rU:150,aO:-110,aU:-110},fin:{pts:2.5,reb:2.5,ast:0.5,pO:-110,pU:-110,rO:-185,rU:154,aO:-110,aU:-110}},
+  Tony:  {pi:{pts:0.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},fin:{pts:1.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-150,rU:120,aO:-110,aU:-110}},
+  Jack:  {pi:{pts:0.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},fin:{pts:1.5,reb:1.5,ast:0.5,pO:-110,pU:-110,rO:-150,rU:120,aO:-110,aU:-110}},
+  Dan:   {pi:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110},fin:{pts:1.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-148,rU:118,aO:-110,aU:-110}},
+  Jordan:{pi:{pts:0.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-140,rU:110,aO:-110,aU:-110},fin:{pts:1.5,reb:0.5,ast:0.5,pO:-110,pU:-110,rO:-145,rU:115,aO:-110,aU:-110}},
+  Matthew:{pi:{pts:0.5,reb:0.5,ast:0.5,pO:100,pU:-120,rO:-140,rU:110,aO:-110,aU:-110},fin:{pts:1.5,reb:0.5,ast:0.5,pO:105,pU:-125,rO:-145,rU:115,aO:-110,aU:-110}}
 };
-function getPL(name,type){
-  var p = PP[name] || PP.Jordan;
-  var t = type==="rr" ? p.rr : p.se;
+function getPL(name,gid){
+  var p=PP[name]||PP.Jordan;
+  var t=gid==="fin"?p.fin:p.pi;
   return {pts:t.pts,reb:t.reb,ast:t.ast,pO:{o:t.pO,u:t.pU},rO:{o:t.rO,u:t.rU},aO:{o:t.aO,u:t.aU}};
 }
 function resolveB(bet,gr,statMap){
@@ -152,7 +149,7 @@ function resolveB(bet,gr,statMap){
     var allWin = bet.legs.every(function(leg){
       var legId = leg.id;
       var legGameId = leg.gid || leg.gameId;
-      var legType = leg.type || leg.gameType || "rr";
+      var legType = leg.gid || leg.gameId || "pi1";
       var legRes = gr[legGameId];
       if(!legRes || !legRes.final) return false;
       // Resolve this prop leg
@@ -163,7 +160,7 @@ function resolveB(bet,gr,statMap){
         var stat = rest.slice(rest.lastIndexOf("_")+1);
         var pname = rest.slice(0,rest.lastIndexOf("_"));
         var pst = (statMap && statMap[legGameId+"__"+pname]) || {pts:0,reb:0,ast:0};
-        var line = getPL(pname,legType)[stat] || 0;
+        var line = getPL(pname,legGameId)[stat] || 0;
         if(dir==="over") return pst[stat]>line;
         if(dir==="under") return pst[stat]<line;
         return false;
@@ -191,7 +188,7 @@ function resolveB(bet,gr,statMap){
     var stat2 = rest2.slice(rest2.lastIndexOf("_")+1);
     var pname2 = rest2.slice(0,rest2.lastIndexOf("_"));
     var pst2 = (statMap && statMap[bet.gameId+"__"+pname2]) || {pts:0,reb:0,ast:0};
-    var line2 = getPL(pname2, bet.gameType||"rr")[stat2] || 0;
+    var line2 = getPL(pname2, bet.gameId||"pi1")[stat2] || 0;
     if(dir2==="over") return pst2[stat2]>line2?"win":"loss";
     if(dir2==="under") return pst2[stat2]<line2?"win":"loss";
   }
@@ -206,7 +203,9 @@ function App() {
   var CARD = {background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12};
 
   var tabS = useState(0); var tab = tabS[0]; var setTab = tabS[1];
-  var rrScS = useState({}); var rrSc = rrScS[0]; var setRrSc = rrScS[1];
+  var drawS = useState(null); var draw = drawS[0]; var setDraw = drawS[1];
+  var pi1S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var pi1 = pi1S[0]; var setPi1 = pi1S[1];
+  var pi2S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var pi2 = pi2S[0]; var setPi2 = pi2S[1];
   var sf1S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf1 = sf1S[0]; var setSf1 = sf1S[1];
   var sf2S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf2 = sf2S[0]; var setSf2 = sf2S[1];
   var finS = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var fin = finS[0]; var setFin = finS[1];
@@ -222,10 +221,16 @@ function App() {
   var amtS = useState(null); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
   var ledgerS = useState(false); var showLedger = ledgerS[0]; var setShowLedger = ledgerS[1];
   var rulesS = useState(false); var showRules = rulesS[0]; var setShowRules = rulesS[1];
+  var profileS = useState(false); var showProfile = profileS[0]; var setShowProfile = profileS[1];
+  var balsS = useState({}); var bals = balsS[0]; var setBals = balsS[1];
+  var depPlayerS = useState(""); var depPlayer = depPlayerS[0]; var setDepPlayer = depPlayerS[1];
+  var depAmtS = useState(""); var depAmt = depAmtS[0]; var setDepAmt = depAmtS[1];
+  var depMsgS = useState(null); var depMsg = depMsgS[0]; var setDepMsg = depMsgS[1];
   var loggedInS = useState(function(){ return lsGet("loggedIn")||null; }); var loggedIn = loggedInS[0]; var setLoggedIn = loggedInS[1];
   var validUser = loggedIn && PINS.hasOwnProperty(loggedIn);
   var bettor = validUser ? loggedIn : "";
-  var skReadOnly = !validUser || (loggedIn!=="Seth" && loggedIn!=="Joaquin");
+  var isSeth = loggedIn==="Seth";
+  var skReadOnly = !isSeth && loggedIn!=="Joaquin";
   var loginNameS = useState(""); var loginName = loginNameS[0]; var setLoginName = loginNameS[1];
   var loginPinS = useState(""); var loginPin = loginPinS[0]; var setLoginPin = loginPinS[1];
   var loginErrS = useState(false); var loginErr = loginErrS[0]; var setLoginErr = loginErrS[1];
@@ -234,12 +239,15 @@ function App() {
   useEffect(function(){
     var db = window.__db;
     var keys = [
-      {k:"rr",    set:setRrSc,  def:{}},
-      {k:"sf1",   set:setSf1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
-      {k:"sf2",   set:setSf2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
-      {k:"fin",   set:setFin,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
-      {k:"bets",  set:setBets,  def:[]},
-      {k:"pst",   set:setPStats,def:{}}
+      {k:"draw", set:setDraw,  def:null},
+      {k:"pi1",  set:setPi1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+      {k:"pi2",  set:setPi2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+      {k:"sf1",  set:setSf1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+      {k:"sf2",  set:setSf2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+      {k:"fin",  set:setFin,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
+      {k:"bets", set:setBets,  def:[]},
+      {k:"pst",  set:setPStats,def:{}},
+      {k:"bal",  set:setBals,  def:{}}
     ];
     var refs = keys.map(function(item){
       var ref = db.ref("state/" + item.k);
@@ -259,216 +267,144 @@ function App() {
   useEffect(function(){ lsSet("loggedIn",loggedIn); }, [loggedIn]);
 
   //
-  function setRrScFb(updater){ setRrSc(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("rr",next); return next; }); }
-  function setSf1Fb(updater){ setSf1(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf1",next); return next; }); }
-  function setSf2Fb(updater){ setSf2(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("sf2",next); return next; }); }
-  function setFinFb(updater){ setFin(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("fin",next); return next; }); }
-  function setBetsFb(updater){ setBets(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("bets",next); return next; }); }
-  function setPStatsFb(updater){ setPStats(function(prev){ var next=typeof updater==="function"?updater(prev):updater; fbSet("pst",next); return next; }); }
+  function setDrawFb(v){ setDraw(v); fbSet("draw",v); }
+  function setPi1Fb(u){ setPi1(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pi1",n); return n; }); }
+  function setPi2Fb(u){ setPi2(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pi2",n); return n; }); }
+  function setSf1Fb(u){ setSf1(function(p){ var n=typeof u==="function"?u(p):u; fbSet("sf1",n); return n; }); }
+  function setSf2Fb(u){ setSf2(function(p){ var n=typeof u==="function"?u(p):u; fbSet("sf2",n); return n; }); }
+  function setFinFb(u){ setFin(function(p){ var n=typeof u==="function"?u(p):u; fbSet("fin",n); return n; }); }
+  function setBetsFb(u){ setBets(function(p){ var n=typeof u==="function"?u(p):u; fbSet("bets",n); return n; }); }
+  function setPStatsFb(u){ setPStats(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pst",n); return n; }); }
+  function setBalsFb(u){ setBals(function(p){ var n=typeof u==="function"?u(p):u; fbSet("bal",n); return n; }); }
+
+  // Match helpers
+  function getMatch(gid){ if(gid==="pi1") return pi1; if(gid==="pi2") return pi2; if(gid==="sf1") return sf1; if(gid==="sf2") return sf2; if(gid==="fin") return fin; return null; }
+  function setMatchFb(gid,u){ if(gid==="pi1") setPi1Fb(u); else if(gid==="pi2") setPi2Fb(u); else if(gid==="sf1") setSf1Fb(u); else if(gid==="sf2") setSf2Fb(u); else if(gid==="fin") setFinFb(u); }
+
+  // Random draw - Seth only
+  function doDraw(){
+    var ids=[1,2,3,4,5];
+    for(var i=ids.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=ids[i]; ids[i]=ids[j]; ids[j]=tmp; }
+    var d={pi1t1:ids[0],pi1t2:ids[1],pi2t2:ids[2],s1:ids[3],s2:ids[4]};
+    setDrawFb(d);
+    setPi1Fb({t1:ids[0],t2:ids[1],s1:0,s2:0,w:null});
+    setPi2Fb({t1:null,t2:ids[2],s1:0,s2:0,w:null});
+    setSf1Fb({t1:null,t2:ids[3],s1:0,s2:0,w:null});
+    setSf2Fb({t1:null,t2:ids[4],s1:0,s2:0,w:null});
+    setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
+    setPStatsFb({});
+  }
 
   function skKey(gid,p){ return gid+"__"+p; }
   function getSt(gid,p){ return pStats[skKey(gid,p)] || {pts:0,reb:0,ast:0}; }
-  function gameMax(gid){
-    // RR games cap at 3, bracket games cap at 7
-    if(gid==="sf1"||gid==="sf2"||gid==="fin") return 7;
-    return 3;
-  }
+  function gameMax(gid){ return GAME_CAP[gid]||7; }
   function adjSt(gid,teamId,p,f,d){
-    if(f==="pts" && d>0){
-      var cap = gameMax(gid);
-      var curTeamPts = liveTP(gid,teamId);
-      if(curTeamPts >= cap){
-        if(gid==="sf1"||gid==="sf2"||gid==="fin"){
-          // Find the other team's id directly from state
-          var matchState = gid==="sf1" ? sf1 : gid==="sf2" ? sf2 : fin;
-          var otherTeamId = matchState.t1===teamId ? matchState.t2 : matchState.t1;
-          var otherPts = otherTeamId ? liveTP(gid,otherTeamId) : 0;
-          // Allow continued scoring if both teams at cap-1 or more and no one leads by 2
-          if(otherPts >= cap-1 && curTeamPts-otherPts < 2){
-            // overtime   fall through to allow
-          } else {
-            return; // capped
-          }
-        } else {
-          return; // RR cap
-        }
-      }
+    if(f==="pts"&&d>0){
+      var cap=gameMax(gid); var curTeamPts=liveTP(gid,teamId);
+      var mm=getMatch(gid); var otherTid=mm?(mm.t1===teamId?mm.t2:mm.t1):null;
+      var otherPts=otherTid?liveTP(gid,otherTid):0;
+      if(curTeamPts>=cap){ var inOT=otherPts>=cap-1&&curTeamPts-otherPts<2; if(!inOT) return; }
     }
     setPStatsFb(function(prev){
-      var k = skKey(gid,p);
-      var c = prev[k] || {pts:0,reb:0,ast:0};
-      var next = {};
-      next[f] = Math.max(0, c[f]+d);
-      return Object.assign({}, prev, {[k]: Object.assign({},c,next)});
+      var k=skKey(gid,p); var c=prev[k]||{pts:0,reb:0,ast:0}; var next={}; next[f]=Math.max(0,c[f]+d);
+      return Object.assign({},prev,{[k]:Object.assign({},c,next)});
     });
   }
   function resetGame(gid){
-    var teams = skGames.find(function(g){ return g.id===gid; });
-    if(!teams) return;
-    var allPlayers = teams.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players); },[]);
-    setPStatsFb(function(prev){
-      var next = Object.assign({},prev);
-      allPlayers.forEach(function(p){
-        next[skKey(gid,p)] = {pts:0,reb:0,ast:0};
-      });
-      return next;
-    });
-    // Reopen the RR game if finalized
-    if(rrSc[gid]&&rrSc[gid].final){
-      reopenRR(gid);
+    var m=getMatch(gid); if(!m) return;
+    var teams=[m.t1,m.t2].filter(Boolean);
+    var allP=teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players); },[]);
+    setPStatsFb(function(prev){ var next=Object.assign({},prev); allP.forEach(function(p){ next[skKey(gid,p)]={pts:0,reb:0,ast:0}; }); return next; });
+    setMatchFb(gid,function(mm){ return Object.assign({},mm,{s1:0,s2:0,w:null}); });
+    if(gid==="pi1"){
+      setPi2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
+      setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
+      setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
+      setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
+      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["pi2","sf1","sf2","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0,reb:0,ast:0}; }); }); return next; });
     }
-    // If this is an RR game, also wipe SF and Final   standings are no longer valid
-    var isRR = ALL_GAMES.some(function(g){ return g.id===gid; });
-    if(isRR){
-      var emptyMatch = {t1:null,t2:null,s1:0,s2:0,w:null};
-      setSf1Fb(emptyMatch);
-      setSf2Fb(emptyMatch);
-      setFinFb(emptyMatch);
-      // Also clear SF/Final player stats
-      ["sf1","sf2","fin"].forEach(function(bid){
-        setPStatsFb(function(prev){
-          var next = Object.assign({},prev);
-          ALL_PLAYERS.forEach(function(p){
-            next[skKey(bid,p)] = {pts:0,reb:0,ast:0};
-          });
-          return next;
-        });
-      });
+    if(gid==="pi2"){
+      setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
+      setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,s1:0,s2:0,w:null}); });
+      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["sf2","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0,reb:0,ast:0}; }); }); return next; });
+    }
+    if(gid==="sf1"||gid==="sf2"){
+      setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,s1:0,s2:0,w:null}); });
+      setPStatsFb(function(prev){ var next=Object.assign({},prev); ALL_PLAYERS.forEach(function(p){ next[skKey("fin",p)]={pts:0,reb:0,ast:0}; }); return next; });
     }
   }
   function liveTP(gid,tid){
+    if(!tid) return 0;
     return getTeam(tid).players.reduce(function(s,p){ return s+(pStats[skKey(gid,p)]&&pStats[skKey(gid,p)].pts||0); }, 0);
   }
 
-  // Single source of truth: resolve ALL bets whenever any score state changes
+  // Resolve bets on game state changes
   useEffect(function(){
     if(!bets.length) return;
-    // Build game results from current state
-    var gr = {};
-    ALL_GAMES.forEach(function(g){
-      var sc = rrSc[g.id]; if(!sc) return;
-      var o = calcOdds(g.t1,g.t2,"rr");
-      gr[g.id] = {s1:sc.t1,s2:sc.t2,spread:o.spread,ou:o.ou,sfav:o.sfav,final:!!sc.final};
+    var gr={};
+    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){
+      var m=getMatch(gid); if(!m||!m.t1||!m.t2) return;
+      gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w};
     });
-    [{gid:"sf1",m:sf1},{gid:"sf2",m:sf2}].forEach(function(x){
-      if(!x.m.t1||!x.m.t2) return;
-      var o = calcOdds(x.m.t1,x.m.t2,"se");
-      gr[x.gid] = {s1:x.m.s1,s2:x.m.s2,spread:o.spread,ou:o.ou,sfav:o.sfav,final:!!x.m.w};
-    });
-    if(fin.t1&&fin.t2){
-      var o2 = calcOdds(fin.t1,fin.t2,"final");
-      gr["fin"] = {s1:fin.s1,s2:fin.s2,spread:o2.spread,ou:o2.ou,sfav:o2.sfav,final:!!fin.w};
-    }
-    var resolved = bets.map(function(b){ return Object.assign({},b,{result:resolveB(b,gr,pStats)}); });
-    var changed = resolved.some(function(b,i){ return b.result!==bets[i].result; });
+    var resolved=bets.map(function(b){ return Object.assign({},b,{result:resolveB(b,gr,pStats)}); });
+    var changed=resolved.some(function(b,i){ return b.result!==bets[i].result; });
     if(changed) setBetsFb(resolved);
-  }, [rrSc,sf1.w,sf2.w,fin.w,pStats]);
+  },[pi1.w,pi2.w,sf1.w,sf2.w,fin.w,pStats]);
 
-  function finalizeRR(gameId){
-    setRrScFb(function(prev){
-      var cur = prev[gameId] || {t1:0,t2:0,final:false};
-      var upd = {}; upd[gameId] = Object.assign({},cur,{final:true});
-      return Object.assign({},prev,upd);
+  // Score sync
+  useEffect(function(){
+    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){
+      var m=getMatch(gid); if(!m||!m.t1||!m.t2) return;
+      var s1=liveTP(gid,m.t1),s2=liveTP(gid,m.t2);
+      if(s1!==m.s1||s2!==m.s2) setMatchFb(gid,function(mm){ return Object.assign({},mm,{s1:s1,s2:s2}); });
     });
-  }
+  },[pStats,pi1.t1,pi1.t2,pi2.t1,pi2.t2,sf1.t1,sf1.t2,sf2.t1,sf2.t2,fin.t1,fin.t2]);
 
-  function reopenRR(gameId){
-    setRrScFb(function(prev){
-      var cur = prev[gameId] || {t1:0,t2:0,final:false};
-      var upd = {}; upd[gameId] = Object.assign({},cur,{final:false});
-      return Object.assign({},prev,upd);
-    });
-  }
-
+  // Auto-advance: PI1 winner -> SF1 t1, PI1 loser -> PI2 t1
   useEffect(function(){
-    ALL_GAMES.forEach(function(g){
-      var s1=liveTP(g.id,g.t1), s2=liveTP(g.id,g.t2);
-      setRrScFb(function(prev){
-        var cur = prev[g.id]||{t1:0,t2:0,final:false};
-        if(cur.t1===s1&&cur.t2===s2) return prev;
-        var upd = {}; upd[g.id] = Object.assign({},cur,{t1:s1,t2:s2});
-        return Object.assign({},prev,upd);
-      });
-    });
-  }, [pStats]);
-
+    if(!pi1.w) return;
+    var loser=pi1.w===pi1.t1?pi1.t2:pi1.t1;
+    if(pi2.t1!==loser) setPi2Fb(function(m){ return Object.assign({},m,{t1:loser}); });
+    if(sf1.t1!==pi1.w) setSf1Fb(function(m){ return Object.assign({},m,{t1:pi1.w}); });
+  },[pi1.w]);
   useEffect(function(){
-    if(sf1.t1&&sf1.t2){
-      var s1=liveTP("sf1",sf1.t1), s2=liveTP("sf1",sf1.t2);
-      if(s1!==sf1.s1||s2!==sf1.s2) setSf1Fb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
-    }
-  }, [pStats,sf1.t1,sf1.t2]);
-  useEffect(function(){
-    if(sf2.t1&&sf2.t2){
-      var s1=liveTP("sf2",sf2.t1), s2=liveTP("sf2",sf2.t2);
-      if(s1!==sf2.s1||s2!==sf2.s2) setSf2Fb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
-    }
-  }, [pStats,sf2.t1,sf2.t2]);
-  useEffect(function(){
-    if(fin.t1&&fin.t2){
-      var s1=liveTP("fin",fin.t1), s2=liveTP("fin",fin.t2);
-      if(s1!==fin.s1||s2!==fin.s2) setFinFb(function(m){ return Object.assign({},m,{s1:s1,s2:s2}); });
-    }
-  }, [pStats,fin.t1,fin.t2]);
+    if(!pi2.w) return;
+    if(sf2.t1!==pi2.w) setSf2Fb(function(m){ return Object.assign({},m,{t1:pi2.w}); });
+  },[pi2.w]);
+  useEffect(function(){ if(sf1.w&&fin.t1!==sf1.w) setFinFb(function(m){ return Object.assign({},m,{t1:sf1.w}); }); },[sf1.w]);
+  useEffect(function(){ if(sf2.w&&fin.t2!==sf2.w) setFinFb(function(m){ return Object.assign({},m,{t2:sf2.w}); }); },[sf2.w]);
 
-  var standings = TEAMS.map(function(t){
-    var w=0,l=0,pf=0,pa=0;
-    ALL_GAMES.forEach(function(g){
-      var sc=rrSc[g.id]; if(!sc||!sc.final) return;
-      if(g.t1===t.id){pf+=sc.t1;pa+=sc.t2;sc.t1>sc.t2?w++:l++;}
-      if(g.t2===t.id){pf+=sc.t2;pa+=sc.t1;sc.t2>sc.t1?w++:l++;}
-    });
-    return Object.assign({},t,{w:w,l:l,pf:pf,pa:pa});
-  }).sort(function(a,b){ return b.w-a.w||b.pf-a.pf; });
-
-  var rrDone = ALL_GAMES.every(function(g){ return rrSc[g.id]&&rrSc[g.id].final; });
-  var rrDoneN = ALL_GAMES.filter(function(g){ return rrSc[g.id]&&rrSc[g.id].final; }).length;
-
-  useEffect(function(){
-    if(rrDone&&!sf1.t1){
-      var s = standings;
-      setSf1Fb({t1:s[0].id,t2:s[3].id,s1:0,s2:0,w:null});
-      setSf2Fb({t1:s[1].id,t2:s[2].id,s1:0,s2:0,w:null});
-    }
-  }, [rrDone]);
-
-  var skGames = ALL_GAMES.map(function(g){
-    return {id:g.id,label:"G"+GNUM[g.id]+": "+getTeam(g.t1).label+" vs "+getTeam(g.t2).label,teams:[g.t1,g.t2],type:"rr"};
-  });
-  skGames.push({id:"sf1",label:sf1.t1&&sf1.t2?"SF1: "+getTeam(sf1.t1).label+" vs "+getTeam(sf1.t2).label:"SF1: TBD vs TBD",teams:sf1.t1&&sf1.t2?[sf1.t1,sf1.t2]:[],type:"se",prereqLocked:!rrDone});
-  skGames.push({id:"sf2",label:sf2.t1&&sf2.t2?"SF2: "+getTeam(sf2.t1).label+" vs "+getTeam(sf2.t2).label:"SF2: TBD vs TBD",teams:sf2.t1&&sf2.t2?[sf2.t1,sf2.t2]:[],type:"se",prereqLocked:!rrDone});
-  skGames.push({id:"fin",label:fin.t1&&fin.t2?"Final: "+getTeam(fin.t1).label+" vs "+getTeam(fin.t2).label:"Final: TBD vs TBD",teams:fin.t1&&fin.t2?[fin.t1,fin.t2]:[],type:"final",prereqLocked:!(sf1.w&&sf2.w)});
-
-  //
-  function getPlayersInGame(gid){
-    var rg = ALL_GAMES.find(function(g){ return g.id===gid; });
-    if(rg) return getTeam(rg.t1).players.concat(getTeam(rg.t2).players);
-    if(gid==="sf1"&&sf1.t1&&sf1.t2) return getTeam(sf1.t1).players.concat(getTeam(sf1.t2).players);
-    if(gid==="sf2"&&sf2.t1&&sf2.t2) return getTeam(sf2.t1).players.concat(getTeam(sf2.t2).players);
-    if(gid==="fin"&&fin.t1&&fin.t2) return getTeam(fin.t1).players.concat(getTeam(fin.t2).players);
-    return [];
+  // Game lock logic
+  function isGameLocked(gid){
+    if(gid==="pi1") return !draw;
+    if(gid==="pi2") return !pi1.w;
+    if(gid==="sf1") return !pi2.w;
+    if(gid==="sf2") return !sf1.w;
+    if(gid==="fin") return !sf2.w;
+    return false;
   }
-  function isGameFinalized(gid){
-    return (rrSc[gid]&&rrSc[gid].final)||(gid==="sf1"&&!!sf1.w)||(gid==="sf2"&&!!sf2.w)||(gid==="fin"&&!!fin.w);
-  }
-  function isGameStarted(gid){
-    if(isGameFinalized(gid)) return true;
-    var players = getPlayersInGame(gid);
-    return players.some(function(p){ var s=pStats[skKey(gid,p)]; return s&&(s.pts>0||s.reb>0||s.ast>0); });
-  }
-  function isPlayerInGame(gid){
-    return getPlayersInGame(gid).indexOf(bettor)>=0;
-  }
+  function getPlayersInGame(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return []; return getTeam(m.t1).players.concat(getTeam(m.t2).players); }
+  function isGameFinalized(gid){ var m=getMatch(gid); return !!(m&&m.w); }
+  function isGameStarted(gid){ if(isGameFinalized(gid)) return true; return getPlayersInGame(gid).some(function(p){ var s=pStats[skKey(gid,p)]; return s&&(s.pts>0||s.reb>0||s.ast>0); }); }
+  function isPlayerInGame(gid){ return getPlayersInGame(gid).indexOf(bettor)>=0; }
 
-  var bGames = ALL_GAMES.map(function(g){
-    return {id:g.id,full:"Game "+GNUM[g.id],t1:g.t1,t2:g.t2,type:"rr",
-      prereqLocked:false, playerLocked:isPlayerInGame(g.id)};
-  });
-  bGames.push({id:"sf1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,type:"se",prereqLocked:!rrDone,playerLocked:!rrDone?false:isPlayerInGame("sf1")});
-  bGames.push({id:"sf2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,type:"se",prereqLocked:!rrDone,playerLocked:!rrDone?false:isPlayerInGame("sf2")});
-  bGames.push({id:"fin",full:"Championship",t1:fin.t1,t2:fin.t2,type:"final",prereqLocked:!(sf1.w&&sf2.w),playerLocked:(sf1.w&&sf2.w)?isPlayerInGame("fin"):false});
+  var skGames=[
+    {id:"pi1",label:"Play-In 1",  teams:pi1.t1&&pi1.t2?[pi1.t1,pi1.t2]:[],prereqLocked:!draw},
+    {id:"pi2",label:"Play-In 2",  teams:pi2.t1&&pi2.t2?[pi2.t1,pi2.t2]:[],prereqLocked:isGameLocked("pi2")},
+    {id:"sf1",label:"Semifinal 1",teams:sf1.t1&&sf1.t2?[sf1.t1,sf1.t2]:[],prereqLocked:isGameLocked("sf1")},
+    {id:"sf2",label:"Semifinal 2",teams:sf2.t1&&sf2.t2?[sf2.t1,sf2.t2]:[],prereqLocked:isGameLocked("sf2")},
+    {id:"fin",label:"Championship",teams:fin.t1&&fin.t2?[fin.t1,fin.t2]:[],prereqLocked:isGameLocked("fin")},
+  ];
 
-  var selG = bGames.find(function(g){ return g.id===bGame; }) || bGames[0];
+  var bGames=[
+    {id:"pi1",full:"Play-In 1",  t1:pi1.t1,t2:pi1.t2,prereqLocked:!draw,playerLocked:draw?isPlayerInGame("pi1"):false},
+    {id:"pi2",full:"Play-In 2",  t1:pi2.t1,t2:pi2.t2,prereqLocked:isGameLocked("pi2"),playerLocked:!isGameLocked("pi2")&&isPlayerInGame("pi2")},
+    {id:"sf1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,prereqLocked:isGameLocked("sf1"),playerLocked:!isGameLocked("sf1")&&isPlayerInGame("sf1")},
+    {id:"sf2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,prereqLocked:isGameLocked("sf2"),playerLocked:!isGameLocked("sf2")&&isPlayerInGame("sf2")},
+    {id:"fin",full:"Championship",t1:fin.t1,t2:fin.t2,prereqLocked:isGameLocked("fin"),playerLocked:!isGameLocked("fin")&&isPlayerInGame("fin")},
+  ];
+
+  var selG=bGames.find(function(g){ return g.id===bGame; })||bGames[0];
 
   function hasSt(id){ return stSlip.some(function(l){ return l.id===id; }); }
   function haPa(id){ return paSlip.some(function(l){ return l.id===id; }); }
@@ -501,37 +437,36 @@ function App() {
   function togglePa(leg){ if(haPa(leg.id)){setPaSlip(function(s){return s.filter(function(l){return l.id!==leg.id;});});return;} if(!paBlock(leg)) setPaSlip(function(s){return s.concat([leg]);}); }
 
   function placeBets(){
-    if(!bettor || !slipAmt) return;
-    if(stSlip.length===0 && paSlip.length===0) return;
-    if(paSlip.length>0 && parlayAtLimit) return;
-    // Build game results for resolving
-    var gr = {};
-    ALL_GAMES.forEach(function(g){
-      var sc=rrSc[g.id]; if(!sc) return;
-      var o=calcOdds(g.t1,g.t2,"rr");
-      gr[g.id]={s1:sc.t1,s2:sc.t2,spread:o.spread,ou:o.ou,sfav:o.sfav,final:!!sc.final};
-    });
-    if(sf1.t1&&sf1.t2){var o1=calcOdds(sf1.t1,sf1.t2,"se");gr["sf1"]={s1:sf1.s1,s2:sf1.s2,spread:o1.spread,ou:o1.ou,sfav:o1.sfav,final:!!sf1.w};}
-    if(sf2.t1&&sf2.t2){var o2=calcOdds(sf2.t1,sf2.t2,"se");gr["sf2"]={s1:sf2.s1,s2:sf2.s2,spread:o2.spread,ou:o2.ou,sfav:o2.sfav,final:!!sf2.w};}
-    if(fin.t1&&fin.t2){var oFin=calcOdds(fin.t1,fin.t2,"final");gr["fin"]={s1:fin.s1,s2:fin.s2,spread:oFin.spread,ou:oFin.ou,sfav:oFin.sfav,final:!!fin.w};}
-    var nb = [];
+    if(!bettor||!slipAmt) return;
+    if(stSlip.length===0&&paSlip.length===0) return;
+    if(paSlip.length>0&&parlayAtLimit) return;
+    var totalCost=slipAmt*(stSlip.length+(paSlip.length>0?1:0));
+    if(parseFloat(bals[bettor]||0)<totalCost) return;
+    var gr={};
+    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return; gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w}; });
+    var nb=[];
     stSlip.forEach(function(leg,i){
       var tw=mlPay(leg.ml,slipAmt);
-      var b={id:Date.now()+i,bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString(),gameType:leg.type||"rr"};
+      var b={id:Date.now()+i,bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString()};
       b.result=resolveB(b,gr,pStats); nb.push(b);
     });
     if(paSlip.length>0){
       var tw2=parlayWin(paSlip,slipAmt);
-      var pb={id:Date.now()+100,bettor:bettor,game:"PROP PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:paSlip,pick:paSlip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(paSlip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString(),gameType:"parlay"};
+      var pb={id:Date.now()+100,bettor:bettor,game:"PROP PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:paSlip,pick:paSlip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(paSlip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString()};
       pb.result=resolveB(pb,gr,pStats); nb.push(pb);
     }
+    // Deduct total stake from balance
+    var totalStake = slipAmt * (stSlip.length + (paSlip.length>0?1:0));
+    setBalsFb(function(prev){
+      var cur=parseFloat(prev[bettor]||0);
+      var next=Object.assign({},prev);
+      next[bettor]=parseFloat((cur-totalStake).toFixed(2));
+      return next;
+    });
     setBetsFb(function(p){ return p.concat(nb); });
     setStSlip([]); setPaSlip([]); setSlipAmt(null); setSlipOpen(false);
   }
 
-  var totW = bets.reduce(function(s,b){ return s+b.amt; }, 0);
-  var totP = bets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; }, 0);
-  var maxA = selG ? selG.max : 5;
   var amts = [1,5,10];
 
   //
@@ -555,7 +490,7 @@ function App() {
 
   function GameLines(props) {
     var game = props.game;
-    var o = calcOdds(game.t1,game.t2,game.type);
+    var o = calcOdds(game.t1,game.t2);
     var t1 = getTeam(game.t1);
     var t2 = getTeam(game.t2);
     var gl = game.full;
@@ -612,7 +547,7 @@ function App() {
     return (
       <div>
         <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,200,100,0.5)",letterSpacing:1,marginBottom:12,padding:"6px 10px",background:"rgba(255,184,0,0.05)",borderRadius:6,border:"1px solid rgba(255,184,0,0.1)"}}>
-          Same-game parlay only. Max 3 legs.
+          Same-game parlay only. Max 3 legs. Max 2 parlays per game.
         </div>
         {teams.map(function(team){
           return (
@@ -623,7 +558,7 @@ function App() {
                 <div style={{flex:1,height:1,background:team.color+"20",marginLeft:4}}/>
               </div>
               {team.players.map(function(name){
-                var pl = getPL(name,game.type);
+                var pl = getPL(name,game.id);
                 var stats = [
                   {key:"pts",label:"Points",  line:pl.pts, oML:pl.pO.o, uML:pl.pO.u},
                   {key:"reb",label:"Rebounds",line:pl.reb, oML:pl.rO.o, uML:pl.rO.u},
@@ -673,59 +608,27 @@ function App() {
   function SkPanel(props) {
     var game = props.game;
     var readOnly = props.readOnly;
-    var allP = game.teams.reduce(function(a,tid){ return a.concat(getTeam(tid).players.map(function(p){ return {name:p,team:getTeam(tid)}; })); },[]);
     var cap = gameMax(game.id);
 
     function renderFinalizeBar(){
-      var t1=getTeam(game.teams[0]), t2=getTeam(game.teams[1]);
-      var s1=liveTP(game.id,t1.id), s2=liveTP(game.id,t2.id);
-      var isBracket = game.type==="se"||game.type==="final";
-      function hasWinner(){
-        if(!isBracket) return s1!==s2 && (s1>=cap||s2>=cap);
-        if(s1>=cap && s1-s2>=2) return true;
-        if(s2>=cap && s2-s1>=2) return true;
-        return false;
-      }
-      var alreadyFinal = (game.type==="rr" && rrSc[game.id]&&rrSc[game.id].final)
-        || (game.id==="sf1"&&!!sf1.w)
-        || (game.id==="sf2"&&!!sf2.w)
-        || (game.id==="fin"&&!!fin.w);
-      var winner = hasWinner() ? (s1>s2?t1:t2) : null;
-      var canFinalize = !alreadyFinal && !!winner;
+      var t1=getTeam(game.teams[0]),t2=getTeam(game.teams[1]);
+      var s1=liveTP(game.id,t1.id),s2=liveTP(game.id,t2.id);
+      function hasWinner(){ return (s1>=cap&&s1-s2>=2)||(s2>=cap&&s2-s1>=2); }
+      var mm=getMatch(game.id); var alreadyFinal=mm&&!!mm.w;
+      var winner=hasWinner()?(s1>s2?t1:t2):null; var canFinalize=!alreadyFinal&&!!winner;
+      var tied=s1===s2&&s1>=cap-1;
+      var statusMsg=alreadyFinal?"FINAL: "+(s1>s2?t1.label:t2.label)+" wins "+Math.max(s1,s2)+"-"+Math.min(s1,s2):tied?"TIED AT "+s1+" — KEEP PLAYING":canFinalize?null:"FIRST TO "+cap+", WIN BY 2";
       function doFinalize(){
         if(!canFinalize) return;
-        var w = s1>s2?t1.id:t2.id;
-        if(game.type==="rr"){
-          finalizeRR(game.id);
-        } else if(game.id==="sf1"){
-          setSf1Fb(function(mm){ return Object.assign({},mm,{w:w}); });
-          setFinFb(function(f){ return Object.assign({},f,{t1:w}); });
-        } else if(game.id==="sf2"){
-          setSf2Fb(function(mm){ return Object.assign({},mm,{w:w}); });
-          setFinFb(function(f){ return Object.assign({},f,{t2:w}); });
-        } else if(game.id==="fin"){
-          setFinFb(function(mm){ return Object.assign({},mm,{w:w}); });
-        }
+        var w=s1>s2?t1.id:t2.id;
+        setMatchFb(game.id,function(mm){ return Object.assign({},mm,{w:w}); });
       }
       function doReopen(){
-        if(game.type==="rr"){
-          reopenRR(game.id);
-        } else if(game.id==="sf1"){
-          setSf1Fb(function(mm){ return Object.assign({},mm,{w:null}); });
-          setFinFb(function(f){ return Object.assign({},f,{t1:null,w:null}); });
-        } else if(game.id==="sf2"){
-          setSf2Fb(function(mm){ return Object.assign({},mm,{w:null}); });
-          setFinFb(function(f){ return Object.assign({},f,{t2:null,w:null}); });
-        } else if(game.id==="fin"){
-          setFinFb(function(mm){ return Object.assign({},mm,{w:null}); });
-        }
+        setMatchFb(game.id,function(mm){ return Object.assign({},mm,{w:null}); });
+        if(game.id==="pi1"){ setPi2Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); }); setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); }); }
+        if(game.id==="pi2") setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); });
+        if(game.id==="sf1"||game.id==="sf2") setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,w:null}); });
       }
-      var tied = isBracket && s1===s2 && s1>=6;
-      var statusMsg = alreadyFinal
-        ? "FINAL: "+(s1>s2?t1.label:t2.label)+" wins "+Math.max(s1,s2)+"-"+Math.min(s1,s2)
-        : tied ? "TIED AT "+s1+" - KEEP PLAYING"
-        : canFinalize ? null
-        : isBracket ? "FIRST TO "+cap+" (WIN BY 2)" : "FIRST TO "+cap;
       if(alreadyFinal){
         return (
           <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -739,9 +642,7 @@ function App() {
       }
       return (
         <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-          {!canFinalize&&statusMsg&&(
-            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>
-          )}
+          {!canFinalize&&statusMsg&&<div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>}
           {!readOnly&&<button onClick={doFinalize} disabled={!canFinalize} style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}>FINALIZE RESULT</button>}
         </div>
       );
@@ -751,17 +652,15 @@ function App() {
         
         <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,107,53,0.06)"}}>
           <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:"#FF6B35"}}>{game.label}</div>
-          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>FIRST TO {cap}</div>
+          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>TO {cap}, WIN BY 2</div>
         </div>
         <div style={{padding:"12px 14px"}}>
           {game.teams.map(function(tid){
             var team = getTeam(tid);
             var teamPts = liveTP(game.id,team.id);
-            var isBracketGame = game.id==="sf1"||game.id==="sf2"||game.id==="fin";
             var otherTid = game.teams.find(function(t){ return t!==tid; });
             var otherPts = otherTid ? liveTP(game.id,otherTid) : 0;
-            // In bracket OT (both >= cap-1, lead < 2), don't treat as capped
-            var inOvertime = isBracketGame && teamPts>=cap-1 && otherPts>=cap-1 && Math.abs(teamPts-otherPts)<2;
+            var inOvertime = teamPts>=cap-1 && otherPts>=cap-1 && Math.abs(teamPts-otherPts)<2;
             var atCap = teamPts >= cap && !inOvertime;
             return (
               <div key={tid} style={{marginBottom:14}}>
@@ -905,9 +804,8 @@ function App() {
           <div style={{fontFamily:DI,fontSize:18,letterSpacing:2}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.4)",letterSpacing:1}}>{loggedIn}</div>
-          <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.7)",fontFamily:MO,fontSize:8,letterSpacing:1,padding:"5px 9px",cursor:"pointer"}}>RULES</button>
-          <button onClick={function(){ setLoggedIn(null); setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{flexShrink:0,background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:6,color:"rgba(255,120,120,0.7)",fontFamily:MO,fontSize:8,letterSpacing:1,padding:"5px 9px",cursor:"pointer"}}>LOGOUT</button>
+          <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.55)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>RULES</button>
+          <button onClick={function(){ setLoggedIn(null); setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{flexShrink:0,background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:6,color:"rgba(255,120,120,0.7)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>LOGOUT</button>
         </div>
       </div>
 
@@ -926,9 +824,11 @@ function App() {
                   <span style={{fontSize:15}}>&#x1F3C0;</span> FORMAT
                 </div>
                 {[
-                  {label:"Round Robin",desc:"6 sequential games. First team to 3 points wins. Each team plays 2 games and gets 1 bye."},
-                  {label:"Advancement",desc:"Top 4 teams by record (points scored as tiebreaker) advance to the single-elimination bracket."},
-                  {label:"Bracket",desc:"Semifinal and Championship games are first to 7 points. If tied at 6-6, play continues — win by 2."},
+                  {label:"Play-In 1",desc:"Two randomly drawn teams battle it out. Winner gets a bye straight to Semifinal 1. Loser drops into Play-In 2. First to 5, win by 2."},
+                  {label:"Play-In 2",desc:"Play-In 1 loser vs a third randomly drawn team. Winner advances to Semifinal 1. Loser is eliminated. First to 5, win by 2."},
+                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 5, win by 2."},
+                  {label:"Semifinal 2",desc:"Semifinal 1 winner vs Bye Seed 2. First to 5, win by 2."},
+                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 7, win by 2. Glory on the line."},
                 ].map(function(item,i){
                   return (
                     <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
@@ -971,11 +871,115 @@ function App() {
         </div>
       )}
 
+      {false&&(function(){
+        var myBets = bets.filter(function(b){ return b.bettor===bettor; });
+        var totalWagered = myBets.reduce(function(s,b){ return s+b.amt; }, 0);
+        var totalWon = myBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; }, 0);
+        var pending = myBets.filter(function(b){ return b.result==="pending"; }).length;
+        var netPL = (totalWon - totalWagered).toFixed(2);
+        var myBal = parseFloat(bals[bettor]||0).toFixed(2);
+        var isSeth = loggedIn === "Seth";
+
+        function doDeposit(){
+          var amt = parseFloat(depAmt);
+          if(!depPlayer || isNaN(amt) || amt===0) { setDepMsg({err:true,txt:"Select a player and enter an amount."}); return; }
+          setBalsFb(function(prev){
+            var cur = parseFloat(prev[depPlayer]||0);
+            var next = Object.assign({},prev);
+            next[depPlayer] = parseFloat((cur+amt).toFixed(2));
+            return next;
+          });
+          setDepMsg({err:false,txt:(amt>0?"+ $"+amt.toFixed(2)+" added to ":"- $"+Math.abs(amt).toFixed(2)+" removed from ")+depPlayer+"'s balance."});
+          setDepAmt("");
+        }
+
+        return (
+          <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto",left:"50%",transform:"translateX(-50%)",width:"100%"}}>
+            <div onClick={function(){ setShowProfile(false); setDepMsg(null); }} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.8)",backdropFilter:"blur(8px)"}}/>
+            <div style={{position:"relative",marginTop:"auto",background:"#0d0e1a",borderRadius:"20px 20px 0 0",overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)",borderBottom:"none",maxHeight:"92vh",display:"flex",flexDirection:"column"}}>
+
+              {/* drag handle */}
+              <div style={{display:"flex",justifyContent:"center",padding:"10px 0 0",flexShrink:0}}>
+                <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/>
+              </div>
+
+              <div style={{overflowY:"auto",flex:1}}>
+
+                {/* avatar + name */}
+                <div style={{padding:"18px 20px 16px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                  <div style={{width:54,height:54,borderRadius:"50%",background:"rgba(255,107,53,0.15)",border:"2px solid rgba(255,107,53,0.4)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px",fontSize:22}}>
+                    {loggedIn.slice(0,1)}
+                  </div>
+                  <div style={{fontFamily:DI,fontSize:22,letterSpacing:2,color:"#fff"}}>{loggedIn}</div>
+                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:3}}>LAS VEGAS INVITATIONAL</div>
+                </div>
+
+                {/* balance hero */}
+                <div style={{padding:"20px 20px 16px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,107,53,0.04)"}}>
+                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
+                  <div style={{fontFamily:DI,fontSize:44,color:"#A8FF78",lineHeight:1}}>${myBal}</div>
+                </div>
+
+                {/* betting stats */}
+                <div style={{padding:"14px 20px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+                    {[
+                      {label:"BETS",value:myBets.length,color:"#fff"},
+                      {label:"WON",value:myBets.filter(function(b){return b.result==="win";}).length,color:"#A8FF78"},
+                      {label:"LOST",value:myBets.filter(function(b){return b.result==="loss";}).length,color:"#FF8080"},
+                      {label:"PENDING",value:pending,color:"#FFB800"},
+                    ].map(function(s,i){
+                      return (
+                        <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 4px"}}>
+                          <div style={{fontFamily:DI,fontSize:22,color:s.color,lineHeight:1}}>{s.value}</div>
+                          <div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* net P/L */}
+                <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
+                    <div style={{fontFamily:DI,fontSize:22,color:parseFloat(netPL)>=0?"#A8FF78":"#FF8080"}}>{parseFloat(netPL)>=0?"+":""}{netPL}</div>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
+                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
+                    <div style={{fontFamily:DI,fontSize:14,color:"rgba(255,255,255,0.5)"}}>${totalWagered}</div>
+                  </div>
+                </div>
+
+                {/* actions */}
+                <div style={{padding:"14px 20px 28px",display:"flex",flexDirection:"column",gap:8}}>
+                  <button
+                    onClick={function(){ setShowProfile(false); setDepMsg(null); setShowRules(true); }}
+                    style={{width:"100%",padding:"13px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.55)"}}
+                  >
+                    RULES
+                  </button>
+                  <button
+                    onClick={function(){ setShowProfile(false); setDepMsg(null); }}
+                    style={{width:"100%",padding:"13px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)"}}
+                  >
+                    CLOSE
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"rgba(4,4,12,0.98)",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",zIndex:200,backdropFilter:"blur(20px)"}}>
-        {TABS.map(function(t,i){
+        {(isSeth?TABS_SETH:TABS).map(function(t,i){
+          var icons=isSeth?TAB_ICONS_SETH:TAB_ICONS;
           return (
             <button key={i} onClick={function(){ setTab(i); }} style={{flex:1,padding:"8px 2px 6px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1,position:"relative"}}>
-              <span style={{fontSize:16}}>{TAB_ICONS[i]}</span>
+              <span style={{fontSize:16}}>{icons[i]}</span>
               <span style={{fontFamily:MO,fontSize:6,letterSpacing:1,color:tab===i?"#FF6B35":"rgba(255,255,255,0.28)",textTransform:"uppercase"}}>{t}</span>
               {tab===i&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:20,height:2,background:"#FF6B35",borderRadius:1}}/>}
               {i===0&&totalLegs>0&&tab!==0&&<div style={{position:"absolute",top:6,right:"18%",width:15,height:15,borderRadius:"50%",background:"#FF6B35",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:9,color:"#fff"}}>{totalLegs}</div>}
@@ -1045,7 +1049,10 @@ function App() {
                                   </div>
                                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                                     <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800"}}>{b.result.toUpperCase()}</div>
-                                    {canDelete && <button onClick={function(){ setBetsFb(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>}
+                                    {canDelete && <button onClick={function(){
+                                      setBalsFb(function(prev){ var cur=parseFloat(prev[b.bettor]||0); var next=Object.assign({},prev); next[b.bettor]=parseFloat((cur+b.amt).toFixed(2)); return next; });
+                                      setBetsFb(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); });
+                                    }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>}
                                   </div>
                                 </div>
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1068,7 +1075,7 @@ function App() {
                 })()}
                 <div style={{padding:"14px 14px 10px"}}>
                   <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
-                    {selG.full.toUpperCase()} - {selG.type==="rr"?"FIRST TO 3":"FIRST TO 7, WIN BY 2"} - MAX ${selG.max}
+                    {selG.full.toUpperCase()} — {selG.id==="fin"?"TO 7, WIN BY 2":"TO 5, WIN BY 2"}
                   </div>
                   {selG.t1&&selG.t2 ? (
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -1109,12 +1116,12 @@ function App() {
                     var gid = selG.id;
                     // Lock if prerequisite games not done yet
                     if(selG.prereqLocked){
-                      var prereqMsg = gid==="fin" ? "Complete both semifinals to unlock betting." : "Complete the round robin to unlock betting.";
+
                       return (
                         <div style={{textAlign:"center",padding:"24px 16px"}}>
                           <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
                           <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>BETTING LOCKED</div>
-                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>{prereqMsg}</div>
+                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>Complete the previous game to unlock betting.</div>
                         </div>
                       );
                     }
@@ -1222,44 +1229,60 @@ function App() {
                         </div>
                       )}
                       <div style={{marginBottom:12}}>
-                        <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:8}}>STAKE - MAX ${maxA}</div>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
+                          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>STAKE</div>
+                          <div style={{fontFamily:MO,fontSize:8,color:parseFloat(bals[bettor]||0)<=0?"#FF8080":"rgba(255,255,255,0.3)",letterSpacing:1}}>BAL: ${parseFloat(bals[bettor]||0).toFixed(2)}</div>
+                        </div>
                         <div style={{display:"flex",gap:6}}>
                           {amts.map(function(a){
-                            return <button key={a} onClick={function(){ setSlipAmt(a); }} style={{flex:1,padding:"10px 4px",borderRadius:8,cursor:"pointer",background:slipAmt===a?"rgba(255,107,53,0.25)":"rgba(255,255,255,0.06)",border:slipAmt===a?"1px solid #FF6B35":"1px solid rgba(255,255,255,0.08)",fontFamily:DI,fontSize:15,color:slipAmt===a?"#FF6B35":"rgba(255,255,255,0.5)"}}>${a}</button>;
+                            var totalCost=a*(stSlip.length+(paSlip.length>0?1:0));
+                            var canAfford=parseFloat(bals[bettor]||0)>=totalCost;
+                            return <button key={a} onClick={function(){ setSlipAmt(a); }} disabled={!canAfford} style={{flex:1,padding:"10px 4px",borderRadius:8,cursor:canAfford?"pointer":"not-allowed",background:slipAmt===a?"rgba(255,107,53,0.25)":canAfford?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)",border:slipAmt===a?"1px solid #FF6B35":canAfford?"1px solid rgba(255,255,255,0.08)":"1px solid rgba(255,255,255,0.04)",fontFamily:DI,fontSize:15,color:slipAmt===a?"#FF6B35":canAfford?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)",opacity:canAfford?1:0.4}}>${a}</button>;
                           })}
                         </div>
                       </div>
-                      {slipAmt&&(
-                        <div style={{display:"flex",gap:8,marginBottom:12}}>
-                          {stSlip.length>0&&(
-                            <div style={{flex:1,padding:"10px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8,textAlign:"center"}}>
-                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",marginBottom:3}}>STRAIGHT WIN</div>
-                              <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${stSlip.reduce(function(s,l){ return s+parseFloat(mlPay(l.ml,slipAmt)); }, 0).toFixed(2)}</div>
-                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>{stSlip.length} bet{stSlip.length>1?"s":""} x ${slipAmt}</div>
+                      {slipAmt&&(function(){
+                        var totalCost=slipAmt*(stSlip.length+(paSlip.length>0?1:0));
+                        var balance=parseFloat(bals[bettor]||0);
+                        var insufficientFunds=balance<totalCost;
+                        return (
+                          <div>
+                            <div style={{display:"flex",gap:8,marginBottom:12}}>
+                              {stSlip.length>0&&(
+                                <div style={{flex:1,padding:"10px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8,textAlign:"center"}}>
+                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",marginBottom:3}}>STRAIGHT WIN</div>
+                                  <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${stSlip.reduce(function(s,l){ return s+parseFloat(mlPay(l.ml,slipAmt)); }, 0).toFixed(2)}</div>
+                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>{stSlip.length} bet{stSlip.length>1?"s":""} x ${slipAmt}</div>
+                                </div>
+                              )}
+                              {paSlip.length>0&&(
+                                <div style={{flex:1,padding:"10px 8px",background:"rgba(255,184,0,0.06)",border:"1px solid rgba(255,184,0,0.15)",borderRadius:8,textAlign:"center"}}>
+                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,184,0,0.5)",marginBottom:3}}>PARLAY WIN</div>
+                                  <div style={{fontFamily:DI,fontSize:16,color:"#FFB800"}}>${parlayWin(paSlip,slipAmt)}</div>
+                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>1 parlay x ${slipAmt}</div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {paSlip.length>0&&(
-                            <div style={{flex:1,padding:"10px 8px",background:"rgba(255,184,0,0.06)",border:"1px solid rgba(255,184,0,0.15)",borderRadius:8,textAlign:"center"}}>
-                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,184,0,0.5)",marginBottom:3}}>PARLAY WIN</div>
-                              <div style={{fontFamily:DI,fontSize:16,color:"#FFB800"}}>${parlayWin(paSlip,slipAmt)}</div>
-                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>1 parlay x ${slipAmt}</div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {parlayAtLimit&&paSlip.length>0&&(
-                        <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
-                          Max 2 parlays per game reached for this game.
-                        </div>
-                      )}
-                      <button
-                        onClick={placeBets}
-                        disabled={!slipAmt||(paSlip.length>0&&parlayAtLimit)}
-                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"pointer":"default",background:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:(slipAmt&&!(paSlip.length>0&&parlayAtLimit))?"#fff":"rgba(255,255,255,0.2)"}}
-                      >
-                        PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
-                      </button>
+                            {insufficientFunds&&(
+                              <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
+                                Insufficient balance. Total cost ${totalCost.toFixed(2)}, balance ${balance.toFixed(2)}.
+                              </div>
+                            )}
+                            {parlayAtLimit&&paSlip.length>0&&(
+                              <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
+                                Max 2 parlays per game reached.
+                              </div>
+                            )}
+                            <button
+                              onClick={placeBets}
+                              disabled={insufficientFunds||(paSlip.length>0&&parlayAtLimit)}
+                              style={{width:"100%",padding:"14px",borderRadius:10,cursor:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"pointer":"default",background:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"#fff":"rgba(255,255,255,0.2)"}}
+                            >
+                              PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -1277,11 +1300,7 @@ function App() {
                 onChange={function(e){ setSkSel(e.target.value); }}
                 style={{flex:1,padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
               >
-                {skGames.map(function(g){
-                  var shortLabel = g.type==="rr" ? "Game "+GNUM[g.id] : g.type==="se" ? (g.id==="sf1"?"Semifinal 1":"Semifinal 2") : "Championship";
-                  var label = g.prereqLocked ? "🔒 "+shortLabel : shortLabel;
-                  return <option key={g.id} value={g.id}>{label}</option>;
-                })}
+                {skGames.map(function(g){ return <option key={g.id} value={g.id}>{g.prereqLocked?"🔒 ":""}{g.label}</option>; })}
               </select>
               {skSel&&!skReadOnly&&(
                 <button onClick={function(){ resetGame(skSel); }} style={{flexShrink:0,padding:"10px 12px",borderRadius:10,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
@@ -1291,16 +1310,31 @@ function App() {
             </div>
             <div style={{padding:"14px 12px"}}>
               {(function(){
-                var game = skGames.find(function(g){ return g.id===(skSel||(skGames[0]&&skGames[0].id)); });
+                var gid = skSel||(skGames[0]&&skGames[0].id);
+                var game = skGames.find(function(g){ return g.id===gid; });
                 if(!game) return null;
-                var isLocked = !!game.prereqLocked;
-                if(isLocked){
+                if(!draw){
+                  return (
+                    <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
+                      <div style={{fontSize:28,marginBottom:10}}>&#x1F3B2;</div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>AWAITING DRAW</div>
+                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams on the day of the tournament.</div>
+                    </div>
+                  );
+                }
+                if(game.prereqLocked){
                   return (
                     <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
                       <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
-                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>
-                        {game.type==="se"?"UNLOCKS AFTER ROUND ROBIN":"UNLOCKS AFTER SEMIFINALS"}
-                      </div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>UNLOCKS AFTER PREVIOUS GAME</div>
+                    </div>
+                  );
+                }
+                if(!game.teams||game.teams.length<2){
+                  return (
+                    <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
+                      <div style={{fontSize:28,marginBottom:10}}>&#x23F3;</div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>TEAMS TBD</div>
                     </div>
                   );
                 }
@@ -1312,126 +1346,113 @@ function App() {
 
         {tab===2&&(
           <div style={{padding:"14px 12px"}}>
-            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
-              <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between"}}>
-                <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FF6B35"}}>STANDINGS</span>
-                <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",alignSelf:"center"}}>{rrDoneN}/{ALL_GAMES.length} GAMES FINAL</span>
-              </div>
-              {standings.map(function(t,i){
-                return (
-                  <div key={t.id} style={{padding:"9px 14px",borderBottom:i<4?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",alignItems:"center",gap:10,background:i<4?t.color+"07":"transparent"}}>
-                    <div style={{fontFamily:DI,fontSize:18,color:i<4?t.color:"rgba(255,255,255,0.2)",minWidth:22,textAlign:"center"}}>{i+1}</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:i<4?"#fff":"rgba(255,255,255,0.35)"}}>{t.label}</div>
-                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.28)"}}>{t.players.join(", ")}</div>
+
+            {/* Draw section - Seth only */}
+            {isSeth&&(
+              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+                <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>TEAM DRAW</span>
+                  <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>SETH ONLY</span>
+                </div>
+                <div style={{padding:"14px"}}>
+                  {draw&&(
+                    <div style={{marginBottom:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                      {[
+                        {label:"PLAY-IN 1",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
+                        {label:"PLAY-IN 2 OPP",teams:[draw.pi2t2],color:"#4ECDC4"},
+                        {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
+                        {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
+                      ].map(function(row,i){
+                        return (
+                          <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
+                            <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
+                            {row.teams.map(function(tid){ var t=getTeam(tid); return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontFamily:DI,fontSize:14,color:i<4?t.color:"rgba(255,255,255,0.28)"}}>{t.w}-{t.l}</div>
-                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.28)"}}>{t.pf} pts</div>
-                    </div>
-                    {i===3&&<div style={{fontFamily:MO,fontSize:7,color:"#FFB800",background:"rgba(255,184,0,0.1)",border:"1px solid rgba(255,184,0,0.2)",borderRadius:3,padding:"1px 5px",flexShrink:0}}>CUT</div>}
-                  </div>
-                );
-              })}
-              <div style={{padding:"6px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-                <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.18)"}}>1 court - 6 sequential games - ~54 min</span>
+                  )}
+                  {!draw&&<div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.35)",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Randomly assigns all 5 teams into the bracket. Play-In 1 teams, Play-In 2 opponent, and the 2 bye seeds decided at once.</div>}
+                  <button onClick={doDraw} style={{width:"100%",padding:"13px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"#A78BFA"}}>
+                    {draw?"RE-DRAW TEAMS":"DRAW TEAMS"}
+                  </button>
+                </div>
               </div>
-            </div>
-            {SCHEDULE.map(function(round){
-              return (
-                <div key={round.round} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:12,overflow:"hidden"}}>
-                  <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",background:"rgba(255,184,0,0.04)"}}>
-                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>ROUND {round.round}</span>
-                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",alignSelf:"center"}}>BYE: {getTeam(round.bye).label}</span>
-                  </div>
-                  {round.games.map(function(game,gi){
-                    var t1=getTeam(game.t1), t2=getTeam(game.t2);
-                    var sc=rrSc[game.id], done=sc&&sc.final;
-                    var s1=sc?sc.t1:0, s2=sc?sc.t2:0;
+            )}
+
+            {/* Draw results - visible to everyone */}
+            {draw&&!isSeth&&(
+              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+                <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>DRAW RESULTS</span></div>
+                <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[
+                    {label:"PLAY-IN 1",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
+                    {label:"PLAY-IN 2 OPP",teams:[draw.pi2t2],color:"#4ECDC4"},
+                    {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
+                    {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
+                  ].map(function(row,i){
                     return (
-                      <div key={game.id} style={{padding:"12px 14px",borderBottom:gi===0?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.22)",minWidth:20,flexShrink:0}}>G{GNUM[game.id]}</div>
-                        <div style={{flex:1}}>
-                          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                            <div style={{width:6,height:6,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
-                            <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s1>s2?t1.color:"#fff"}}>{t1.label}</span>
-                            {done&&s1>s2&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>W</span>}
-                          </div>
-                          <div style={{display:"flex",alignItems:"center",gap:6}}>
-                            <div style={{width:6,height:6,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
-                            <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&s2>s1?t2.color:"#fff"}}>{t2.label}</span>
-                            {done&&s2>s1&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>W</span>}
-                          </div>
-                        </div>
-                        <div style={{flexShrink:0,textAlign:"right"}}>
-                          {done ? (
-                            <div style={{fontFamily:DI,fontSize:28,lineHeight:1}}>
-                              <span style={{color:s1>s2?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
-                              <span style={{color:"rgba(255,255,255,0.18)",fontSize:14,margin:"0 5px"}}>-</span>
-                              <span style={{color:s2>s1?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
-                            </div>
-                          ) : (
-                            <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
-                          )}
-                        </div>
+                      <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
+                        <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
+                        {row.teams.map(function(tid){ var t=getTeam(tid); return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
                       </div>
                     );
                   })}
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {tab===3&&(
-          <div style={{padding:"14px 12px"}}>
-            {!rrDone&&(
-              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"20px 16px",textAlign:"center",marginBottom:12}}>
-                <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>COMPLETE ROUND ROBIN TO SEED BRACKET</div>
-                <div style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.2)",marginTop:6}}>{rrDoneN} / {ALL_GAMES.length} games complete</div>
               </div>
             )}
+
+            {!draw&&!isSeth&&(
+              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"24px 16px",textAlign:"center",marginBottom:14}}>
+                <div style={{fontSize:28,marginBottom:10}}>&#x1F3B2;</div>
+                <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)"}}>DRAW PENDING</div>
+                <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams on the day of the tournament.</div>
+              </div>
+            )}
+
+            {/* Bracket games */}
             {[
-              {label:"SEMIFINAL 1",sublabel:"#1 vs #4",match:sf1,ac:"#A78BFA",isFinal:false},
-              {label:"SEMIFINAL 2",sublabel:"#2 vs #3",match:sf2,ac:"#A78BFA",isFinal:false},
-              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",isFinal:true},
+              {label:"PLAY-IN 1",sublabel:"Winner bye to SF1 · Loser to PI2",match:pi1,ac:"#FF6B35",cap:5},
+              {label:"PLAY-IN 2",sublabel:"Winner to SF1 · Loser eliminated",match:pi2,ac:"#4ECDC4",cap:5},
+              {label:"SEMIFINAL 1",sublabel:"PI1 Winner vs Bye Seed 1",match:sf1,ac:"#A78BFA",cap:5},
+              {label:"SEMIFINAL 2",sublabel:"PI2 Winner vs Bye Seed 2",match:sf2,ac:"#A78BFA",cap:5},
+              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",cap:7},
             ].map(function(row,ri){
-              var t1 = row.match.t1 ? getTeam(row.match.t1) : null;
-              var t2 = row.match.t2 ? getTeam(row.match.t2) : null;
-              var done = !!row.match.w;
-              var s1 = row.match.s1||0, s2 = row.match.s2||0;
+              var t1=row.match.t1?getTeam(row.match.t1):null;
+              var t2=row.match.t2?getTeam(row.match.t2):null;
+              var done=!!row.match.w; var s1=row.match.s1||0,s2=row.match.s2||0;
+              var isFinal=row.cap===11;
               return (
-                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(row.isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:12,overflow:"hidden"}}>
-                  <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:row.isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
+                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:12,overflow:"hidden"}}>
+                  <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
                     <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:row.ac}}>{row.label}</span>
-                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)"}}>{row.isFinal?"TO 7 - WIN BY 2":row.sublabel}</span>
+                    <span style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TO {row.cap} · WIN BY 2</span>
                   </div>
-                  {!t1||!t2 ? (
-                    <div style={{padding:"16px 14px",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>
-                      {rrDone ? "AWAITING SEMIFINAL RESULTS" : "PENDING ROUND ROBIN"}
-                    </div>
-                  ) : (
-                    <div style={{padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{padding:"4px 14px 6px"}}><div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{row.sublabel}</div></div>
+                  {!t1||!t2?(
+                    <div style={{padding:"10px 14px",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>{!draw?"AWAITING DRAW":"AWAITING PREVIOUS RESULT"}</div>
+                  ):(
+                    <div style={{padding:"6px 14px 12px",display:"flex",alignItems:"center",gap:10}}>
                       <div style={{flex:1}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                           <div style={{width:6,height:6,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
                           <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t1.id?t1.color:"#fff"}}>{t1.label}</span>
-                          {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>{row.isFinal?"CHAMP":"W"}</span>}
+                          {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>{isFinal?"CHAMP":"W"}</span>}
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           <div style={{width:6,height:6,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
                           <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t2.id?t2.color:"#fff"}}>{t2.label}</span>
-                          {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>{row.isFinal?"CHAMP":"W"}</span>}
+                          {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>{isFinal?"CHAMP":"W"}</span>}
                         </div>
                       </div>
                       <div style={{flexShrink:0,textAlign:"right"}}>
-                        {done ? (
+                        {done?(
                           <div style={{fontFamily:DI,fontSize:28,lineHeight:1}}>
                             <span style={{color:row.match.w===t1.id?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
                             <span style={{color:"rgba(255,255,255,0.18)",fontSize:14,margin:"0 5px"}}>-</span>
                             <span style={{color:row.match.w===t2.id?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
                           </div>
-                        ) : (
+                        ):(
                           <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
                         )}
                       </div>
@@ -1440,6 +1461,183 @@ function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+
+        {tab===3&&(
+          <div style={{padding:"0 0 8px"}}>
+            {/* Avatar + name */}
+            <div style={{padding:"28px 20px 20px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+              <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(255,107,53,0.15)",border:"2px solid rgba(255,107,53,0.4)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:26,fontFamily:DI,color:"#FF6B35"}}>{loggedIn.slice(0,1)}</div>
+              <div style={{fontFamily:DI,fontSize:24,letterSpacing:2,color:"#fff"}}>{loggedIn}</div>
+              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:4}}>LAS VEGAS INVITATIONAL</div>
+            </div>
+
+            {/* Balance */}
+            <div style={{padding:"20px 20px 16px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,107,53,0.04)"}}>
+              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
+              <div style={{fontFamily:DI,fontSize:48,color:"#A8FF78",lineHeight:1}}>${parseFloat(bals[bettor]||0).toFixed(2)}</div>
+            </div>
+
+            {/* Betting record */}
+            {(function(){
+              var myBets=bets.filter(function(b){ return b.bettor===bettor; });
+              var totalWagered=myBets.reduce(function(s,b){ return s+b.amt; },0);
+              var totalWon=myBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; },0);
+              var pending=myBets.filter(function(b){ return b.result==="pending"; }).length;
+              var netPL=(totalWon-totalWagered).toFixed(2);
+              return (
+                <div>
+                  <div style={{padding:"14px 20px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                    <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+                      {[
+                        {label:"BETS",value:myBets.length,color:"#fff"},
+                        {label:"WON",value:myBets.filter(function(b){ return b.result==="win"; }).length,color:"#A8FF78"},
+                        {label:"LOST",value:myBets.filter(function(b){ return b.result==="loss"; }).length,color:"#FF8080"},
+                        {label:"PENDING",value:pending,color:"#FFB800"},
+                      ].map(function(s,i){
+                        return <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 4px"}}><div style={{fontFamily:DI,fontSize:22,color:s.color,lineHeight:1}}>{s.value}</div><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div></div>;
+                      })}
+                    </div>
+                  </div>
+                  <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
+                      <div style={{fontFamily:DI,fontSize:22,color:parseFloat(netPL)>=0?"#A8FF78":"#FF8080"}}>{parseFloat(netPL)>=0?"+":""}{netPL}</div>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
+                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
+                      <div style={{fontFamily:DI,fontSize:14,color:"rgba(255,255,255,0.5)"}}>${totalWagered}</div>
+                    </div>
+                  </div>
+
+                  {/* Payout section — per game winnings for Seth to pay out */}
+                  {(function(){
+                    var wonBets=myBets.filter(function(b){ return b.result==="win"; });
+                    if(!wonBets.length) return null;
+                    var byGame={};
+                    wonBets.forEach(function(b){
+                      var gid=b.isParlay&&b.legs&&b.legs.length>0?b.legs[0].gid:b.gameId;
+                      var label=b.isParlay?"Prop Parlay":(b.game||gid);
+                      var key=gid||"other";
+                      if(!byGame[key]) byGame[key]={label:label,collect:0};
+                      byGame[key].collect+=parseFloat(b.toWin)+b.amt;
+                    });
+                    var gameKeys=Object.keys(byGame);
+                    var totalCollect=wonBets.reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; },0);
+                    return (
+                      <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(168,255,120,0.03)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                          <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
+                          <div style={{fontFamily:MO,fontSize:7,color:"#A8FF78",letterSpacing:3}}>WINNINGS TO COLLECT</div>
+                        </div>
+                        {gameKeys.map(function(key){
+                          var g=byGame[key];
+                          return (
+                            <div key={key} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+                              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.5)",letterSpacing:1,flex:1,marginRight:8}}>{g.label}</div>
+                              <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${g.collect.toFixed(2)}</div>
+                            </div>
+                          );
+                        })}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,marginTop:4}}>
+                          <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>TOTAL COLLECT</div>
+                          <div style={{fontFamily:DI,fontSize:22,color:"#A8FF78"}}>${totalCollect.toFixed(2)}</div>
+                        </div>
+                        <div style={{fontFamily:MO,fontSize:7,color:"rgba(168,255,120,0.4)",marginTop:4,letterSpacing:1}}>Includes original stake + winnings</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
+
+          </div>
+        )}
+
+        {tab===4&&isSeth&&(
+          <div style={{padding:"14px 12px"}}>
+
+            {/* Header */}
+            <div style={{padding:"4px 2px 14px"}}>
+              <div style={{fontFamily:DI,fontSize:20,letterSpacing:2,color:"#A78BFA"}}>ADMIN</div>
+              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:2}}>SETH ONLY</div>
+            </div>
+
+            {/* Update Balance */}
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,overflow:"hidden",marginBottom:14}}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#A78BFA"}}/>
+                <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>MANAGE BALANCES</span>
+              </div>
+              <div style={{padding:"14px"}}>
+                <div style={{marginBottom:8}}>
+                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:4}}>PLAYER</div>
+                  <select value={depPlayer} onChange={function(e){ setDepPlayer(e.target.value); setDepMsg(null); }}
+                    style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none"}}>
+                    <option value="">Select player...</option>
+                    {ALL_PLAYERS.map(function(p){ return <option key={p} value={p}>{p} (${parseFloat(bals[p]||0).toFixed(2)})</option>; })}
+                  </select>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:4}}>AMOUNT (use negative to deduct)</div>
+                  <input type="number" value={depAmt} onChange={function(e){ setDepAmt(e.target.value); setDepMsg(null); }} placeholder="e.g. 20 or -5"
+                    style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:DI,fontSize:16,letterSpacing:1,boxSizing:"border-box"}}/>
+                </div>
+                {depMsg&&<div style={{marginBottom:8,padding:"7px 10px",borderRadius:6,background:depMsg.err?"rgba(255,80,80,0.1)":"rgba(168,255,120,0.1)",border:"1px solid "+(depMsg.err?"rgba(255,80,80,0.3)":"rgba(168,255,120,0.3)"),fontFamily:MO,fontSize:8,color:depMsg.err?"#FF8080":"#A8FF78",letterSpacing:1}}>{depMsg.txt}</div>}
+                <button onClick={function(){
+                  var amt=parseFloat(depAmt);
+                  if(!depPlayer||isNaN(amt)||amt===0){ setDepMsg({err:true,txt:"Select a player and enter an amount."}); return; }
+                  setBalsFb(function(prev){ var cur=parseFloat(prev[depPlayer]||0); var next=Object.assign({},prev); next[depPlayer]=parseFloat((cur+amt).toFixed(2)); return next; });
+                  setDepMsg({err:false,txt:(amt>0?"+ $"+amt.toFixed(2)+" added to ":"- $"+Math.abs(amt).toFixed(2)+" removed from ")+depPlayer+"'s balance."}); setDepAmt("");
+                }} style={{width:"100%",padding:"11px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>UPDATE BALANCE</button>
+              </div>
+            </div>
+
+            {/* Settle Winnings */}
+            {(function(){
+              var playerWinnings=ALL_PLAYERS.map(function(p){
+                var wonBets=bets.filter(function(b){ return b.bettor===p&&b.result==="win"; });
+                var total=wonBets.reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; },0);
+                return {name:p,total:total,count:wonBets.length};
+              }).filter(function(p){ return p.total>0; }).sort(function(a,b){ return b.total-a.total; });
+              var grandTotal=playerWinnings.reduce(function(s,p){ return s+p.total; },0);
+              return (
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:12,overflow:"hidden"}}>
+                  <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(168,255,120,0.06)",display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
+                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>SETTLE WINNINGS</span>
+                  </div>
+                  {!playerWinnings.length?(
+                    <div style={{padding:"24px 14px",textAlign:"center",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>No winning bets yet.</div>
+                  ):(
+                    <div>
+                      {playerWinnings.map(function(p,i){
+                        return (
+                          <div key={p.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:i<playerWinnings.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                            <div>
+                              <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:"#fff"}}>{p.name}</div>
+                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",marginTop:2}}>{p.count} winning bet{p.count!==1?"s":""}</div>
+                            </div>
+                            <div style={{fontFamily:DI,fontSize:22,color:"#A8FF78"}}>${p.total.toFixed(2)}</div>
+                          </div>
+                        );
+                      })}
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:"rgba(168,255,120,0.06)",borderTop:"1px solid rgba(168,255,120,0.2)"}}>
+                        <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>TOTAL PAYOUT</div>
+                        <div style={{fontFamily:DI,fontSize:24,color:"#A8FF78"}}>${grandTotal.toFixed(2)}</div>
+                      </div>
+                      <div style={{padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <div style={{fontFamily:MO,fontSize:7,color:"rgba(168,255,120,0.4)",letterSpacing:1}}>Includes original stake + winnings</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
           </div>
         )}
 
