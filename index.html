@@ -363,7 +363,7 @@ function App() {
   function isGameLocked(gid){
     if(gid==="pi1") return !draw;
     if(gid==="sf1") return !pi1.w;
-    if(gid==="sf2") return !draw;
+    if(gid==="sf2") return !sf1.w;
     if(gid==="fin") return !sf1.w||!sf2.w;
     return false;
   }
