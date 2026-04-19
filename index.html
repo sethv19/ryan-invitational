@@ -43,17 +43,18 @@ var useEffect = React.useEffect;
 
 //
 var TEAMS = [
-  {id:1, label:"Team 1", players:["Jacob","Chappy","Dan"],    color:"#FF6B35"},
-  {id:2, label:"Team 2", players:["Liam","Adam","Jack"],      color:"#4ECDC4"},
+  {id:1, label:"Team 1", players:["Jacob","Jack","Dan"],    color:"#FF6B35"},
+  {id:2, label:"Team 2", players:["Liam","Adam","Chappy"],      color:"#4ECDC4"},
   {id:3, label:"Team 3", players:["Nathan","Seth","Jordan"],  color:"#A78BFA"},
   {id:4, label:"Team 4", players:["Ryan","Cam","Tony"],       color:"#34D399"},
   {id:5, label:"Team 5", players:["Joe","Thomas","Matthew"],  color:"#FBBF24"},
 ];
-// Format: Play-In 1 -> winner bye to SF1, loser to PI2 -> winner SF2, loser out
-// Play-In and Semifinal games first to 5 win by 2. Final first to 7 win by 2.
+// Format: 1 Play-In (2 random teams). Winner -> bracket. Loser eliminated.
+// Bracket: SF1 = PI winner vs Bye 1, SF2 = Bye 2 vs Bye 3, Final = SF1w vs SF2w
+// Play-In and Semifinal games first to 7 win by 2. Final first to 11 win by 2.
 var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
 var STRENGTH = {1:7.0, 2:6.7, 3:8.3, 4:7.0, 5:11.0};
-var GAME_CAP = {pi1:5, pi2:5, sf1:5, sf2:5, fin:7};
+var GAME_CAP = {pi1:7, sf1:7, sf2:7, fin:11};
 var PINS = {
   Adam:"77ec867e21dc93a51d37bf42d435d1ac9c9688f8f071375feedd6a0863a536c7",
   Dan:"2fbf317387d52ebc9838265c45838977ed49681ed17cd8f0542a7d963958ca55",
@@ -115,21 +116,21 @@ function calcOdds(t1id,t2id,type){
   return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
-  // Points only. pi = play-in/semi (first to 5), fin = championship (first to 7)
-  Jacob: {pi:{pts:2.5,pO:-150,pU:130}, fin:{pts:3.5,pO:-145,pU:125}},
-  Nathan:{pi:{pts:2.5,pO:-135,pU:115}, fin:{pts:3.5,pO:-130,pU:110}},
-  Liam:  {pi:{pts:2.5,pO:-130,pU:110}, fin:{pts:3.5,pO:-125,pU:105}},
-  Ryan:  {pi:{pts:2.5,pO:-120,pU:100}, fin:{pts:3.5,pO:-115,pU:-105}},
+  // Points only. pi = play-in/semi (first to 7), fin = championship (first to 11)
+  Jacob: {pi:{pts:3.5,pO:-150,pU:130}, fin:{pts:4.5,pO:-145,pU:125}},
+  Nathan:{pi:{pts:3.5,pO:-135,pU:115}, fin:{pts:4.5,pO:-130,pU:110}},
+  Liam:  {pi:{pts:3.5,pO:-130,pU:110}, fin:{pts:4.5,pO:-125,pU:105}},
+  Ryan:  {pi:{pts:3.5,pO:-120,pU:100}, fin:{pts:4.5,pO:-115,pU:-105}},
   Adam:  {pi:{pts:2.5,pO:-118,pU:100}, fin:{pts:3.5,pO:-115,pU:-105}},
-  Cam:   {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Chappy:{pi:{pts:2.5,pO:-115,pU:-105},fin:{pts:2.5,pO:-112,pU:-108}},
-  Thomas:{pi:{pts:1.5,pO:-115,pU:-105},fin:{pts:2.5,pO:-110,pU:-110}},
-  Seth:  {pi:{pts:2.5,pO:-118,pU:100}, fin:{pts:2.5,pO:-115,pU:-105}},
-  Joe:   {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Tony:  {pi:{pts:0.5,pO:-110,pU:-110},fin:{pts:1.5,pO:-110,pU:-110}},
-  Jack:  {pi:{pts:0.5,pO:-110,pU:-110},fin:{pts:1.5,pO:-110,pU:-110}},
-  Dan:   {pi:{pts:0.5,pO:-110,pU:-110},fin:{pts:1.5,pO:-110,pU:-110}},
-  Jordan:{pi:{pts:0.5,pO:-110,pU:-110},fin:{pts:1.5,pO:-110,pU:-110}},
+  Cam:   {pi:{pts:2.5,pO:-110,pU:-110},fin:{pts:3.5,pO:-110,pU:-110}},
+  Chappy:{pi:{pts:3.5,pO:-115,pU:-105},fin:{pts:3.5,pO:-112,pU:-108}},
+  Thomas:{pi:{pts:2.5,pO:-115,pU:-105},fin:{pts:3.5,pO:-110,pU:-110}},
+  Seth:  {pi:{pts:3.5,pO:-118,pU:100}, fin:{pts:3.5,pO:-115,pU:-105}},
+  Joe:   {pi:{pts:2.5,pO:-110,pU:-110},fin:{pts:3.5,pO:-110,pU:-110}},
+  Tony:  {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
+  Jack:  {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
+  Dan:   {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
+  Jordan:{pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
   Matthew:{pi:{pts:0.5,pO:100,pU:-120},fin:{pts:1.5,pO:105,pU:-125}}
 };
 function getPL(name,gid){
@@ -205,7 +206,6 @@ function App() {
   var tabS = useState(0); var tab = tabS[0]; var setTab = tabS[1];
   var drawS = useState(null); var draw = drawS[0]; var setDraw = drawS[1];
   var pi1S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var pi1 = pi1S[0]; var setPi1 = pi1S[1];
-  var pi2S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var pi2 = pi2S[0]; var setPi2 = pi2S[1];
   var sf1S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf1 = sf1S[0]; var setSf1 = sf1S[1];
   var sf2S = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var sf2 = sf2S[0]; var setSf2 = sf2S[1];
   var finS = useState({t1:null,t2:null,s1:0,s2:0,w:null}); var fin = finS[0]; var setFin = finS[1];
@@ -241,7 +241,6 @@ function App() {
     var keys = [
       {k:"draw", set:setDraw,  def:null},
       {k:"pi1",  set:setPi1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
-      {k:"pi2",  set:setPi2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
       {k:"sf1",  set:setSf1,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
       {k:"sf2",  set:setSf2,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
       {k:"fin",  set:setFin,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
@@ -269,7 +268,6 @@ function App() {
   //
   function setDrawFb(v){ setDraw(v); fbSet("draw",v); }
   function setPi1Fb(u){ setPi1(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pi1",n); return n; }); }
-  function setPi2Fb(u){ setPi2(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pi2",n); return n; }); }
   function setSf1Fb(u){ setSf1(function(p){ var n=typeof u==="function"?u(p):u; fbSet("sf1",n); return n; }); }
   function setSf2Fb(u){ setSf2(function(p){ var n=typeof u==="function"?u(p):u; fbSet("sf2",n); return n; }); }
   function setFinFb(u){ setFin(function(p){ var n=typeof u==="function"?u(p):u; fbSet("fin",n); return n; }); }
@@ -278,19 +276,19 @@ function App() {
   function setBalsFb(u){ setBals(function(p){ var n=typeof u==="function"?u(p):u; fbSet("bal",n); return n; }); }
 
   // Match helpers
-  function getMatch(gid){ if(gid==="pi1") return pi1; if(gid==="pi2") return pi2; if(gid==="sf1") return sf1; if(gid==="sf2") return sf2; if(gid==="fin") return fin; return null; }
-  function setMatchFb(gid,u){ if(gid==="pi1") setPi1Fb(u); else if(gid==="pi2") setPi2Fb(u); else if(gid==="sf1") setSf1Fb(u); else if(gid==="sf2") setSf2Fb(u); else if(gid==="fin") setFinFb(u); }
+  function getMatch(gid){ if(gid==="pi1") return pi1; if(gid==="sf1") return sf1; if(gid==="sf2") return sf2; if(gid==="fin") return fin; return null; }
+  function setMatchFb(gid,u){ if(gid==="pi1") setPi1Fb(u); else if(gid==="sf1") setSf1Fb(u); else if(gid==="sf2") setSf2Fb(u); else if(gid==="fin") setFinFb(u); }
 
   // Random draw - Seth only
   function doDraw(){
     var ids=[1,2,3,4,5];
     for(var i=ids.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=ids[i]; ids[i]=ids[j]; ids[j]=tmp; }
-    var d={pi1t1:ids[0],pi1t2:ids[1],pi2t2:ids[2],s1:ids[3],s2:ids[4]};
+    // ids[0],ids[1] = play-in teams; ids[2]=bye1 (SF1), ids[3]=bye2 (SF2 t1), ids[4]=bye3 (SF2 t2)
+    var d={pi1t1:ids[0],pi1t2:ids[1],s1:ids[2],s2:ids[3],s3:ids[4]};
     setDrawFb(d);
     setPi1Fb({t1:ids[0],t2:ids[1],s1:0,s2:0,w:null});
-    setPi2Fb({t1:null,t2:ids[2],s1:0,s2:0,w:null});
-    setSf1Fb({t1:null,t2:ids[3],s1:0,s2:0,w:null});
-    setSf2Fb({t1:null,t2:ids[4],s1:0,s2:0,w:null});
+    setSf1Fb({t1:null,t2:ids[2],s1:0,s2:0,w:null});
+    setSf2Fb({t1:ids[3],t2:ids[4],s1:0,s2:0,w:null});
     setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
     setPStatsFb({});
   }
@@ -317,16 +315,9 @@ function App() {
     setPStatsFb(function(prev){ var next=Object.assign({},prev); allP.forEach(function(p){ next[skKey(gid,p)]={pts:0}; }); return next; });
     setMatchFb(gid,function(mm){ return Object.assign({},mm,{s1:0,s2:0,w:null}); });
     if(gid==="pi1"){
-      setPi2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
       setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
-      setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
       setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
-      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["pi2","sf1","sf2","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0}; }); }); return next; });
-    }
-    if(gid==="pi2"){
-      setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
-      setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,s1:0,s2:0,w:null}); });
-      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["sf2","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0}; }); }); return next; });
+      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["sf1","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0}; }); }); return next; });
     }
     if(gid==="sf1"||gid==="sf2"){
       setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,s1:0,s2:0,w:null}); });
@@ -342,45 +333,38 @@ function App() {
   useEffect(function(){
     if(!bets.length) return;
     var gr={};
-    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){
+    ["pi1","sf1","sf2","fin"].forEach(function(gid){
       var m=getMatch(gid); if(!m||!m.t1||!m.t2) return;
       gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w};
     });
     var resolved=bets.map(function(b){ return Object.assign({},b,{result:resolveB(b,gr,pStats)}); });
     var changed=resolved.some(function(b,i){ return b.result!==bets[i].result; });
     if(changed) setBetsFb(resolved);
-  },[pi1.w,pi2.w,sf1.w,sf2.w,fin.w,pStats]);
+  },[pi1.w,sf1.w,sf2.w,fin.w,pStats]);
 
   // Score sync
   useEffect(function(){
-    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){
+    ["pi1","sf1","sf2","fin"].forEach(function(gid){
       var m=getMatch(gid); if(!m||!m.t1||!m.t2) return;
       var s1=liveTP(gid,m.t1),s2=liveTP(gid,m.t2);
       if(s1!==m.s1||s2!==m.s2) setMatchFb(gid,function(mm){ return Object.assign({},mm,{s1:s1,s2:s2}); });
     });
-  },[pStats,pi1.t1,pi1.t2,pi2.t1,pi2.t2,sf1.t1,sf1.t2,sf2.t1,sf2.t2,fin.t1,fin.t2]);
+  },[pStats,pi1.t1,pi1.t2,sf1.t1,sf1.t2,sf2.t1,sf2.t2,fin.t1,fin.t2]);
 
-  // Auto-advance: PI1 winner -> SF1 t1, PI1 loser -> PI2 t1
+  // Auto-advance: PI1 winner -> SF1 t1
   useEffect(function(){
     if(!pi1.w) return;
-    var loser=pi1.w===pi1.t1?pi1.t2:pi1.t1;
-    if(pi2.t1!==loser) setPi2Fb(function(m){ return Object.assign({},m,{t1:loser}); });
     if(sf1.t1!==pi1.w) setSf1Fb(function(m){ return Object.assign({},m,{t1:pi1.w}); });
   },[pi1.w]);
-  useEffect(function(){
-    if(!pi2.w) return;
-    if(sf2.t1!==pi2.w) setSf2Fb(function(m){ return Object.assign({},m,{t1:pi2.w}); });
-  },[pi2.w]);
   useEffect(function(){ if(sf1.w&&fin.t1!==sf1.w) setFinFb(function(m){ return Object.assign({},m,{t1:sf1.w}); }); },[sf1.w]);
   useEffect(function(){ if(sf2.w&&fin.t2!==sf2.w) setFinFb(function(m){ return Object.assign({},m,{t2:sf2.w}); }); },[sf2.w]);
 
   // Game lock logic
   function isGameLocked(gid){
     if(gid==="pi1") return !draw;
-    if(gid==="pi2") return !pi1.w;
-    if(gid==="sf1") return !pi2.w;
-    if(gid==="sf2") return !sf1.w;
-    if(gid==="fin") return !sf2.w;
+    if(gid==="sf1") return !pi1.w;
+    if(gid==="sf2") return !draw;
+    if(gid==="fin") return !sf1.w||!sf2.w;
     return false;
   }
   function getPlayersInGame(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return []; return getTeam(m.t1).players.concat(getTeam(m.t2).players); }
@@ -389,16 +373,14 @@ function App() {
   function isPlayerInGame(gid){ return getPlayersInGame(gid).indexOf(bettor)>=0; }
 
   var skGames=[
-    {id:"pi1",label:"Play-In 1",  teams:pi1.t1&&pi1.t2?[pi1.t1,pi1.t2]:[],prereqLocked:!draw},
-    {id:"pi2",label:"Play-In 2",  teams:pi2.t1&&pi2.t2?[pi2.t1,pi2.t2]:[],prereqLocked:isGameLocked("pi2")},
+    {id:"pi1",label:"Play-In",    teams:pi1.t1&&pi1.t2?[pi1.t1,pi1.t2]:[],prereqLocked:!draw},
     {id:"sf1",label:"Semifinal 1",teams:sf1.t1&&sf1.t2?[sf1.t1,sf1.t2]:[],prereqLocked:isGameLocked("sf1")},
     {id:"sf2",label:"Semifinal 2",teams:sf2.t1&&sf2.t2?[sf2.t1,sf2.t2]:[],prereqLocked:isGameLocked("sf2")},
     {id:"fin",label:"Championship",teams:fin.t1&&fin.t2?[fin.t1,fin.t2]:[],prereqLocked:isGameLocked("fin")},
   ];
 
   var bGames=[
-    {id:"pi1",full:"Play-In 1",  t1:pi1.t1,t2:pi1.t2,prereqLocked:!draw,playerLocked:draw?isPlayerInGame("pi1"):false},
-    {id:"pi2",full:"Play-In 2",  t1:pi2.t1,t2:pi2.t2,prereqLocked:isGameLocked("pi2"),playerLocked:!isGameLocked("pi2")&&isPlayerInGame("pi2")},
+    {id:"pi1",full:"Play-In",    t1:pi1.t1,t2:pi1.t2,prereqLocked:!draw,playerLocked:draw?isPlayerInGame("pi1"):false},
     {id:"sf1",full:"Semifinal 1",t1:sf1.t1,t2:sf1.t2,prereqLocked:isGameLocked("sf1"),playerLocked:!isGameLocked("sf1")&&isPlayerInGame("sf1")},
     {id:"sf2",full:"Semifinal 2",t1:sf2.t1,t2:sf2.t2,prereqLocked:isGameLocked("sf2"),playerLocked:!isGameLocked("sf2")&&isPlayerInGame("sf2")},
     {id:"fin",full:"Championship",t1:fin.t1,t2:fin.t2,prereqLocked:isGameLocked("fin"),playerLocked:!isGameLocked("fin")&&isPlayerInGame("fin")},
@@ -443,7 +425,7 @@ function App() {
     var totalCost=slipAmt*(stSlip.length+(paSlip.length>0?1:0));
     if(parseFloat(bals[bettor]||0)<totalCost) return;
     var gr={};
-    ["pi1","pi2","sf1","sf2","fin"].forEach(function(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return; gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w}; });
+    ["pi1","sf1","sf2","fin"].forEach(function(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return; gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w}; });
     var nb=[];
     stSlip.forEach(function(leg,i){
       var tw=mlPay(leg.ml,slipAmt);
@@ -624,8 +606,7 @@ function App() {
       }
       function doReopen(){
         setMatchFb(game.id,function(mm){ return Object.assign({},mm,{w:null}); });
-        if(game.id==="pi1"){ setPi2Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); }); setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); }); }
-        if(game.id==="pi2") setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); });
+        if(game.id==="pi1") setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,w:null}); });
         if(game.id==="sf1"||game.id==="sf2") setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,w:null}); });
       }
       if(alreadyFinal){
@@ -815,11 +796,11 @@ function App() {
                   <span style={{fontSize:15}}>&#x1F3C0;</span> FORMAT
                 </div>
                 {[
-                  {label:"Play-In 1",desc:"Two randomly drawn teams battle it out. Winner gets a bye straight to Semifinal 1. Loser drops into Play-In 2. First to 5, win by 2."},
-                  {label:"Play-In 2",desc:"Play-In 1 loser vs a third randomly drawn team. Winner advances to Semifinal 1. Loser is eliminated. First to 5, win by 2."},
-                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 5, win by 2."},
-                  {label:"Semifinal 2",desc:"Semifinal 1 winner vs Bye Seed 2. First to 5, win by 2."},
-                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 7, win by 2. Glory on the line."},
+                  {label:"The Draw",desc:"Seth randomly draws 2 teams to compete in the Play-In. The remaining 3 teams receive byes directly into the bracket as Seeds 1, 2, and 3."},
+                  {label:"Play-In",desc:"The 2 drawn teams play. Winner advances to Semifinal 1 as the Play-In seed. Loser is eliminated. First to 7, win by 2."},
+                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 7, win by 2."},
+                  {label:"Semifinal 2",desc:"Bye Seed 2 vs Bye Seed 3. First to 7, win by 2."},
+                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 11, win by 2. Glory on the line."},
                 ].map(function(item,i){
                   return (
                     <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
@@ -1066,7 +1047,7 @@ function App() {
                 })()}
                 <div style={{padding:"14px 14px 10px"}}>
                   <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
-                    {selG.full.toUpperCase()} — {selG.id==="fin"?"TO 7, WIN BY 2":"TO 5, WIN BY 2"}
+                    {selG.full.toUpperCase()} — {selG.id==="fin"?"TO 11, WIN BY 2":"TO 7, WIN BY 2"}
                   </div>
                   {selG.t1&&selG.t2 ? (
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -1349,10 +1330,10 @@ function App() {
                   {draw&&(
                     <div style={{marginBottom:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                       {[
-                        {label:"PLAY-IN 1",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
-                        {label:"PLAY-IN 2 OPP",teams:[draw.pi2t2],color:"#4ECDC4"},
+                        {label:"PLAY-IN",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
                         {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
                         {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
+                        {label:"BYE SEED 3",teams:[draw.s3],color:"#FBBF24"},
                       ].map(function(row,i){
                         return (
                           <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
@@ -1363,7 +1344,7 @@ function App() {
                       })}
                     </div>
                   )}
-                  {!draw&&<div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.35)",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Randomly assigns all 5 teams into the bracket. Play-In 1 teams, Play-In 2 opponent, and the 2 bye seeds decided at once.</div>}
+                  {!draw&&<div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.35)",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Randomly assigns all 5 teams. 2 teams play the Play-In, 3 teams get byes into the bracket.</div>}
                   <button onClick={doDraw} style={{width:"100%",padding:"13px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"#A78BFA"}}>
                     {draw?"RE-DRAW TEAMS":"DRAW TEAMS"}
                   </button>
@@ -1377,10 +1358,10 @@ function App() {
                 <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>DRAW RESULTS</span></div>
                 <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                   {[
-                    {label:"PLAY-IN 1",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
-                    {label:"PLAY-IN 2 OPP",teams:[draw.pi2t2],color:"#4ECDC4"},
+                    {label:"PLAY-IN",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
                     {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
                     {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
+                    {label:"BYE SEED 3",teams:[draw.s3],color:"#FBBF24"},
                   ].map(function(row,i){
                     return (
                       <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
@@ -1403,11 +1384,10 @@ function App() {
 
             {/* Bracket games */}
             {[
-              {label:"PLAY-IN 1",sublabel:"Winner bye to SF1 · Loser to PI2",match:pi1,ac:"#FF6B35",cap:5},
-              {label:"PLAY-IN 2",sublabel:"Winner to SF1 · Loser eliminated",match:pi2,ac:"#4ECDC4",cap:5},
-              {label:"SEMIFINAL 1",sublabel:"PI1 Winner vs Bye Seed 1",match:sf1,ac:"#A78BFA",cap:5},
-              {label:"SEMIFINAL 2",sublabel:"PI2 Winner vs Bye Seed 2",match:sf2,ac:"#A78BFA",cap:5},
-              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",cap:7},
+              {label:"PLAY-IN",sublabel:"Winner advances · Loser eliminated",match:pi1,ac:"#FF6B35",cap:7},
+              {label:"SEMIFINAL 1",sublabel:"Play-In Winner vs Bye Seed 1",match:sf1,ac:"#A78BFA",cap:7},
+              {label:"SEMIFINAL 2",sublabel:"Bye Seed 2 vs Bye Seed 3",match:sf2,ac:"#A78BFA",cap:7},
+              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",cap:11},
             ].map(function(row,ri){
               var t1=row.match.t1?getTeam(row.match.t1):null;
               var t2=row.match.t2?getTeam(row.match.t2):null;
