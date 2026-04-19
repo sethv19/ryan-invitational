@@ -734,11 +734,8 @@ function App() {
               <option value="Joaquin">Joaquin</option>
             </select>
           </div>
-          <div style={{marginBottom:20}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>PIN</div>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:7,color:"rgba(255,255,255,0.2)"}}>last 4 digits of your phone number</div>
-            </div>
+              <div style={{marginBottom:20}}>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>PIN</div>
             <input
               type="password"
               inputMode="numeric"
@@ -746,8 +743,8 @@ function App() {
               value={loginPin}
               onChange={function(e){ setLoginPin(e.target.value.replace(/\D/g,"")); setLoginErr(false); }}
               onKeyDown={function(e){ if(e.key==="Enter") doLogin(); }}
-              placeholder="••••"
-              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:loginErr?"1px solid rgba(255,80,80,0.6)":"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'Oswald',sans-serif",fontSize:22,letterSpacing:8,textAlign:"center",boxSizing:"border-box"}}
+              placeholder="last 4 digits of your phone #"
+              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:loginErr?"1px solid rgba(255,80,80,0.6)":"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'DM Mono',monospace",fontSize:16,letterSpacing:loginPin.length>0?8:0.5,textAlign:"center",boxSizing:"border-box",color:"rgba(255,255,255,0.7)"}}
             />
             {loginErr&&(
               <div style={{marginTop:6,fontFamily:"'DM Mono',monospace",fontSize:8,color:"#FF8080",letterSpacing:1,textAlign:"center"}}>
