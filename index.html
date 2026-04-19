@@ -1319,6 +1319,46 @@ function App() {
         {tab===2&&(
           <div style={{padding:"14px 12px"}}>
 
+            {/* Teams card */}
+            {(function(){
+              var teamsOpen = true; // always shown
+              return (
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+                  <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>TEAMS</span>
+                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>5 TEAMS</span>
+                  </div>
+                  <div style={{padding:"10px 14px"}}>
+                    {TEAMS.map(function(team,i){
+                      var drawRole = null;
+                      if(draw){
+                        if(team.id===draw.pi1t1||team.id===draw.pi1t2) drawRole={label:"PLAY-IN",color:"#FF6B35"};
+                        else if(team.id===draw.s1) drawRole={label:"BYE SEED 1",color:"#A78BFA"};
+                        else if(team.id===draw.s2) drawRole={label:"BYE SEED 2",color:"#34D399"};
+                        else if(team.id===draw.s3) drawRole={label:"BYE SEED 3",color:"#FBBF24"};
+                      }
+                      return (
+                        <div key={team.id} style={{paddingBottom:i<TEAMS.length-1?12:0,marginBottom:i<TEAMS.length-1?12:0,borderBottom:i<TEAMS.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <div style={{width:8,height:8,borderRadius:"50%",background:team.color,flexShrink:0}}/>
+                              <span style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:team.color}}>{team.label}</span>
+                            </div>
+                            {drawRole&&<span style={{fontFamily:MO,fontSize:6,letterSpacing:1,color:drawRole.color,background:drawRole.color+"18",border:"1px solid "+drawRole.color+"40",borderRadius:4,padding:"2px 6px"}}>{drawRole.label}</span>}
+                          </div>
+                          <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingLeft:16}}>
+                            {team.players.map(function(p){
+                              return <span key={p} style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"3px 7px"}}>{p}</span>;
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Draw section - Seth only */}
             {isSeth&&(
               <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
