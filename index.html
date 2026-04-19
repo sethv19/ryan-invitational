@@ -1328,7 +1328,7 @@ function App() {
               <div style={{padding:"10px 14px"}}>
                 {TEAMS.map(function(team,i){
                   var drawRole=null;
-                  if(draw){
+                  if(draw&&draw.s3){
                     if(team.id===draw.pi1t1||team.id===draw.pi1t2) drawRole={label:"PLAY-IN",color:"#FF6B35"};
                     else if(team.id===draw.s1) drawRole={label:"BYE SEED 1",color:"#A78BFA"};
                     else if(team.id===draw.s2) drawRole={label:"BYE SEED 2",color:"#34D399"};
@@ -1360,7 +1360,7 @@ function App() {
                   <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>SETH ONLY</span>
                 </div>
                 <div style={{padding:"14px"}}>
-                  {draw&&(
+                  {draw&&draw.s3&&(
                     <div style={{marginBottom:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                       {[
                         {label:"PLAY-IN",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
@@ -1371,7 +1371,7 @@ function App() {
                         return (
                           <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
                             <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
-                            {row.teams.map(function(tid){ var t=getTeam(tid); return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
+                            {row.teams.filter(Boolean).map(function(tid){ var t=getTeam(tid); if(!t) return null; return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
                           </div>
                         );
                       })}
@@ -1386,7 +1386,7 @@ function App() {
             )}
 
             {/* Draw results - visible to everyone */}
-            {draw&&!isSeth&&(
+            {draw&&draw.s3&&!isSeth&&(
               <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>DRAW RESULTS</span></div>
                 <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
@@ -1399,7 +1399,7 @@ function App() {
                     return (
                       <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
                         <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
-                        {row.teams.map(function(tid){ var t=getTeam(tid); return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
+                        {row.teams.filter(Boolean).map(function(tid){ var t=getTeam(tid); if(!t) return null; return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
                       </div>
                     );
                   })}
@@ -1424,6 +1424,8 @@ function App() {
             ].map(function(row,ri){
               var t1=row.match.t1?getTeam(row.match.t1):null;
               var t2=row.match.t2?getTeam(row.match.t2):null;
+              if(t1&&!t1.color) t1=null;
+              if(t2&&!t2.color) t2=null;
               var done=!!row.match.w; var s1=row.match.s1||0,s2=row.match.s2||0;
               var isFinal=row.cap===11;
               return (
