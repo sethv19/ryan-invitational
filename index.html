@@ -44,9 +44,9 @@ var useEffect = React.useEffect;
 //
 var TEAMS = [
   {id:1, label:"Team 1", players:["Jacob","Jack","Dan"],    color:"#FF6B35"},
-  {id:2, label:"Team 2", players:["Liam","Adam","Chappy"],      color:"#4ECDC4"},
+  {id:2, label:"Team 2", players:["Liam","Tony","Chappy"],     color:"#4ECDC4"},
   {id:3, label:"Team 3", players:["Nathan","Seth","Jordan"],  color:"#A78BFA"},
-  {id:4, label:"Team 4", players:["Ryan","Cam","Tony"],       color:"#34D399"},
+  {id:4, label:"Team 4", players:["Ryan","Cam","Adam"],       color:"#34D399"},
   {id:5, label:"Team 5", players:["Joe","Thomas","Matthew"],  color:"#FBBF24"},
 ];
 // Format: 1 Play-In (2 random teams). Winner -> bracket. Loser eliminated.
@@ -116,22 +116,22 @@ function calcOdds(t1id,t2id,type){
   return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
-  // Points only. pi = play-in/semi (first to 7), fin = championship (first to 11)
-  Jacob: {pi:{pts:3.5,pO:-150,pU:130}, fin:{pts:4.5,pO:-145,pU:125}},
-  Nathan:{pi:{pts:3.5,pO:-135,pU:115}, fin:{pts:4.5,pO:-130,pU:110}},
-  Liam:  {pi:{pts:3.5,pO:-130,pU:110}, fin:{pts:4.5,pO:-125,pU:105}},
-  Ryan:  {pi:{pts:3.5,pO:-120,pU:100}, fin:{pts:4.5,pO:-115,pU:-105}},
-  Adam:  {pi:{pts:2.5,pO:-118,pU:100}, fin:{pts:3.5,pO:-115,pU:-105}},
-  Cam:   {pi:{pts:2.5,pO:-110,pU:-110},fin:{pts:3.5,pO:-110,pU:-110}},
-  Chappy:{pi:{pts:3.5,pO:-115,pU:-105},fin:{pts:3.5,pO:-112,pU:-108}},
-  Thomas:{pi:{pts:2.5,pO:-115,pU:-105},fin:{pts:3.5,pO:-110,pU:-110}},
-  Seth:  {pi:{pts:3.5,pO:-118,pU:100}, fin:{pts:3.5,pO:-115,pU:-105}},
-  Joe:   {pi:{pts:2.5,pO:-110,pU:-110},fin:{pts:3.5,pO:-110,pU:-110}},
-  Tony:  {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Jack:  {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Dan:   {pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Jordan:{pi:{pts:1.5,pO:-110,pU:-110},fin:{pts:2.5,pO:-110,pU:-110}},
-  Matthew:{pi:{pts:0.5,pO:100,pU:-120},fin:{pts:1.5,pO:105,pU:-125}}
+  // Primary: 2.5pi/3.5fin, ranked odds. Secondary: 1.5pi/2.5fin, coin flip. Tertiary: 1.5pi/1.5fin, under lean.
+  Jacob: {pi:{pts:2.5,pO:-175,pU:145},  fin:{pts:3.5,pO:-170,pU:140}},
+  Liam:  {pi:{pts:2.5,pO:-162,pU:138},  fin:{pts:3.5,pO:-158,pU:132}},
+  Nathan:{pi:{pts:2.5,pO:-150,pU:128},  fin:{pts:3.5,pO:-145,pU:122}},
+  Ryan:  {pi:{pts:2.5,pO:-138,pU:118},  fin:{pts:3.5,pO:-135,pU:115}},
+  Joe:   {pi:{pts:2.5,pO:-125,pU:105},  fin:{pts:3.5,pO:-122,pU:102}},
+  Jack:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
+  Chappy:{pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
+  Seth:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
+  Adam:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
+  Thomas:{pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
+  Dan:   {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
+  Tony:  {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
+  Jordan:{pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
+  Cam:   {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
+  Matthew:{pi:{pts:1.5,pO:130,pU:-155}, fin:{pts:1.5,pO:125,pU:-150}}
 };
 function getPL(name,gid){
   var p=PP[name]||PP.Jordan;
