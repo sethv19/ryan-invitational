@@ -71,7 +71,7 @@ var PINS = {
   Ryan:"1384adef2899b15d901d9f3455c2254073f359b03e115b373a72697d6c248894",
   Thomas:"55595a6e5cfc81858117b2737ed72bedb96f5a3aa35be330b2b8912c5601c0be",
   Tony:"ae53a424384a3eee3b5a0147e239c05bbdc6767d6f1827e95e4545beccc67d1c",
-  Seth:"3d3e74d0148d98b4405ebf4ece8d07d0fde42e1012e7419f367e8a55b7d04429"
+  Seth:"2dc93bf9df900ec5df45ef3312805c696f6baa16f7fa52685e77a5b7b0fcfc34"
 };
 var TABS = ["Betting","Scorekeeper","Bracket","Profile"];
 var TABS_SETH = ["Betting","Scorekeeper","Bracket","Profile","Admin"];
@@ -743,7 +743,7 @@ function App() {
               value={loginPin}
               onChange={function(e){ setLoginPin(e.target.value.replace(/\D/g,"")); setLoginErr(false); }}
               onKeyDown={function(e){ if(e.key==="Enter") doLogin(); }}
-              placeholder="last 4 digits of your phone #"
+              placeholder="last 4 digits of phone #"
               style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:loginErr?"1px solid rgba(255,80,80,0.6)":"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'DM Mono',monospace",fontSize:16,letterSpacing:loginPin.length>0?8:0.5,textAlign:"center",boxSizing:"border-box",color:"rgba(255,255,255,0.7)"}}
             />
             {loginErr&&(
