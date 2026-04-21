@@ -44,16 +44,16 @@ var useEffect = React.useEffect;
 //
 var TEAMS = [
   {id:1, label:"Team 1", players:["Jacob","Jack","Dan"],    color:"#FF6B35"},
-  {id:2, label:"Team 2", players:["Liam","Tony","Chappy"],     color:"#4ECDC4"},
+  {id:2, label:"Team 2", players:["Liam","Chappy","Tony"],     color:"#4ECDC4"},
   {id:3, label:"Team 3", players:["Nathan","Seth","Jordan"],  color:"#A78BFA"},
-  {id:4, label:"Team 4", players:["Ryan","Cam","Adam"],       color:"#34D399"},
+  {id:4, label:"Team 4", players:["Ryan","Adam","Cam"],       color:"#34D399"},
   {id:5, label:"Team 5", players:["Joe","Thomas","Matthew"],  color:"#FBBF24"},
 ];
 // Format: 1 Play-In (2 random teams). Winner -> bracket. Loser eliminated.
 // Bracket: SF1 = PI winner vs Bye 1, SF2 = Bye 2 vs Bye 3, Final = SF1w vs SF2w
 // Play-In and Semifinal games first to 7 win by 2. Final first to 11 win by 2.
-var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
-var STRENGTH = {1:7.0, 2:6.7, 3:8.3, 4:7.0, 5:11.0};
+var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joaquin","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
+var STRENGTH = {1:7.5, 2:7.0, 3:8.0, 4:7.5, 5:5.5};
 var GAME_CAP = {pi1:7, sf1:7, sf2:7, fin:11};
 var PINS = {
   Adam:"77ec867e21dc93a51d37bf42d435d1ac9c9688f8f071375feedd6a0863a536c7",
@@ -73,10 +73,10 @@ var PINS = {
   Tony:"ae53a424384a3eee3b5a0147e239c05bbdc6767d6f1827e95e4545beccc67d1c",
   Seth:"2dc93bf9df900ec5df45ef3312805c696f6baa16f7fa52685e77a5b7b0fcfc34"
 };
-var TABS = ["Betting","Scorekeeper","Bracket","Profile"];
-var TABS_SETH = ["Betting","Scorekeeper","Bracket","Profile","Admin"];
-var TAB_ICONS = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC6","\uD83D\uDC64"];
-var TAB_ICONS_SETH = ["\uD83C\uDFB0","\uD83D\uDCCA","\uD83C\uDFC6","\uD83D\uDC64","\uD83D\uDD12"];
+var TABS = ["Bracket","Betting","Scores","Profile"];
+var TABS_SETH = ["Bracket","Betting","Scores","Profile","Admin"];
+var TAB_ICONS = ["\uD83C\uDFC6","\uD83C\uDFB0","\uD83D\uDCCA","\uD83D\uDC64"];
+var TAB_ICONS_SETH = ["\uD83C\uDFC6","\uD83C\uDFB0","\uD83D\uDCCA","\uD83D\uDC64","\uD83D\uDD12"];
 
 //
 var lsGet = function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
@@ -105,33 +105,33 @@ function parlayWin(legs,bet){
 function calcOdds(t1id,t2id,type){
   var diff = STRENGTH[t2id]-STRENGTH[t1id];
   var ml1,ml2;
-  if(diff>3){ml1=-280;ml2=230;}
-  else if(diff>1.5){ml1=-175;ml2=145;}
-  else if(diff>0.5){ml1=-140;ml2=118;}
+  if(diff>1.5){ml1=-130;ml2=100;}
+  else if(diff>0.5){ml1=-120;ml2=100;}
   else if(diff>-0.5){ml1=-115;ml2=-105;}
-  else if(diff>-1.5){ml1=118;ml2=-140;}
-  else if(diff>-3){ml1=145;ml2=-175;}
-  else{ml1=230;ml2=-280;}
+  else if(diff>-1.5){ml1=100;ml2=-120;}
+  else{ml1=100;ml2=-130;}
   var rr = type==="rr";
   return {ml1:ml1, ml2:ml2, spread:rr?0.5:1.5, ou:rr?1.5:3.5, sfav:diff>=0?1:2};
 }
 var PP = {
-  // Primary: 2.5pi/3.5fin, ranked odds. Secondary: 1.5pi/2.5fin, coin flip. Tertiary: 1.5pi/1.5fin, under lean.
-  Jacob: {pi:{pts:2.5,pO:-175,pU:145},  fin:{pts:3.5,pO:-170,pU:140}},
-  Liam:  {pi:{pts:2.5,pO:-162,pU:138},  fin:{pts:3.5,pO:-158,pU:132}},
-  Nathan:{pi:{pts:2.5,pO:-150,pU:128},  fin:{pts:3.5,pO:-145,pU:122}},
-  Ryan:  {pi:{pts:2.5,pO:-138,pU:118},  fin:{pts:3.5,pO:-135,pU:115}},
-  Joe:   {pi:{pts:2.5,pO:-125,pU:105},  fin:{pts:3.5,pO:-122,pU:102}},
-  Jack:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
-  Chappy:{pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
-  Seth:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
-  Adam:  {pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
-  Thomas:{pi:{pts:1.5,pO:-112,pU:-108}, fin:{pts:2.5,pO:-112,pU:-108}},
-  Dan:   {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
-  Tony:  {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
-  Jordan:{pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
-  Cam:   {pi:{pts:1.5,pO:130,pU:-155},  fin:{pts:1.5,pO:125,pU:-150}},
-  Matthew:{pi:{pts:1.5,pO:130,pU:-155}, fin:{pts:1.5,pO:125,pU:-150}}
+  // Primary: 3.5pi/5.5fin, ranked overs, unders capped +105
+  // Secondary: 2.5pi/3.5fin, coin flip -112/-108
+  // Tertiary: 1.5pi/2.5fin, overs capped +105, unders -130/-125
+  Jacob: {pi:{pts:3.5,pO:-175,pU:105},  fin:{pts:5.5,pO:-170,pU:105}},
+  Liam:  {pi:{pts:3.5,pO:-162,pU:105},  fin:{pts:5.5,pO:-158,pU:105}},
+  Nathan:{pi:{pts:3.5,pO:-150,pU:105},  fin:{pts:5.5,pO:-145,pU:105}},
+  Ryan:  {pi:{pts:3.5,pO:-138,pU:105},  fin:{pts:5.5,pO:-135,pU:105}},
+  Joe:   {pi:{pts:2.5,pO:-112,pU:-108}, fin:{pts:3.5,pO:-112,pU:-108}},
+  Jack:  {pi:{pts:1.5,pO:105,pU:-130},  fin:{pts:2.5,pO:105,pU:-125}},
+  Chappy:{pi:{pts:2.5,pO:-112,pU:-108}, fin:{pts:3.5,pO:-112,pU:-108}},
+  Seth:  {pi:{pts:2.5,pO:-112,pU:-108}, fin:{pts:3.5,pO:-112,pU:-108}},
+  Adam:  {pi:{pts:2.5,pO:-112,pU:-108}, fin:{pts:3.5,pO:-112,pU:-108}},
+  Thomas:{pi:{pts:2.5,pO:-112,pU:-108}, fin:{pts:3.5,pO:-112,pU:-108}},
+  Dan:   {pi:{pts:1.5,pO:105,pU:-130},  fin:{pts:2.5,pO:105,pU:-125}},
+  Tony:  {pi:{pts:1.5,pO:105,pU:-130},  fin:{pts:2.5,pO:105,pU:-125}},
+  Jordan:{pi:{pts:1.5,pO:105,pU:-130},  fin:{pts:2.5,pO:105,pU:-125}},
+  Cam:   {pi:{pts:1.5,pO:105,pU:-130},  fin:{pts:2.5,pO:105,pU:-125}},
+  Matthew:{pi:{pts:1.5,pO:105,pU:-130}, fin:{pts:2.5,pO:105,pU:-125}}
 };
 function getPL(name,gid){
   var p=PP[name]||PP.Jordan;
@@ -139,10 +139,9 @@ function getPL(name,gid){
   return {pts:t.pts,pO:{o:t.pO,u:t.pU}};
 }
 function resolveB(bet,gr,statMap){
-  // Parlay: resolve each stored leg, win only if all win
+  // Parlay: resolve each leg, win only if all win
   if(bet.isParlay && bet.legs && bet.legs.length){
     var allFinal = bet.legs.every(function(leg){
-      // Each leg has a gameId; check if that game is finalized
       var legRes = gr[leg.gid||leg.gameId];
       return legRes && legRes.final;
     });
@@ -150,10 +149,12 @@ function resolveB(bet,gr,statMap){
     var allWin = bet.legs.every(function(leg){
       var legId = leg.id;
       var legGameId = leg.gid || leg.gameId;
-      var legType = leg.gid || leg.gameId || "pi1";
       var legRes = gr[legGameId];
       if(!legRes || !legRes.final) return false;
-      // Resolve this prop leg
+      // ML leg
+      if(legId.slice(-4)==="_ml1") return legRes.s1 > legRes.s2;
+      if(legId.slice(-4)==="_ml2") return legRes.s2 > legRes.s1;
+      // Prop leg
       if(legId.indexOf("_prop_")>=0){
         var after = legId.split("_prop_")[1];
         var dir = after.slice(after.lastIndexOf("_")+1);
@@ -164,24 +165,18 @@ function resolveB(bet,gr,statMap){
         var line = getPL(pname,legGameId)[stat] || 0;
         if(dir==="over") return pst[stat]>line;
         if(dir==="under") return pst[stat]<line;
-        return false;
       }
       return false;
     });
     return allWin ? "win" : "loss";
   }
+  // Straight bet
   var res = gr[bet.gameId];
   if(!res || !res.final) return "pending";
-  var s1=res.s1, s2=res.s2, spread=res.spread, ou=res.ou, sfav=res.sfav;
   var id = bet.betOptionId;
   if(!id) return bet.result;
-  if(id.slice(-4)==="_ml1") return s1>s2?"win":"loss";
-  if(id.slice(-4)==="_ml2") return s2>s1?"win":"loss";
-  if(id.slice(-4)==="_sp1") return sfav===1 ? ((s1-s2)>spread?"win":"loss") : ((s2-s1)<spread?"win":"loss");
-  if(id.slice(-4)==="_sp2") return sfav===2 ? ((s2-s1)>spread?"win":"loss") : ((s1-s2)<spread?"win":"loss");
-  var tot = s1+s2;
-  if(id.slice(-4)==="_ouo") return s1>ou?"win":"loss";
-  if(id.slice(-4)==="_ouu") return s2>ou?"win":"loss";
+  if(id.slice(-4)==="_ml1") return res.s1>res.s2?"win":"loss";
+  if(id.slice(-4)==="_ml2") return res.s2>res.s1?"win":"loss";
   if(id.indexOf("_prop_")>=0){
     var after2 = id.split("_prop_")[1];
     var dir2 = after2.slice(after2.lastIndexOf("_")+1);
@@ -214,17 +209,15 @@ function App() {
   var skSelS = useState(null); var skSel = skSelS[0]; var setSkSel = skSelS[1];
   var skTabS = useState(0); var skTab = skTabS[0]; var setSkTab = skTabS[1];
   var bGameS = useState(null); var bGame = bGameS[0]; var setBGame = bGameS[1];
-  var bViewS = useState("lines"); var bView = bViewS[0]; var setBView = bViewS[1];
-  var stSlipS = useState([]); var stSlip = stSlipS[0]; var setStSlip = stSlipS[1];
-  var paSlipS = useState([]); var paSlip = paSlipS[0]; var setPaSlip = paSlipS[1];
+  var slipS = useState([]); var slip = slipS[0]; var setSlip = slipS[1];
   var slipOpenS = useState(false); var slipOpen = slipOpenS[0]; var setSlipOpen = slipOpenS[1];
-  var amtS = useState(null); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
+  var amtS = useState(5); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
   var ledgerS = useState(false); var showLedger = ledgerS[0]; var setShowLedger = ledgerS[1];
   var rulesS = useState(false); var showRules = rulesS[0]; var setShowRules = rulesS[1];
   var profileS = useState(false); var showProfile = profileS[0]; var setShowProfile = profileS[1];
   var balsS = useState({}); var bals = balsS[0]; var setBals = balsS[1];
-  var depPlayerS = useState(""); var depPlayer = depPlayerS[0]; var setDepPlayer = depPlayerS[1];
-  var depAmtS = useState(""); var depAmt = depAmtS[0]; var setDepAmt = depAmtS[1];
+  var settledS = useState({}); var settled = settledS[0]; var setSettled = settledS[1];
+  var depPlayerS = useState([]); var depPlayers = depPlayerS[0]; var setDepPlayers = depPlayerS[1];
   var depMsgS = useState(null); var depMsg = depMsgS[0]; var setDepMsg = depMsgS[1];
   var loggedInS = useState(function(){ return lsGet("loggedIn")||null; }); var loggedIn = loggedInS[0]; var setLoggedIn = loggedInS[1];
   var validUser = loggedIn && PINS.hasOwnProperty(loggedIn);
@@ -246,7 +239,8 @@ function App() {
       {k:"fin",  set:setFin,   def:{t1:null,t2:null,s1:0,s2:0,w:null}},
       {k:"bets", set:setBets,  def:[]},
       {k:"pst",  set:setPStats,def:{}},
-      {k:"bal",  set:setBals,  def:{}}
+      {k:"bal",     set:setBals,    def:{}},
+      {k:"settled", set:setSettled, def:{}}
     ];
     var refs = keys.map(function(item){
       var ref = db.ref("state/" + item.k);
@@ -274,6 +268,7 @@ function App() {
   function setBetsFb(u){ setBets(function(p){ var n=typeof u==="function"?u(p):u; fbSet("bets",n); return n; }); }
   function setPStatsFb(u){ setPStats(function(p){ var n=typeof u==="function"?u(p):u; fbSet("pst",n); return n; }); }
   function setBalsFb(u){ setBals(function(p){ var n=typeof u==="function"?u(p):u; fbSet("bal",n); return n; }); }
+  function setSettledFb(u){ setSettled(function(p){ var n=typeof u==="function"?u(p):u; fbSet("settled",n); return n; }); }
 
   // Match helpers
   function getMatch(gid){ if(gid==="pi1") return pi1; if(gid==="sf1") return sf1; if(gid==="sf2") return sf2; if(gid==="fin") return fin; return null; }
@@ -388,203 +383,177 @@ function App() {
 
   var selG=bGames.find(function(g){ return g.id===bGame; })||bGames[0];
 
-  function hasSt(id){ return stSlip.some(function(l){ return l.id===id; }); }
-  function haPa(id){ return paSlip.some(function(l){ return l.id===id; }); }
-  var totalLegs = stSlip.length + paSlip.length;
-  // How many parlays has this bettor already placed for the parlay slip's game?
-  var parlaySlipGid = paSlip.length>0 ? paSlip[0].gid : null;
-  var existingParlayCount = parlaySlipGid ? bets.filter(function(b){
-    return b.isParlay && b.bettor===bettor && b.legs && b.legs.length>0 && b.legs[0].gid===parlaySlipGid;
-  }).length : 0;
-  var parlayAtLimit = parlaySlipGid && existingParlayCount >= 2;
+  function hasLeg(id){ return slip.some(function(l){ return l.id===id; }); }
+  var slipGid = slip.length>0 ? slip[0].gid : null;
+  var selGid = (bGames.find(function(g){ return g.id===(bGame||(bGames[0]&&bGames[0].id)||""); })||{}).id;
+  var existingBetsOnGame = selGid ? bets.filter(function(b){
+    var bgid = b.isParlay&&b.legs&&b.legs.length>0 ? b.legs[0].gid : b.gameId;
+    return b.bettor===bettor && bgid===selGid;
+  }) : [];
+  var existingBetCount = existingBetsOnGame.length;
+  var hasActiveBetOnGame = existingBetCount >= 2;
+  var atBetLimit = hasActiveBetOnGame;
 
-  function paBlock(leg){
-    if(paSlip.length>=3 && !haPa(leg.id)) return "MAX 3 LEGS";
-    if(paSlip.length>0 && !haPa(leg.id) && paSlip[0].gid!==leg.gid) return "SAME GAME ONLY";
+  function slipBlock(leg){
+    if(hasLeg(leg.id)) return null;
+    if(slip.length>=3) return "MAX 3 LEGS";
+    if(slip.length>0 && slip[0].gid!==leg.gid) return "SAME GAME ONLY";
     var idx = leg.id.indexOf("_prop_");
     if(idx>=0){
       var after = leg.id.slice(idx+6);
       var u2 = after.indexOf("_", after.indexOf("_")+1);
       var pname = after.slice(0,u2);
-      var dup = paSlip.some(function(l){
+      var dup = slip.some(function(l){
         var li = l.id.indexOf("_prop_"); if(li<0) return false;
         var la = l.id.slice(li+6);
         return la.slice(0,la.indexOf("_",la.indexOf("_")+1))===pname && l.id!==leg.id;
       });
-      if(dup && !haPa(leg.id)) return "ONE PROP PER PLAYER";
+      if(dup) return "ONE PROP PER PLAYER";
     }
     return null;
   }
-  function toggleSt(leg){ hasSt(leg.id)?setStSlip(function(s){return s.filter(function(l){return l.id!==leg.id;});}):setStSlip(function(s){return s.concat([leg]);}); }
-  function togglePa(leg){ if(haPa(leg.id)){setPaSlip(function(s){return s.filter(function(l){return l.id!==leg.id;});});return;} if(!paBlock(leg)) setPaSlip(function(s){return s.concat([leg]);}); }
+  function toggleLeg(leg){
+    if(hasLeg(leg.id)){ setSlip(function(s){return s.filter(function(l){return l.id!==leg.id;})}); return; }
+    if(slipBlock(leg)) return;
+    setSlip(function(s){return s.concat([leg]);});
+  }
 
   function placeBets(){
-    if(!bettor||!slipAmt) return;
-    if(stSlip.length===0&&paSlip.length===0) return;
-    if(paSlip.length>0&&parlayAtLimit) return;
-    var totalCost=slipAmt*(stSlip.length+(paSlip.length>0?1:0));
-    if(parseFloat(bals[bettor]||0)<totalCost) return;
+    if(!bettor||slip.length===0) return;
+    if(atBetLimit||hasActiveBetOnGame) return;
+    var slipAmt=FIXED_STAKE;
+    if(parseFloat(bals[bettor]||0)<slipAmt) return;
     var gr={};
     ["pi1","sf1","sf2","fin"].forEach(function(gid){ var m=getMatch(gid); if(!m||!m.t1||!m.t2) return; gr[gid]={s1:m.s1,s2:m.s2,final:!!m.w}; });
     var nb=[];
-    stSlip.forEach(function(leg,i){
+    if(slip.length===1){
+      var leg=slip[0];
       var tw=mlPay(leg.ml,slipAmt);
-      var b={id:Date.now()+i,bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString()};
+      var b={id:Date.now(),bettor:bettor,game:leg.gLabel||leg.label,gameId:leg.gid,betOptionId:leg.id,pick:leg.label,line:fml(leg.ml),amt:slipAmt,toWin:tw,result:"pending",ts:new Date().toLocaleTimeString()};
       b.result=resolveB(b,gr,pStats); nb.push(b);
-    });
-    if(paSlip.length>0){
-      var tw2=parlayWin(paSlip,slipAmt);
-      var pb={id:Date.now()+100,bettor:bettor,game:"PROP PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:paSlip,pick:paSlip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(paSlip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString()};
+    } else {
+      var tw2=parlayWin(slip,slipAmt);
+      var pb={id:Date.now(),bettor:bettor,game:slip.length+"-LEG PARLAY",gameId:"parlay",betOptionId:"parlay",isParlay:true,legs:slip,pick:slip.map(function(l){return l.label;}).join(" + "),line:parlayOdds(slip),amt:slipAmt,toWin:tw2,result:"pending",ts:new Date().toLocaleTimeString(),gameType:"parlay"};
       pb.result=resolveB(pb,gr,pStats); nb.push(pb);
     }
-    // Deduct total stake from balance
-    var totalStake = slipAmt * (stSlip.length + (paSlip.length>0?1:0));
     setBalsFb(function(prev){
       var cur=parseFloat(prev[bettor]||0);
       var next=Object.assign({},prev);
-      next[bettor]=parseFloat((cur-totalStake).toFixed(2));
+      next[bettor]=parseFloat((cur-slipAmt).toFixed(2));
       return next;
     });
     setBetsFb(function(p){ return p.concat(nb); });
-    setStSlip([]); setPaSlip([]); setSlipAmt(null); setSlipOpen(false);
+    setSlip([]); setSlipOpen(false); setShowLedger(true);
   }
 
-  var amts = [1,5,10];
+  var FIXED_STAKE = 5;
 
   //
-  function BetBtn(props) {
-    var id=props.id, label=props.label, ml=props.ml, gid=props.gid, gLabel=props.gLabel, type=props.type;
-    var sel = hasSt(id);
-    function handleClick(){
-      toggleSt({id:id,label:label,ml:ml,gid:gid,gLabel:gLabel,type:type});
-    }
-    return (
-      <button
-        onClick={handleClick}
-        style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 6px",borderRadius:8,cursor:"pointer",gap:2,border:"none",background:sel?"rgba(255,107,53,0.2)":"rgba(255,255,255,0.06)",outline:sel?"2px solid #FF6B35":"2px solid transparent",transition:"all 0.15s",minWidth:0,width:"100%"}}
-      >
-        <span style={{fontFamily:MO,fontSize:7,color:sel?"#FF6B35":"rgba(255,255,255,0.4)",letterSpacing:1}}>{label}</span>
-        <span style={{fontFamily:DI,fontSize:17,color:ml<0?"#4ECDC4":"#FBBF24",lineHeight:1}}>{fml(ml)}</span>
-        <span style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>STRAIGHT</span>
-      </button>
-    );
-  }
-
-  function GameLines(props) {
+  function BettingPage(props){
     var game = props.game;
-    var o = calcOdds(game.t1,game.t2);
-    var t1 = getTeam(game.t1);
-    var t2 = getTeam(game.t2);
-    var gl = game.full;
-    var rows = [
-      {team:t1, ml:o.ml1, mlk:"ml1"},
-      {team:t2, ml:o.ml2, mlk:"ml2"}
-    ];
-    return (
-      <div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10,paddingBottom:8,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-          <div/>
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",textAlign:"center",letterSpacing:1}}>MONEYLINE</div>
-        </div>
-        {rows.map(function(row,ri){
-          return (
-            <div key={ri} style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:6}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:row.team.color,flexShrink:0}}/>
-                <span style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff"}}>{row.team.label}</span>
-              </div>
-              <BetBtn id={game.id+"_"+row.mlk} label={row.team.label} ml={row.ml} gid={game.id} gLabel={gl+": "+row.team.label+" ML"} type={game.type}/>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  function PropBtn(props) {
-    var id=props.id, leg=props.leg, sel=props.sel, blocked=props.blocked, dir=props.dir, ml=props.ml, line=props.line;
-    var isBlocked = blocked && !sel;
-    var bg = sel ? (dir==="over"?"rgba(168,255,120,0.15)":"rgba(255,107,53,0.15)") : "rgba(255,255,255,0.03)";
-    var outlineColor = sel ? (dir==="over"?"#A8FF78":"#FF6B35") : (isBlocked?"rgba(255,80,80,0.2)":"transparent");
-    var labelColor = sel ? (dir==="over"?"#A8FF78":"#FF6B35") : (isBlocked?"#FF8080":"rgba(255,255,255,0.3)");
-    var labelText = sel ? "ADDED" : (isBlocked ? "BLOCKED" : (dir==="over"?"OVER":"UNDER"));
-    function handleClick(){ togglePa(leg); }
-    return (
-      <button
-        onClick={handleClick}
-        disabled={isBlocked}
-        style={{padding:"9px 4px",borderRadius:6,cursor:isBlocked?"not-allowed":"pointer",border:"none",background:bg,outline:"1.5px solid "+outlineColor,opacity:isBlocked?0.4:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:"100%"}}
-      >
-        <span style={{fontFamily:MO,fontSize:6,color:labelColor,letterSpacing:1}}>{labelText}</span>
-        <span style={{fontFamily:DI,fontSize:15,color:ml<0?"#4ECDC4":"#FBBF24"}}>{fml(ml)}</span>
-        <span style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{dir==="over"?"O":"U"} {line}</span>
-      </button>
-    );
-  }
-
-  function PlayerProps(props) {
-    var game = props.game;
+    var allBlocked = !!props.allBlocked;
     if(!game.t1||!game.t2) return null;
-    var t1=getTeam(game.t1), t2=getTeam(game.t2);
+    var o = calcOdds(game.t1, game.t2);
+    var t1 = getTeam(game.t1), t2 = getTeam(game.t2);
+
+    function TapBtn(tprops){
+      var leg=tprops.leg, label=tprops.label, sub=tprops.sub;
+      var sel=hasLeg(leg.id);
+      var blocked=allBlocked||(!!slipBlock(leg)&&!sel)||(!sel&&!!tprops.forceBlock);
+      var imp = leg.ml>0 ? Math.round(100/(leg.ml+100)*100) : Math.round(Math.abs(leg.ml)/(Math.abs(leg.ml)+100)*100);
+      return (
+        <button onClick={function(){ toggleLeg(leg); }} disabled={blocked}
+          style={{flex:1,padding:"10px 6px",borderRadius:8,cursor:blocked?"not-allowed":"pointer",border:"none",
+            background:sel?"rgba(255,107,53,0.25)":"rgba(255,255,255,0.06)",
+            outline:sel?"2px solid #FF6B35":"2px solid transparent",
+            opacity:blocked?0.35:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all 0.15s"}}>
+          <span style={{fontFamily:MO,fontSize:11,color:sel?"#FF6B35":"rgba(255,255,255,0.4)",letterSpacing:1}}>{label}</span>
+          <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24",lineHeight:1}}>{fml(leg.ml)}</span>
+          <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{imp}%</span>
+          {sub&&<span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>{sub}</span>}
+        </button>
+      );
+    }
+
     return (
       <div>
-        <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,200,100,0.5)",letterSpacing:1,marginBottom:10,padding:"5px 8px",background:"rgba(255,184,0,0.05)",borderRadius:6,border:"1px solid rgba(255,184,0,0.1)"}}>
-          Same-game parlay only · Max 3 legs · Max 2 parlays per game
+        {/* MONEYLINE */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:8}}>MONEYLINE</div>
+          <div style={{display:"flex",gap:8}}>
+            {(function(){
+              var ml1id=game.id+"_ml1", ml2id=game.id+"_ml2";
+              var ml1inSlip=hasLeg(ml1id), ml2inSlip=hasLeg(ml2id);
+              var leg1={id:ml1id,label:t1.label,ml:o.ml1,gid:game.id,gLabel:game.full+": "+t1.label+" ML"};
+              var leg2={id:ml2id,label:t2.label,ml:o.ml2,gid:game.id,gLabel:game.full+": "+t2.label+" ML"};
+              var blk1=ml2inSlip&&!ml1inSlip;
+              var blk2=ml1inSlip&&!ml2inSlip;
+              return [
+                <TapBtn key="ml1" leg={leg1} label={t1.label} forceBlock={blk1}/>,
+                <TapBtn key="ml2" leg={leg2} label={t2.label} forceBlock={blk2}/>
+              ];
+            })()}
+          </div>
         </div>
-        {[t1,t2].map(function(team){
-          return (
-            <div key={team.id} style={{marginBottom:12}}>
-              {/* Team header */}
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:team.color,flexShrink:0}}/>
-                <span style={{fontFamily:DI,fontSize:11,letterSpacing:2,color:team.color}}>{team.label}</span>
-                <div style={{flex:1,height:1,background:team.color+"20"}}/>
-              </div>
-              {/* Column headers */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 40px 72px 72px",gap:4,padding:"0 4px 4px",marginBottom:2}}>
-                <div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PLAYER</div>
-                <div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.2)",letterSpacing:1,textAlign:"center"}}>LINE</div>
-                <div style={{fontFamily:MO,fontSize:6,color:"rgba(168,255,120,0.4)",letterSpacing:1,textAlign:"center"}}>OVER</div>
-                <div style={{fontFamily:MO,fontSize:6,color:"rgba(255,107,53,0.4)",letterSpacing:1,textAlign:"center"}}>UNDER</div>
-              </div>
-              {/* Player rows */}
-              {team.players.map(function(name){
-                var pl=getPL(name,game.id);
-                var oid=game.id+"_prop_"+name+"_pts_over";
-                var uid=game.id+"_prop_"+name+"_pts_under";
-                var oleg={id:oid,label:name+" O"+pl.pts+" Pts",ml:pl.pO.o,gid:game.id,gLabel:game.full+": "+name+" O"+pl.pts+" Pts"};
-                var uleg={id:uid,label:name+" U"+pl.pts+" Pts",ml:pl.pO.u,gid:game.id,gLabel:game.full+": "+name+" U"+pl.pts+" Pts"};
-                var oSel=haPa(oid), uSel=haPa(uid);
-                var obl=!oSel?paBlock(oleg):null;
-                var ubl=!uSel?paBlock(uleg):null;
-                function MiniBtn(bprops){
-                  var sel=bprops.sel, blocked=bprops.blocked&&!bprops.sel, dir=bprops.dir, ml=bprops.ml;
-                  var bg=sel?(dir==="over"?"rgba(168,255,120,0.18)":"rgba(255,107,53,0.18)"):"rgba(255,255,255,0.04)";
-                  var border=sel?(dir==="over"?"1px solid rgba(168,255,120,0.5)":"1px solid rgba(255,107,53,0.5)"):"1px solid rgba(255,255,255,0.08)";
-                  var textColor=sel?(dir==="over"?"#A8FF78":"#FF6B35"):blocked?"rgba(255,255,255,0.15)":ml<0?"#4ECDC4":"#FBBF24";
+
+        {/* PLAYER PROPS */}
+        <div>
+          <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:8}}>PLAYER PROPS</div>
+          {[t1,t2].map(function(team){
+            return (
+              <div key={team.id} style={{marginBottom:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:team.color}}/>
+                  <span style={{fontFamily:DI,fontSize:11,letterSpacing:2,color:team.color}}>{team.label}</span>
+                  <div style={{flex:1,height:1,background:team.color+"20"}}/>
+                </div>
+                {/* Column headers */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 36px 1fr 1fr",gap:4,padding:"0 2px 4px"}}>
+                  <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PLAYER</div>
+                  <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:1,textAlign:"center"}}>LINE</div>
+                  <div style={{fontFamily:MO,fontSize:10,color:"rgba(168,255,120,0.5)",letterSpacing:1,textAlign:"center"}}>OVER</div>
+                  <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,107,53,0.5)",letterSpacing:1,textAlign:"center"}}>UNDER</div>
+                </div>
+                {team.players.map(function(name){
+                  var pl=getPL(name,game.id);
+                  var oid=game.id+"_prop_"+name+"_pts_over";
+                  var uid=game.id+"_prop_"+name+"_pts_under";
+                  var oleg={id:oid,label:name+" O"+pl.pts,ml:pl.pO.o,gid:game.id,gLabel:game.full+": "+name+" O"+pl.pts+" Pts"};
+                  var uleg={id:uid,label:name+" U"+pl.pts,ml:pl.pO.u,gid:game.id,gLabel:game.full+": "+name+" U"+pl.pts+" Pts"};
+                  var oSel=hasLeg(oid), uSel=hasLeg(uid);
+                  var oBlk=!!slipBlock(oleg)&&!oSel, uBlk=!!slipBlock(uleg)&&!uSel;
+                  function PropTap(pprops){
+                    var leg=pprops.leg, sel=pprops.sel, dir=pprops.dir;
+                    var blk=pprops.blk||allBlocked;
+                    return (
+                      <button onClick={function(){ toggleLeg(leg); }} disabled={blk}
+                        style={{padding:"6px 4px",borderRadius:6,cursor:blk?"not-allowed":"pointer",border:"none",
+                          background:sel?"rgba(255,107,53,0.2)":"rgba(255,255,255,0.04)",
+                          outline:sel?"1.5px solid #FF6B35":"1.5px solid transparent",
+                          opacity:blk?0.3:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,width:"100%"}}>
+                        <span style={{fontFamily:MO,fontSize:10,color:sel?"#FF6B35":"rgba(255,255,255,0.3)",letterSpacing:1}}>{sel?"✓":dir}</span>
+                        <span style={{fontFamily:DI,fontSize:13,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
+                        <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)"}}>{leg.ml>0?Math.round(100/(leg.ml+100)*100):Math.round(Math.abs(leg.ml)/(Math.abs(leg.ml)+100)*100)}%</span>
+                      </button>
+                    );
+                  }
                   return (
-                    <button onClick={function(){ dir==="over"?togglePa(oleg):togglePa(uleg); }} disabled={blocked}
-                      style={{padding:"5px 2px",borderRadius:6,cursor:blocked?"not-allowed":"pointer",border:border,background:bg,opacity:blocked?0.35:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,width:"100%"}}>
-                      <span style={{fontFamily:MO,fontSize:6,color:sel?(dir==="over"?"#A8FF78":"#FF6B35"):"rgba(255,255,255,0.3)",letterSpacing:1}}>{sel?"ON":dir==="over"?"O":"U"}</span>
-                      <span style={{fontFamily:DI,fontSize:12,color:textColor,lineHeight:1}}>{fml(ml)}</span>
-                    </button>
+                    <div key={name} style={{display:"grid",gridTemplateColumns:"1fr 36px 1fr 1fr",gap:4,alignItems:"center",padding:"4px 2px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                      <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff"}}>{name}</div>
+                      <div style={{fontFamily:DI,fontSize:13,color:team.color,textAlign:"center"}}>{pl.pts}</div>
+                      <PropTap leg={oleg} sel={oSel} blk={oBlk} dir="O"/>
+                      <PropTap leg={uleg} sel={uSel} blk={uBlk} dir="U"/>
+                    </div>
                   );
-                }
-                return (
-                  <div key={name} style={{display:"grid",gridTemplateColumns:"1fr 40px 72px 72px",gap:4,alignItems:"center",padding:"4px 4px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-                    <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff"}}>{name}</div>
-                    <div style={{fontFamily:DI,fontSize:13,color:team.color,textAlign:"center"}}>{pl.pts}</div>
-                    <MiniBtn sel={oSel} blocked={obl} dir="over" ml={pl.pO.o}/>
-                    <MiniBtn sel={uSel} blocked={ubl} dir="under" ml={pl.pO.u}/>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
+
 
   function SkPanel(props) {
     var game = props.game;
@@ -614,15 +583,15 @@ function App() {
           <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
-              <span style={{fontFamily:MO,fontSize:9,color:"#A8FF78",letterSpacing:1}}>{statusMsg}</span>
+              <span style={{fontFamily:MO,fontSize:11,color:"#A8FF78",letterSpacing:1}}>{statusMsg}</span>
             </div>
-            {!readOnly&&<button onClick={doReopen} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:9,padding:"3px 8px",cursor:"pointer"}}>reopen</button>}
+            {!readOnly&&<button onClick={doReopen} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:5,color:"rgba(255,255,255,0.3)",fontFamily:MO,fontSize:11,padding:"3px 8px",cursor:"pointer"}}>reopen</button>}
           </div>
         );
       }
       return (
         <div style={{padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-          {!canFinalize&&statusMsg&&<div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>}
+          {!canFinalize&&statusMsg&&<div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",textAlign:"center",letterSpacing:1,marginBottom:8}}>{statusMsg}</div>}
           {!readOnly&&<button onClick={doFinalize} disabled={!canFinalize} style={{width:"100%",padding:"11px",borderRadius:8,cursor:canFinalize?"pointer":"default",background:canFinalize?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.04)",border:canFinalize?"1px solid rgba(255,184,0,0.5)":"1px solid rgba(255,255,255,0.08)",color:canFinalize?"#FFB800":"rgba(255,255,255,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2}}>FINALIZE RESULT</button>}
         </div>
       );
@@ -632,7 +601,7 @@ function App() {
         
         <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,107,53,0.06)"}}>
           <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:"#FF6B35"}}>{game.label}</div>
-          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>TO {cap}, WIN BY 2</div>
+          <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>TO {cap}, WIN BY 2</div>
         </div>
         <div style={{padding:"12px 14px"}}>
           {game.teams.map(function(tid){
@@ -649,11 +618,11 @@ function App() {
                   <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:team.color}}>{team.label}</span>
                   <div style={{flex:1}}/>
                   <span style={{fontFamily:DI,fontSize:20,color:atCap?"#A8FF78":team.color,lineHeight:1}}>{teamPts}</span>
-                  {atCap&&<span style={{fontFamily:MO,fontSize:7,color:"#A8FF78",letterSpacing:1,background:"rgba(168,255,120,0.12)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:4,padding:"1px 5px"}}>MAX</span>}
+                  {atCap&&<span style={{fontFamily:MO,fontSize:11,color:"#A8FF78",letterSpacing:1,background:"rgba(168,255,120,0.12)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:4,padding:"1px 5px"}}>MAX</span>}
                 </div>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.22)",letterSpacing:1}}>PLAYER</div>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.22)",textAlign:"center",letterSpacing:1}}>PTS</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.22)",letterSpacing:1}}>PLAYER</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.22)",textAlign:"center",letterSpacing:1}}>PTS</div>
                 </div>
                 {team.players.map(function(player){
                   var s = getSt(game.id,player);
@@ -673,7 +642,7 @@ function App() {
                   );
                 })}
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderTop:"1px solid "+team.color+"20"}}>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TOTAL</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TOTAL</div>
                   <div style={{fontFamily:DI,fontSize:15,color:teamPts>0?team.color:"rgba(255,255,255,0.2)"}}>{teamPts}</div>
                 </div>
               </div>
@@ -718,12 +687,12 @@ function App() {
     return (
       <div style={{minHeight:"100vh",background:"#07080f",color:"#fff",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 24px"}}>
         <div style={{marginBottom:32,textAlign:"center"}}>
-          <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:4,color:"#FF6B35",marginBottom:6}}>LAS VEGAS - BACHELOR PARTY</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,letterSpacing:4,color:"#FF6B35",marginBottom:6}}>LAS VEGAS - BACHELOR PARTY</div>
           <div style={{fontFamily:"'Oswald',sans-serif",fontSize:28,letterSpacing:3}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
         </div>
         <div style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"24px 20px"}}>
           <div style={{marginBottom:14}}>
-            <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>YOUR NAME</div>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>YOUR NAME</div>
             <select
               value={loginName}
               onChange={function(e){ setLoginName(e.target.value); setLoginErr(false); setLoginPin(""); }}
@@ -731,11 +700,10 @@ function App() {
             >
               <option value="">Select your name...</option>
               {ALL_PLAYERS.map(function(p){ return <option key={p} value={p}>{p}</option>; })}
-              <option value="Joaquin">Joaquin</option>
             </select>
           </div>
               <div style={{marginBottom:20}}>
-                <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>PIN</div>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>PIN</div>
             <input
               type="password"
               inputMode="numeric"
@@ -747,7 +715,7 @@ function App() {
               style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:loginErr?"1px solid rgba(255,80,80,0.6)":"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:"'DM Mono',monospace",fontSize:16,letterSpacing:loginPin.length>0?8:0.5,textAlign:"center",boxSizing:"border-box",color:"rgba(255,255,255,0.7)"}}
             />
             {loginErr&&(
-              <div style={{marginTop:6,fontFamily:"'DM Mono',monospace",fontSize:8,color:"#FF8080",letterSpacing:1,textAlign:"center"}}>
+              <div style={{marginTop:6,fontFamily:"'DM Mono',monospace",fontSize:11,color:"#FF8080",letterSpacing:1,textAlign:"center"}}>
                 {Date.now()<_loginLockedUntil?"TOO MANY ATTEMPTS — WAIT 30 SECONDS":!loginName?"SELECT YOUR NAME FIRST":"INCORRECT PIN — TRY AGAIN"}
               </div>
             )}
@@ -769,12 +737,12 @@ function App() {
 
       <div style={{padding:"10px 12px",background:"rgba(0,0,0,0.6)",borderBottom:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:0,zIndex:200,backdropFilter:"blur(20px)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"#FF6B35",marginBottom:2}}>LAS VEGAS — BACHELOR PARTY</div>
+          <div style={{fontFamily:MO,fontSize:9,letterSpacing:2,color:"#FF6B35",marginBottom:2,whiteSpace:"nowrap"}}>LAS VEGAS — BACHELOR PARTY</div>
           <div style={{fontFamily:DI,fontSize:18,letterSpacing:2}}>RYAN'S <span style={{color:"#FF6B35"}}>INVITATIONAL</span></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.55)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>RULES</button>
-          <button onClick={function(){ setLoggedIn(null); setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{flexShrink:0,background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:6,color:"rgba(255,120,120,0.7)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>LOGOUT</button>
+          <button onClick={function(){ setShowRules(true); }} style={{flexShrink:0,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.55)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>HELP</button>
+          <button onClick={function(){ setLoggedIn(null); setSlip([]); setSlipOpen(false); }} style={{flexShrink:0,background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:6,color:"rgba(255,120,120,0.7)",fontFamily:DI,fontSize:12,letterSpacing:1,padding:"5px 11px",cursor:"pointer"}}>LOGOUT</button>
         </div>
       </div>
 
@@ -783,26 +751,31 @@ function App() {
           <div onClick={function(){ setShowRules(false); }} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)"}}/>
           <div style={{position:"relative",margin:"auto 0",background:"#0d0e1a",borderRadius:16,overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,107,53,0.08)"}}>
-              <span style={{fontFamily:DI,fontSize:16,letterSpacing:2,color:"#FF6B35"}}>RULES & FORMAT</span>
-              <button onClick={function(){ setShowRules(false); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:20,lineHeight:1,padding:"0 2px"}}>x</button>
+              <span style={{fontFamily:DI,fontSize:16,letterSpacing:2,color:"#FF6B35"}}>HELP</span>
+              <button onClick={function(){ setShowRules(false); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:20,lineHeight:1,padding:"0 2px"}}>✕</button>
             </div>
             <div style={{overflowY:"auto",padding:"18px"}}>
 
+              {/* BETTING BASICS */}
               <div style={{marginBottom:22}}>
-                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:15}}>&#x1F3C0;</span> FORMAT
+                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FBBF24",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:15}}>🎰</span> BETTING BASICS
                 </div>
                 {[
-                  {label:"The Draw",desc:"Seth randomly draws 2 teams to compete in the Play-In. The remaining 3 teams receive byes directly into the bracket as Seeds 1, 2, and 3."},
-                  {label:"Play-In",desc:"The 2 drawn teams play. Winner advances to Semifinal 1 as the Play-In seed. Loser is eliminated. First to 7, win by 2."},
-                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 7, win by 2."},
-                  {label:"Semifinal 2",desc:"Bye Seed 2 vs Bye Seed 3. First to 7, win by 2."},
-                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 11, win by 2. Glory on the line."},
+                  {label:"Getting started",desc:"Pay Seth $5 cash before each game. He'll load your balance in the app. No balance, no bets. All bets are $5 — fixed."},
+                  {label:"How to place a bet",desc:"Go to the Betting tab, pick a game, and tap any orange button to add it to your slip. You'll see exactly how much you'd collect if you win. Tap PLACE BET when you're ready."},
+                  {label:"How many bets can I place?",desc:"Up to 2 bets per game. Mix and match however you like — two straight bets, two parlays, or one of each."},
+                  {label:"What are the odds numbers?",desc:"The number on each button (like -130 or +100) tells you how much you win on a $5 bet. Negative means the team is the favorite and pays less. Positive means the underdog and pays more. The collect amount in your slip is what actually matters — that's your $5 back plus your winnings."},
+                  {label:"Straight bet",desc:"The simplest bet — one pick. Either a team to win (moneyline) or a player to go over or under their point total. Tap one button, place your bet."},
+                  {label:"Parlay",desc:"Combine 2 or 3 picks into one bet for a bigger payout. The catch — every single pick must win or you get nothing. Higher risk, higher reward."},
+                  {label:"Player props — what is the line?",desc:"The LINE is the points target for that player. For example, Jacob at 3.5 means: OVER = he scores 4 or more, UNDER = he scores 3 or fewer. Tap OVER or UNDER to bet."},
+                  {label:"Why are some buttons greyed out?",desc:"Once you've placed 2 bets on a game, all buttons grey out — you're done for that game. Buttons also grey out if the game has already started."},
+                  {label:"Getting paid",desc:"Seth settles after each game. Check your Profile tab to see your winnings. Seth pays you cash."},
                 ].map(function(item,i){
                   return (
-                    <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
+                    <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(251,191,36,0.3)"}}>
                       <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:3}}>{item.label}</div>
-                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
                     </div>
                   );
                 })}
@@ -810,9 +783,33 @@ function App() {
 
               <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:22}}/>
 
+              {/* FORMAT */}
+              <div style={{marginBottom:22}}>
+                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:15}}>🏀</span> TOURNAMENT FORMAT
+                </div>
+                {[
+                  {label:"The Draw",desc:"Seth randomly draws 2 teams to compete in the Play-In. The remaining 3 teams get byes into the bracket as Seeds 1, 2, and 3."},
+                  {label:"Play-In",desc:"2 drawn teams play each other. Winner advances to Semifinal 1. Loser is eliminated. First to 7 points, win by 2."},
+                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 7, win by 2."},
+                  {label:"Semifinal 2",desc:"Bye Seed 2 vs Bye Seed 3. First to 7, win by 2."},
+                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 11 points, win by 2. Glory on the line."},
+                ].map(function(item,i){
+                  return (
+                    <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
+                      <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:3}}>{item.label}</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:22}}/>
+
+              {/* COURT RULES */}
               <div>
                 <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#4ECDC4",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:15}}>&#x1F4CB;</span> RULES
+                  <span style={{fontSize:15}}>📋</span> COURT RULES
                 </div>
                 {[
                   "Check the ball after each score.",
@@ -826,7 +823,7 @@ function App() {
                       <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(78,205,196,0.15)",border:"1px solid rgba(78,205,196,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
                         <span style={{fontFamily:DI,fontSize:11,color:"#4ECDC4"}}>{i+1}</span>
                       </div>
-                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.6)",lineHeight:1.6,paddingTop:2}}>{rule}</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.6)",lineHeight:1.6,paddingTop:2}}>{rule}</div>
                     </div>
                   );
                 })}
@@ -880,18 +877,18 @@ function App() {
                     {loggedIn.slice(0,1)}
                   </div>
                   <div style={{fontFamily:DI,fontSize:22,letterSpacing:2,color:"#fff"}}>{loggedIn}</div>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:3}}>LAS VEGAS INVITATIONAL</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:3}}>LAS VEGAS INVITATIONAL</div>
                 </div>
 
                 {/* balance hero */}
                 <div style={{padding:"20px 20px 16px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,107,53,0.04)"}}>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
                   <div style={{fontFamily:DI,fontSize:44,color:"#A8FF78",lineHeight:1}}>${myBal}</div>
                 </div>
 
                 {/* betting stats */}
                 <div style={{padding:"14px 20px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
                     {[
                       {label:"BETS",value:myBets.length,color:"#fff"},
@@ -902,7 +899,7 @@ function App() {
                       return (
                         <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 4px"}}>
                           <div style={{fontFamily:DI,fontSize:22,color:s.color,lineHeight:1}}>{s.value}</div>
-                          <div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div>
+                          <div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div>
                         </div>
                       );
                     })}
@@ -912,11 +909,11 @@ function App() {
                 {/* net P/L */}
                 <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
+                    <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
                     <div style={{fontFamily:DI,fontSize:22,color:parseFloat(netPL)>=0?"#A8FF78":"#FF8080"}}>{parseFloat(netPL)>=0?"+":""}{netPL}</div>
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
-                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
+                    <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
                     <div style={{fontFamily:DI,fontSize:14,color:"rgba(255,255,255,0.5)"}}>${totalWagered}</div>
                   </div>
                 </div>
@@ -927,7 +924,7 @@ function App() {
                     onClick={function(){ setShowProfile(false); setDepMsg(null); setShowRules(true); }}
                     style={{width:"100%",padding:"13px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.55)"}}
                   >
-                    RULES
+                    HELP
                   </button>
                   <button
                     onClick={function(){ setShowProfile(false); setDepMsg(null); }}
@@ -947,11 +944,17 @@ function App() {
         {(isSeth?TABS_SETH:TABS).map(function(t,i){
           var icons=isSeth?TAB_ICONS_SETH:TAB_ICONS;
           return (
-            <button key={i} onClick={function(){ setTab(i); }} style={{flex:1,padding:"8px 2px 6px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1,position:"relative"}}>
+            <button key={i} onClick={function(){
+              setTab(i);
+              // Auto-select the live game when switching to Betting (1) or Scores (2)
+              var liveGame = ["pi1","sf1","sf2","fin"].find(function(gid){ return isGameStarted(gid) && !isGameFinalized(gid); });
+              if(i===1 && liveGame) setBGame(liveGame);
+              if(i===2 && liveGame) setSkSel(liveGame);
+            }} style={{flex:1,padding:"8px 2px 6px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1,position:"relative"}}>
               <span style={{fontSize:16}}>{icons[i]}</span>
-              <span style={{fontFamily:MO,fontSize:6,letterSpacing:1,color:tab===i?"#FF6B35":"rgba(255,255,255,0.28)",textTransform:"uppercase"}}>{t}</span>
+              <span style={{fontFamily:MO,fontSize:10,letterSpacing:1,color:tab===i?"#FF6B35":"rgba(255,255,255,0.28)",textTransform:"uppercase"}}>{t}</span>
               {tab===i&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:20,height:2,background:"#FF6B35",borderRadius:1}}/>}
-              {i===0&&totalLegs>0&&tab!==0&&<div style={{position:"absolute",top:6,right:"18%",width:15,height:15,borderRadius:"50%",background:"#FF6B35",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:9,color:"#fff"}}>{totalLegs}</div>}
+              {i===1&&slip.length>0&&tab!==1&&<div style={{position:"absolute",top:6,right:"18%",width:15,height:15,borderRadius:"50%",background:"#FF6B35",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:9,color:"#fff"}}>{slip.length}</div>}
             </button>
           );
         })}
@@ -959,309 +962,190 @@ function App() {
 
       <div style={{padding:"0 0 90px"}}>
 
-        {tab===0&&(
+        {tab===1&&(
           <div>
+            {/* Zero balance banner */}
+            {parseFloat(bals[bettor]||0)===0&&(
+              <div style={{margin:"12px 12px 0",padding:"10px 14px",background:"rgba(255,184,0,0.08)",border:"1px solid rgba(255,184,0,0.25)",borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>💵</span>
+                <div>
+                  <div style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"#FFB800"}}>NO BALANCE</div>
+                  <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:2}}>See Seth to load your balance before betting.</div>
+                </div>
+              </div>
+            )}
+            {/* Game selector */}
             <div style={{padding:"12px 12px 0"}}>
-              <select
-                value={bGame||(bGames[0]&&bGames[0].id)||""}
-                onChange={function(e){
-                  setStSlip([]); setPaSlip([]); setSlipOpen(false);
-                  setBGame(e.target.value); setBView("lines");
-                }}
-                style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
-              >
+              <select value={bGame||(bGames[0]&&bGames[0].id)||""} onChange={function(e){ setSlip([]); setSlipOpen(false); setBGame(e.target.value); }}
+                style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}>
                 {bGames.map(function(g){
-                  var label = g.playerLocked ? "🚫 "+g.full : g.prereqLocked ? "🔒 "+g.full : g.full;
+                  var live = isGameStarted(g.id) && !isGameFinalized(g.id);
+                  var label = g.playerLocked ? "🚫 "+g.full : g.prereqLocked ? "🔒 "+g.full : live ? "🟢 "+g.full+" — LIVE" : isGameFinalized(g.id) ? "✓ "+g.full : g.full;
                   return <option key={g.id} value={g.id}>{label}</option>;
                 })}
               </select>
             </div>
 
-            {selG&&(
-              <div>
-                {bets.length>0&&(function(){
-                  var gid = selG.id;
-                  var gameBets = bets.filter(function(b){
-                    if(b.isParlay) return b.legs && b.legs.length>0 && b.legs[0].gid===gid;
-                    return b.gameId===gid;
-                  });
-                  if(!gameBets.length) return null;
-                  var gW = gameBets.reduce(function(s,b){ return s+b.amt; }, 0);
-                  var gP = gameBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin)+b.amt; }, 0);
-                  var gBookPL = (gameBets.filter(function(b){ return b.result==="loss"; }).reduce(function(s,b){ return s+b.amt; },0) - gameBets.filter(function(b){ return b.result==="win"; }).reduce(function(s,b){ return s+parseFloat(b.toWin); },0)).toFixed(2);
-                  return (
-                    <div style={{padding:"10px 12px 0"}}>
-                      <button onClick={function(){ setShowLedger(function(p){ return !p; }); }} style={{width:"100%",padding:"10px 14px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:"#FFB800"}}>BET LEDGER - {gameBets.length} BET{gameBets.length!==1?"S":""}</span>
-                        <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.3)"}}>{showLedger?"HIDE":"SHOW"}</span>
-                      </button>
-                      {showLedger&&(
-                        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden",marginTop:8}}>
-                          <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                              {[{l:"WAGERED",v:"$"+gW,c:"#FF6B35"},{l:"PAYOUTS",v:"$"+gP.toFixed(2),c:"#A8FF78"},{l:"BOOK P/L",v:"$"+gBookPL,c:"#FFB800"}].map(function(s,i){
-                                return <div key={i} style={{textAlign:"center"}}><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",marginBottom:2}}>{s.l}</div><div style={{fontFamily:DI,fontSize:16,color:s.c}}>{s.v}</div></div>;
-                              })}
-                            </div>
-                          </div>
-                          {gameBets.map(function(b,i){
-                            var betGid = b.isParlay && b.legs && b.legs.length>0 ? b.legs[0].gid : b.gameId;
-                            var gameStarted = isGameStarted(betGid);
-                            var isOwnBet = b.bettor === bettor;
-                            var canDelete = isOwnBet && !gameStarted;
-                            return (
-                              <div key={b.id} style={{padding:"10px 14px",borderBottom:i<gameBets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                                  <div>
-                                    <span style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{b.bettor}</span>
-                                    <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.25)",marginLeft:8}}>{b.ts}</span>
-                                  </div>
-                                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                    <div style={{fontFamily:MO,fontSize:8,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800"}}>{b.result.toUpperCase()}</div>
-                                    {canDelete && <button onClick={function(){
-                                      setBalsFb(function(prev){ var cur=parseFloat(prev[b.bettor]||0); var next=Object.assign({},prev); next[b.bettor]=parseFloat((cur+b.amt).toFixed(2)); return next; });
-                                      setBetsFb(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); });
-                                    }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>&#x2715;</button>}
-                                  </div>
-                                </div>
-                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                                  <span style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.55)",flex:1,marginRight:8,lineHeight:1.4}}>{b.pick}</span>
-                                  <span style={{fontFamily:DI,fontSize:13,flexShrink:0}}>
-                                    <span style={{color:"#FF6B35"}}>${b.amt}</span>
-                                    <span style={{color:"rgba(255,255,255,0.2)",margin:"0 4px"}}>to</span>
-                                    <span style={{color:b.result==="loss"?"#FF8080":"#A8FF78"}}>${b.toWin}</span>
-                                  </span>
-                                </div>
-                                {b.result==="win"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#A8FF78"}}>Collect ${(parseFloat(b.toWin)+b.amt).toFixed(2)}</div>}
-                                {b.result==="loss"&&<div style={{marginTop:3,fontFamily:MO,fontSize:8,color:"#FF8080"}}>Lost ${b.amt}</div>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-                <div style={{padding:"14px 14px 10px"}}>
-                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginBottom:6}}>
-                    {selG.full.toUpperCase()} — {selG.id==="fin"?"TO 11, WIN BY 2":"TO 7, WIN BY 2"}
-                  </div>
-                  {selG.t1&&selG.t2 ? (
-                    <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <div style={{flex:1}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t1).color}}/>
-                          <div>
-                            <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t1).color}}>{getTeam(selG.t1).label}</div>
-                            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)"}}>{getTeam(selG.t1).players.join(", ")}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.2)"}}>vs</span>
-                      <div style={{flex:1,display:"flex",justifyContent:"flex-end"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div>
-                            <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:getTeam(selG.t2).color,textAlign:"right"}}>{getTeam(selG.t2).label}</div>
-                            <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"right"}}>{getTeam(selG.t2).players.join(", ")}</div>
-                          </div>
-                          <div style={{width:8,height:8,borderRadius:"50%",background:getTeam(selG.t2).color}}/>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,padding:"6px 0"}}>
-                      <div style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"rgba(255,255,255,0.2)"}}>TBD</div>
-                      <span style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.12)"}}>vs</span>
-                      <div style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:"rgba(255,255,255,0.2)"}}>TBD</div>
-                    </div>
-                  )}
-                </div>
-                <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-                  <button onClick={function(){ setBView("lines"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="lines"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="lines"?"2px solid #FF6B35":"2px solid transparent"}}>GAME LINES</button>
-                  <button onClick={function(){ setBView("props"); }} style={{flex:1,padding:"10px",background:"none",border:"none",cursor:"pointer",fontFamily:DI,fontSize:12,letterSpacing:2,color:bView==="props"?"#fff":"rgba(255,255,255,0.35)",borderBottom:bView==="props"?"2px solid #FF6B35":"2px solid transparent"}}>PLAYER PROPS</button>
-                </div>
+            {selG&&(function(){
+              var gid=selG.id;
+              var gameBets=bets.filter(function(b){ var bgid=b.isParlay&&b.legs&&b.legs.length>0?b.legs[0].gid:b.gameId; return bgid===gid; });
+              return (
                 <div style={{padding:"14px 12px"}}>
-                  {(function(){
-                    var gid = selG.id;
-                    // Lock if prerequisite games not done yet
-                    if(selG.prereqLocked){
-
-                      return (
-                        <div style={{textAlign:"center",padding:"24px 16px"}}>
-                          <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
-                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>BETTING LOCKED</div>
-                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>Complete the previous game to unlock betting.</div>
-                        </div>
-                      );
-                    }
-                    // Lock if logged-in player is competing in this game
-                    if(selG.playerLocked){
-                      return (
-                        <div style={{textAlign:"center",padding:"24px 16px"}}>
-                          <div style={{fontSize:28,marginBottom:10}}>🚫</div>
-                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>YOU'RE PLAYING IN THIS GAME</div>
-                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>No betting on your own games. No funny business.</div>
-                        </div>
-                      );
-                    }
-                    // Lock betting once game is started or finalized
-                    if(isGameStarted(gid)){
-                      return (
-                        <div style={{textAlign:"center",padding:"24px 16px"}}>
-                          <div style={{fontSize:28,marginBottom:10}}>&#x1F512;</div>
-                          <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>
-                            {isGameFinalized(gid)?"GAME FINALIZED":"GAME IN PROGRESS"}
-                          </div>
-                          <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)"}}>
-                            {isGameFinalized(gid)?"Betting is closed for this game.":"Betting closes once scoring begins."}
-                          </div>
-                        </div>
-                      );
-                    }
+                  {/* Ledger — always visible */}
+                  {gameBets.length>0&&(function(){
                     return (
-                      <div>
-                        {bView==="lines"&&<GameLines game={selG}/>}
-                        {bView==="props"&&<PlayerProps game={selG}/>}
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            )}
-
-            {totalLegs>0&&(
-              <div style={{position:"fixed",bottom:56,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,zIndex:150}}>
-                {!slipOpen&&(
-                  <button onClick={function(){ setSlipOpen(true); }} style={{width:"100%",padding:"12px 16px",background:"#FF6B35",border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 -4px 24px rgba(255,107,53,0.4)"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:12,color:"#fff"}}>{totalLegs}</div>
-                      <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>BET SLIP</span>
-                    </div>
-                    <span style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.8)"}}>VIEW</span>
-                  </button>
-                )}
-                {slipOpen&&(
-                  <div style={{background:"#0d0e1a",borderTop:"2px solid #FF6B35",maxHeight:"80vh",overflowY:"auto",paddingBottom:"16px"}}>
-                    <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"sticky",top:0,background:"#0d0e1a",zIndex:10}}>
-                      <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"#fff"}}>BET SLIP ({totalLegs})</span>
-                      <div style={{display:"flex",gap:8}}>
-                        <button onClick={function(){ setStSlip([]); setPaSlip([]); setSlipOpen(false); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>CLEAR</button>
-                        <button onClick={function(){ setSlipOpen(false); }} style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>HIDE</button>
-                      </div>
-                    </div>
-                    <div style={{padding:"12px 16px"}}>
-                      {stSlip.length>0&&(
-                        <div style={{marginBottom:16}}>
-                          <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"rgba(255,255,255,0.35)",marginBottom:8}}>STRAIGHT BETS - GAME LINES</div>
-                          {stSlip.map(function(leg,i){
-                            return (
-                              <div key={leg.id} style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                                <div style={{flex:1,minWidth:0}}>
-                                  <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff",lineHeight:1.4}}>{leg.label}</div>
-                                  <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginTop:2}}>{leg.gLabel}</div>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:10}}>
-                                  <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
-                                  <button onClick={function(){ setStSlip(function(s){ return s.filter(function(_,j){ return j!==i; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:16,lineHeight:1,padding:2}}>x</button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {paSlip.length>0&&(
-                        <div style={{marginBottom:16}}>
-                          <div style={{fontFamily:MO,fontSize:7,letterSpacing:3,color:"rgba(255,184,0,0.6)",marginBottom:8}}>PROP PARLAY - {paSlip.length} LEG{paSlip.length>1?"S":""}</div>
-                          <div style={{background:"rgba(255,184,0,0.04)",border:"1px solid rgba(255,184,0,0.12)",borderRadius:8,padding:"4px 0",marginBottom:8}}>
-                            {paSlip.map(function(leg,i){
+                      <div style={{marginBottom:14}}>
+                        <button onClick={function(){ setShowLedger(function(p){ return !p; }); }} style={{width:"100%",padding:"10px 14px",borderRadius:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:showLedger?8:0}}>
+                          <span style={{fontFamily:DI,fontSize:12,letterSpacing:2,color:"#FFB800"}}>BET LEDGER — {gameBets.length} BET{gameBets.length!==1?"S":""}</span>
+                          <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)"}}>{showLedger?"HIDE":"SHOW"}</span>
+                        </button>
+                        {showLedger&&(
+                          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,overflow:"hidden"}}>
+                            {gameBets.map(function(b,i){
+                              var betGid=b.isParlay&&b.legs&&b.legs.length>0?b.legs[0].gid:b.gameId;
+                              var canDelete=b.bettor===bettor&&!isGameStarted(betGid);
                               return (
-                                <div key={leg.id} style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",padding:"8px 12px",borderBottom:i<paSlip.length-1?"1px solid rgba(255,184,0,0.08)":"none"}}>
-                                  <div style={{flex:1,minWidth:0}}>
-                                    <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff",lineHeight:1.4}}>{leg.label}</div>
-                                    <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.28)",marginTop:2}}>{leg.gLabel}</div>
+                                <div key={b.id} style={{padding:"10px 14px",borderBottom:i<gameBets.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                                    <div>
+                                      <span style={{fontFamily:DI,fontSize:13,color:"#fff"}}>{b.bettor}</span>
+                                      <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",marginLeft:8}}>{b.ts}</span>
+                                    </div>
+                                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                      <div style={{fontFamily:MO,fontSize:11,padding:"2px 7px",borderRadius:4,background:b.result==="win"?"rgba(168,255,120,0.15)":b.result==="loss"?"rgba(255,100,100,0.15)":"rgba(255,184,0,0.1)",color:b.result==="win"?"#A8FF78":b.result==="loss"?"#FF8080":"#FFB800"}}>{b.result.toUpperCase()}</div>
+                                      {canDelete&&<button onClick={function(){
+                                        setBalsFb(function(prev){ var cur=parseFloat(prev[b.bettor]||0); var next=Object.assign({},prev); next[b.bettor]=parseFloat((cur+b.amt).toFixed(2)); return next; });
+                                        setBetsFb(function(prev){ return prev.filter(function(x){ return x.id!==b.id; }); });
+                                      }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:15,lineHeight:1,padding:"0 2px"}}>✕</button>}
+                                    </div>
                                   </div>
-                                  <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:10}}>
-                                    <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
-                                    <button onClick={function(){ setPaSlip(function(s){ return s.filter(function(_,j){ return j!==i; }); }); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:16,lineHeight:1,padding:2}}>x</button>
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                    <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.55)",flex:1,marginRight:8,lineHeight:1.4}}>{b.pick}</span>
+                                    <span style={{fontFamily:DI,fontSize:13,flexShrink:0}}>
+                                      <span style={{color:"#FF6B35"}}>${b.amt}</span>
+                                      <span style={{color:"rgba(255,255,255,0.2)",margin:"0 4px"}}>→</span>
+                                      <span style={{color:b.result==="loss"?"#FF8080":"#A8FF78"}}>${b.toWin}</span>
+                                    </span>
                                   </div>
+                                  {b.result==="win"&&<div style={{marginTop:3,fontFamily:MO,fontSize:11,color:"#A8FF78"}}>Collect ${(parseFloat(b.toWin)+b.amt).toFixed(2)}</div>}
+                                  {b.result==="loss"&&<div style={{marginTop:3,fontFamily:MO,fontSize:11,color:"#FF8080"}}>Lost ${b.amt}</div>}
                                 </div>
                               );
                             })}
                           </div>
-                          {paSlip.length>1&&(
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",marginBottom:4}}>
-                              <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1}}>COMBINED ODDS</span>
-                              <span style={{fontFamily:DI,fontSize:20,color:"#FFB800"}}>{parlayOdds(paSlip)}</span>
-                            </div>
-                          )}
-          <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>Same-game parlay only · Max 3 legs · Max 2 parlays per game</div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Locked states — shown below ledger */}
+                  {selG.prereqLocked&&(
+                    <div style={{textAlign:"center",padding:"24px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12}}>
+                      <div style={{fontSize:28,marginBottom:10}}>🔒</div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>BETTING LOCKED</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)"}}>{gid==="fin"?"Complete both semifinals to unlock.":"Complete the play-in to unlock."}</div>
+                    </div>
+                  )}
+                  {!selG.prereqLocked&&selG.playerLocked&&(
+                    <div style={{textAlign:"center",padding:"24px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12}}>
+                      <div style={{fontSize:28,marginBottom:10}}>🚫</div>
+                      <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)",marginBottom:6}}>YOU'RE IN THIS GAME</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)"}}>No betting on your own games.</div>
+                    </div>
+                  )}
+                  {!selG.prereqLocked&&!selG.playerLocked&&isGameStarted(gid)&&(
+                    <div style={{textAlign:"center",padding:"20px 16px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.06)"}}>
+                      <div style={{fontSize:24,marginBottom:8}}>🔒</div>
+                      <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"rgba(255,255,255,0.35)",marginBottom:4}}>{isGameFinalized(gid)?"GAME FINALIZED":"GAME IN PROGRESS"}</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)"}}>{isGameFinalized(gid)?"Betting closed.":"Betting closes once scoring begins."}</div>
+                    </div>
+                  )}
+                  {/* Betting surface */}
+                  {!selG.prereqLocked&&!selG.playerLocked&&!isGameStarted(gid)&&(
+                    <div>
+                      {existingBetCount===1&&(
+                        <div style={{marginBottom:10,padding:"7px 12px",background:"rgba(255,184,0,0.06)",border:"1px solid rgba(255,184,0,0.2)",borderRadius:8,fontFamily:MO,fontSize:11,color:"#FFB800",letterSpacing:1}}>
+                          ✓ 1 of 2 bets placed — you can place one more
                         </div>
                       )}
-                      <div style={{marginBottom:12}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
-                          <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>STAKE</div>
-                          <div style={{fontFamily:MO,fontSize:8,color:parseFloat(bals[bettor]||0)<=0?"#FF8080":"rgba(255,255,255,0.3)",letterSpacing:1}}>BAL: ${parseFloat(bals[bettor]||0).toFixed(2)}</div>
-                        </div>
-                        <div style={{display:"flex",gap:6}}>
-                          {amts.map(function(a){
-                            var totalCost=a*(stSlip.length+(paSlip.length>0?1:0));
-                            var canAfford=parseFloat(bals[bettor]||0)>=totalCost;
-                            return <button key={a} onClick={function(){ setSlipAmt(a); }} disabled={!canAfford} style={{flex:1,padding:"10px 4px",borderRadius:8,cursor:canAfford?"pointer":"not-allowed",background:slipAmt===a?"rgba(255,107,53,0.25)":canAfford?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)",border:slipAmt===a?"1px solid #FF6B35":canAfford?"1px solid rgba(255,255,255,0.08)":"1px solid rgba(255,255,255,0.04)",fontFamily:DI,fontSize:15,color:slipAmt===a?"#FF6B35":canAfford?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)",opacity:canAfford?1:0.4}}>${a}</button>;
-                          })}
+                      <BettingPage game={selG} allBlocked={hasActiveBetOnGame}/>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Bet Slip */}
+            {slip.length>0&&(
+              <div style={{position:"fixed",bottom:56,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,zIndex:150}}>
+                {!slipOpen?(
+                  <button onClick={function(){ setSlipOpen(true); }} style={{width:"100%",padding:"12px 16px",background:"#FF6B35",border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 -4px 24px rgba(255,107,53,0.4)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:DI,fontSize:12,color:"#fff"}}>{slip.length}</div>
+                      <div>
+                        <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>{slip.length===1?"STRAIGHT BET":slip.length+"-LEG PARLAY"}</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.75)"}}>
+                          collect ${(parseFloat(slip.length===1?mlPay(slip[0].ml,5):parlayWin(slip,5))+5).toFixed(2)} if win
                         </div>
                       </div>
-                      {slipAmt&&(function(){
-                        var totalCost=slipAmt*(stSlip.length+(paSlip.length>0?1:0));
-                        var balance=parseFloat(bals[bettor]||0);
-                        var insufficientFunds=balance<totalCost;
+                    </div>
+                    <span style={{fontFamily:DI,fontSize:12,color:"rgba(255,255,255,0.8)"}}>VIEW</span>
+                  </button>
+                ):(
+                  <div style={{background:"#0d0e1a",borderTop:"2px solid #FF6B35",maxHeight:"80vh",overflowY:"auto",paddingBottom:"16px"}}>
+                    <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"sticky",top:0,background:"#0d0e1a",zIndex:10}}>
+                      <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"#fff"}}>{slip.length===1?"STRAIGHT BET":slip.length+"-LEG PARLAY"} — $5</span>
+                      <div style={{display:"flex",gap:8}}>
+                        <button onClick={function(){ setSlip([]); setSlipOpen(false); }} style={{fontFamily:MO,fontSize:11,color:"rgba(255,100,100,0.7)",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>CLEAR</button>
+                        <button onClick={function(){ setSlipOpen(false); }} style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:4,padding:"3px 8px",cursor:"pointer"}}>HIDE</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 16px"}}>
+                      {slip.map(function(leg,i){
                         return (
-                          <div>
-                            <div style={{display:"flex",gap:8,marginBottom:12}}>
-                              {stSlip.length>0&&(
-                                <div style={{flex:1,padding:"10px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8,textAlign:"center"}}>
-                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",marginBottom:3}}>STRAIGHT WIN</div>
-                                  <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${stSlip.reduce(function(s,l){ return s+parseFloat(mlPay(l.ml,slipAmt)); }, 0).toFixed(2)}</div>
-                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>{stSlip.length} bet{stSlip.length>1?"s":""} x ${slipAmt}</div>
-                                </div>
-                              )}
-                              {paSlip.length>0&&(
-                                <div style={{flex:1,padding:"10px 8px",background:"rgba(255,184,0,0.06)",border:"1px solid rgba(255,184,0,0.15)",borderRadius:8,textAlign:"center"}}>
-                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,184,0,0.5)",marginBottom:3}}>PARLAY WIN</div>
-                                  <div style={{fontFamily:DI,fontSize:16,color:"#FFB800"}}>${parlayWin(paSlip,slipAmt)}</div>
-                                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.2)"}}>1 parlay x ${slipAmt}</div>
-                                </div>
-                              )}
+                          <div key={leg.id} style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",padding:"10px 0",borderBottom:i<slip.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontFamily:BO,fontSize:12,fontWeight:600,color:"#fff",lineHeight:1.4}}>{leg.label}</div>
+                              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.28)",marginTop:2}}>{leg.gLabel}</div>
                             </div>
-                            {insufficientFunds&&(
-                              <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
-                                Insufficient balance. Total cost ${totalCost.toFixed(2)}, balance ${balance.toFixed(2)}.
-                              </div>
-                            )}
-                            {parlayAtLimit&&paSlip.length>0&&(
-                              <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:8,color:"#FF8080",letterSpacing:1}}>
-                                Max 2 parlays per game reached.
-                              </div>
-                            )}
-                            <button
-                              onClick={placeBets}
-                              disabled={insufficientFunds||(paSlip.length>0&&parlayAtLimit)}
-                              style={{width:"100%",padding:"14px",borderRadius:10,cursor:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"pointer":"default",background:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:(!insufficientFunds&&!(paSlip.length>0&&parlayAtLimit))?"#fff":"rgba(255,255,255,0.2)"}}
-                            >
-                              PLACE {stSlip.length>0&&paSlip.length>0?"BETS + PARLAY":stSlip.length>0?"BET"+(stSlip.length>1?"S":""):"PARLAY"}
-                            </button>
+                            <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0,marginLeft:10}}>
+                              <span style={{fontFamily:DI,fontSize:17,color:leg.ml<0?"#4ECDC4":"#FBBF24"}}>{fml(leg.ml)}</span>
+                              <button onClick={function(){ setSlip(function(s){return s.filter(function(_,j){return j!==i;})}); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:16,lineHeight:1,padding:2}}>✕</button>
+                            </div>
                           </div>
                         );
-                      })()}
+                      })}
+                      {slip.length>1&&(
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderTop:"1px solid rgba(255,255,255,0.06)",marginTop:4}}>
+                          <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.35)",letterSpacing:1}}>COMBINED ODDS</span>
+                          <span style={{fontFamily:DI,fontSize:18,color:"#FFB800"}}>{parlayOdds(slip)}</span>
+                        </div>
+                      )}
+                      <div style={{margin:"12px 0",padding:"14px",background:slip.length===1?"rgba(168,255,120,0.06)":"rgba(255,184,0,0.06)",border:slip.length===1?"1px solid rgba(168,255,120,0.2)":"1px solid rgba(255,184,0,0.2)",borderRadius:10,textAlign:"center"}}>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.4)",marginBottom:4}}>IF YOU WIN</div>
+                        <div style={{fontFamily:DI,fontSize:32,color:slip.length===1?"#A8FF78":"#FFB800",lineHeight:1,marginBottom:4}}>
+                          ${(parseFloat(slip.length===1?mlPay(slip[0].ml,5):parlayWin(slip,5))+5).toFixed(2)}
+                        </div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)"}}>profit ${slip.length===1?mlPay(slip[0].ml,5):parlayWin(slip,5)} + $5 stake back</div>
+                      </div>
+                      {parseFloat(bals[bettor]||0)<5&&(
+                        <div style={{marginBottom:10,padding:"8px 12px",background:"rgba(255,80,80,0.08)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,fontFamily:MO,fontSize:11,color:"#FF8080",letterSpacing:1}}>
+                          Insufficient balance. Need $5.00, balance ${parseFloat(bals[bettor]||0).toFixed(2)}.
+                        </div>
+                      )}
+                      <button onClick={placeBets} disabled={parseFloat(bals[bettor]||0)<5||atBetLimit||hasActiveBetOnGame}
+                        style={{width:"100%",padding:"14px",borderRadius:10,cursor:(parseFloat(bals[bettor]||0)>=5&&!atBetLimit&&!hasActiveBetOnGame)?"pointer":"default",background:(parseFloat(bals[bettor]||0)>=5&&!atBetLimit&&!hasActiveBetOnGame)?"#FF6B35":"rgba(255,255,255,0.06)",border:"none",fontFamily:DI,fontSize:15,letterSpacing:2,color:(parseFloat(bals[bettor]||0)>=5&&!atBetLimit&&!hasActiveBetOnGame)?"#fff":"rgba(255,255,255,0.2)"}}>
+                        PLACE {slip.length===1?"STRAIGHT BET":slip.length+"-LEG PARLAY"}
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
             )}
-
           </div>
         )}
 
-        {tab===1&&(
+        {tab===2&&(
           <div>
             <div style={{padding:"12px 12px 0",display:"flex",alignItems:"center",gap:8}}>
               <select
@@ -1269,10 +1153,15 @@ function App() {
                 onChange={function(e){ setSkSel(e.target.value); }}
                 style={{flex:1,padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none",textAlign:"center"}}
               >
-                {skGames.map(function(g){ return <option key={g.id} value={g.id}>{g.prereqLocked?"🔒 ":""}{g.label}</option>; })}
+                {skGames.map(function(g){
+                  var live = isGameStarted(g.id) && !isGameFinalized(g.id);
+                  var prefix = g.prereqLocked ? "🔒 " : live ? "🟢 " : isGameFinalized(g.id) ? "✓ " : "";
+                  var suffix = live ? " — LIVE" : "";
+                  return <option key={g.id} value={g.id}>{prefix+g.label+suffix}</option>;
+                })}
               </select>
-              {skSel&&!skReadOnly&&(
-                <button onClick={function(){ resetGame(skSel); }} style={{flexShrink:0,padding:"10px 12px",borderRadius:10,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
+              {!skReadOnly&&(
+                <button onClick={function(){ resetGame(skSel||(skGames[0]&&skGames[0].id)); }} style={{flexShrink:0,padding:"10px 12px",borderRadius:10,cursor:"pointer",fontFamily:DI,fontSize:11,letterSpacing:1,border:"1px solid rgba(255,80,80,0.3)",background:"rgba(255,80,80,0.1)",color:"rgba(255,120,120,0.8)"}}>
                   RESET
                 </button>
               )}
@@ -1287,7 +1176,7 @@ function App() {
                     <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 16px",textAlign:"center"}}>
                       <div style={{fontSize:28,marginBottom:10}}>&#x1F3B2;</div>
                       <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.35)"}}>AWAITING DRAW</div>
-                      <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams on the day of the tournament.</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams on the day of the tournament.</div>
                     </div>
                   );
                 }
@@ -1313,14 +1202,14 @@ function App() {
           </div>
         )}
 
-        {tab===2&&(
+        {tab===0&&(
           <div style={{padding:"14px 12px"}}>
 
             {/* Teams card */}
             <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
               <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>TEAMS</span>
-                <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>5 TEAMS</span>
+                <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>5 TEAMS</span>
               </div>
               <div style={{padding:"10px 14px"}}>
                 {TEAMS.map(function(team,i){
@@ -1338,10 +1227,10 @@ function App() {
                           <div style={{width:8,height:8,borderRadius:"50%",background:team.color,flexShrink:0}}/>
                           <span style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:team.color}}>{team.label}</span>
                         </div>
-                        {drawRole&&<span style={{fontFamily:MO,fontSize:6,letterSpacing:1,color:drawRole.color,background:drawRole.color+"18",border:"1px solid "+drawRole.color+"40",borderRadius:4,padding:"2px 6px"}}>{drawRole.label}</span>}
+                        {drawRole&&<span style={{fontFamily:MO,fontSize:10,letterSpacing:1,color:drawRole.color,background:drawRole.color+"18",border:"1px solid "+drawRole.color+"40",borderRadius:4,padding:"2px 6px"}}>{drawRole.label}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingLeft:16}}>
-                        {team.players.map(function(p){ return <span key={p} style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"3px 7px"}}>{p}</span>; })}
+                        {team.players.map(function(p){ return <span key={p} style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"3px 7px"}}>{p}</span>; })}
                       </div>
                     </div>
                   );
@@ -1350,38 +1239,6 @@ function App() {
             </div>
 
             {/* Draw section - Seth only */}
-            {isSeth&&(
-              <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
-                <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>TEAM DRAW</span>
-                  <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>SETH ONLY</span>
-                </div>
-                <div style={{padding:"14px"}}>
-                  {draw&&draw.s3&&(
-                    <div style={{marginBottom:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                      {[
-                        {label:"PLAY-IN",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
-                        {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
-                        {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
-                        {label:"BYE SEED 3",teams:[draw.s3],color:"#FBBF24"},
-                      ].map(function(row,i){
-                        return (
-                          <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
-                            <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
-                            {row.teams.filter(Boolean).map(function(tid){ var t=getTeam(tid); if(!t) return null; return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!draw&&<div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.35)",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Randomly assigns all 5 teams. 2 teams play the Play-In, 3 teams get byes into the bracket.</div>}
-                  <button onClick={doDraw} style={{width:"100%",padding:"13px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"#A78BFA"}}>
-                    {draw?"RE-DRAW TEAMS":"DRAW TEAMS"}
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Draw results - visible to everyone */}
             {draw&&draw.s3&&!isSeth&&(
               <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
@@ -1395,7 +1252,7 @@ function App() {
                   ].map(function(row,i){
                     return (
                       <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
-                        <div style={{fontFamily:MO,fontSize:7,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
                         {row.teams.filter(Boolean).map(function(tid){ var t=getTeam(tid); if(!t) return null; return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
                       </div>
                     );
@@ -1406,9 +1263,9 @@ function App() {
 
             {!draw&&!isSeth&&(
               <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"24px 16px",textAlign:"center",marginBottom:14}}>
-                <div style={{fontSize:28,marginBottom:10}}>&#x1F3B2;</div>
+                <div style={{fontSize:28,marginBottom:10}}>🎲</div>
                 <div style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:"rgba(255,255,255,0.4)"}}>DRAW PENDING</div>
-                <div style={{fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams on the day of the tournament.</div>
+                <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",marginTop:6}}>Seth will draw teams to kick things off.</div>
               </div>
             )}
 
@@ -1426,37 +1283,36 @@ function App() {
               var done=!!row.match.w; var s1=row.match.s1||0,s2=row.match.s2||0;
               var isFinal=row.cap===11;
               return (
-                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:12,overflow:"hidden"}}>
-                  <div style={{padding:"8px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
-                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:row.ac}}>{row.label}</span>
-                    <span style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TO {row.cap} · WIN BY 2</span>
+                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+                  <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
+                    <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:row.ac}}>{row.label}</span>
+                    <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TO {row.cap} · WIN BY 2</span>
                   </div>
-                  <div style={{padding:"4px 14px 6px"}}><div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{row.sublabel}</div></div>
                   {!t1||!t2?(
-                    <div style={{padding:"10px 14px",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>{!draw?"AWAITING DRAW":"AWAITING PREVIOUS RESULT"}</div>
+                    <div style={{padding:"16px",fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>{!draw?"AWAITING DRAW":"AWAITING PREVIOUS RESULT"}</div>
                   ):(
-                    <div style={{padding:"6px 14px 12px",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{padding:"14px 16px 16px",display:"flex",alignItems:"center",gap:12}}>
                       <div style={{flex:1}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                          <div style={{width:6,height:6,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
-                          <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t1.id?t1.color:"#fff"}}>{t1.label}</span>
-                          {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:7,color:t1.color,letterSpacing:1}}>{isFinal?"CHAMP":"W"}</span>}
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                          <div style={{width:8,height:8,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
+                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:done&&row.match.w===t1.id?t1.color:"#fff"}}>{t1.label}</span>
+                          {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:11,color:t1.color,letterSpacing:1}}>{isFinal?"🏆 CHAMP":"W"}</span>}
                         </div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div style={{width:6,height:6,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
-                          <span style={{fontFamily:DI,fontSize:13,letterSpacing:1,color:done&&row.match.w===t2.id?t2.color:"#fff"}}>{t2.label}</span>
-                          {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:7,color:t2.color,letterSpacing:1}}>{isFinal?"CHAMP":"W"}</span>}
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{width:8,height:8,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
+                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:done&&row.match.w===t2.id?t2.color:"#fff"}}>{t2.label}</span>
+                          {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:11,color:t2.color,letterSpacing:1}}>{isFinal?"🏆 CHAMP":"W"}</span>}
                         </div>
                       </div>
                       <div style={{flexShrink:0,textAlign:"right"}}>
                         {done?(
-                          <div style={{fontFamily:DI,fontSize:28,lineHeight:1}}>
+                          <div style={{fontFamily:DI,fontSize:32,lineHeight:1}}>
                             <span style={{color:row.match.w===t1.id?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
-                            <span style={{color:"rgba(255,255,255,0.18)",fontSize:14,margin:"0 5px"}}>-</span>
+                            <span style={{color:"rgba(255,255,255,0.18)",fontSize:16,margin:"0 6px"}}>-</span>
                             <span style={{color:row.match.w===t2.id?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
                           </div>
                         ):(
-                          <span style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
+                          <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
                         )}
                       </div>
                     </div>
@@ -1474,12 +1330,12 @@ function App() {
             <div style={{padding:"28px 20px 20px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
               <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(255,107,53,0.15)",border:"2px solid rgba(255,107,53,0.4)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:26,fontFamily:DI,color:"#FF6B35"}}>{loggedIn.slice(0,1)}</div>
               <div style={{fontFamily:DI,fontSize:24,letterSpacing:2,color:"#fff"}}>{loggedIn}</div>
-              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:4}}>LAS VEGAS INVITATIONAL</div>
+              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:4}}>LAS VEGAS INVITATIONAL</div>
             </div>
 
             {/* Balance */}
             <div style={{padding:"20px 20px 16px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,107,53,0.04)"}}>
-              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
+              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:6}}>BALANCE</div>
               <div style={{fontFamily:DI,fontSize:48,color:"#A8FF78",lineHeight:1}}>${parseFloat(bals[bettor]||0).toFixed(2)}</div>
             </div>
 
@@ -1493,7 +1349,7 @@ function App() {
               return (
                 <div>
                   <div style={{padding:"14px 20px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-                    <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
+                    <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:3,marginBottom:10}}>YOUR BETTING RECORD</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
                       {[
                         {label:"BETS",value:myBets.length,color:"#fff"},
@@ -1501,17 +1357,17 @@ function App() {
                         {label:"LOST",value:myBets.filter(function(b){ return b.result==="loss"; }).length,color:"#FF8080"},
                         {label:"PENDING",value:pending,color:"#FFB800"},
                       ].map(function(s,i){
-                        return <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 4px"}}><div style={{fontFamily:DI,fontSize:22,color:s.color,lineHeight:1}}>{s.value}</div><div style={{fontFamily:MO,fontSize:6,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div></div>;
+                        return <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 4px"}}><div style={{fontFamily:DI,fontSize:22,color:s.color,lineHeight:1}}>{s.value}</div><div style={{fontFamily:MO,fontSize:10,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:3}}>{s.label}</div></div>;
                       })}
                     </div>
                   </div>
                   <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NET P/L</div>
                       <div style={{fontFamily:DI,fontSize:22,color:parseFloat(netPL)>=0?"#A8FF78":"#FF8080"}}>{parseFloat(netPL)>=0?"+":""}{netPL}</div>
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
-                      <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
+                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>TOTAL WAGERED</div>
                       <div style={{fontFamily:DI,fontSize:14,color:"rgba(255,255,255,0.5)"}}>${totalWagered}</div>
                     </div>
                   </div>
@@ -1534,13 +1390,13 @@ function App() {
                       <div style={{padding:"12px 20px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"rgba(168,255,120,0.03)"}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                           <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
-                          <div style={{fontFamily:MO,fontSize:7,color:"#A8FF78",letterSpacing:3}}>WINNINGS TO COLLECT</div>
+                          <div style={{fontFamily:MO,fontSize:11,color:"#A8FF78",letterSpacing:3}}>WINNINGS TO COLLECT</div>
                         </div>
                         {gameKeys.map(function(key){
                           var g=byGame[key];
                           return (
                             <div key={key} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.5)",letterSpacing:1,flex:1,marginRight:8}}>{g.label}</div>
+                              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.5)",letterSpacing:1,flex:1,marginRight:8}}>{g.label}</div>
                               <div style={{fontFamily:DI,fontSize:16,color:"#A8FF78"}}>${g.collect.toFixed(2)}</div>
                             </div>
                           );
@@ -1549,7 +1405,7 @@ function App() {
                           <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>TOTAL COLLECT</div>
                           <div style={{fontFamily:DI,fontSize:22,color:"#A8FF78"}}>${totalCollect.toFixed(2)}</div>
                         </div>
-                        <div style={{fontFamily:MO,fontSize:7,color:"rgba(168,255,120,0.4)",marginTop:4,letterSpacing:1}}>Includes original stake + winnings</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(168,255,120,0.4)",marginTop:4,letterSpacing:1}}>Includes original stake + winnings</div>
                       </div>
                     );
                   })()}
@@ -1566,36 +1422,118 @@ function App() {
             {/* Header */}
             <div style={{padding:"4px 2px 14px"}}>
               <div style={{fontFamily:DI,fontSize:20,letterSpacing:2,color:"#A78BFA"}}>ADMIN</div>
-              <div style={{fontFamily:MO,fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:2}}>SETH ONLY</div>
+              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:2,marginTop:2}}>SETH ONLY</div>
+            </div>
+
+            {/* Team Draw */}
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,overflow:"hidden",marginBottom:14}}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#A78BFA"}}/>
+                <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>TEAM DRAW</span>
+              </div>
+              <div style={{padding:"14px"}}>
+                {draw&&draw.s3&&(
+                  <div style={{marginBottom:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    {[
+                      {label:"PLAY-IN",teams:[draw.pi1t1,draw.pi1t2],color:"#FF6B35"},
+                      {label:"BYE SEED 1",teams:[draw.s1],color:"#A78BFA"},
+                      {label:"BYE SEED 2",teams:[draw.s2],color:"#34D399"},
+                      {label:"BYE SEED 3",teams:[draw.s3],color:"#FBBF24"},
+                    ].map(function(row,i){
+                      return (
+                        <div key={i} style={{background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"10px 12px"}}>
+                          <div style={{fontFamily:MO,fontSize:11,color:row.color,letterSpacing:1,marginBottom:6}}>{row.label}</div>
+                          {row.teams.filter(Boolean).map(function(tid){ var t=getTeam(tid); if(!t) return null; return <div key={tid} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><div style={{width:6,height:6,borderRadius:"50%",background:t.color,flexShrink:0}}/><span style={{fontFamily:DI,fontSize:12,color:"#fff",letterSpacing:1}}>{t.label}</span></div>; })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {!draw&&<div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Randomly assigns all 5 teams. 2 teams play the Play-In, 3 teams get byes into the bracket.</div>}
+                <button onClick={doDraw} style={{width:"100%",padding:"13px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:14,letterSpacing:2,color:"#A78BFA"}}>
+                  {draw?"RE-DRAW TEAMS":"DRAW TEAMS"}
+                </button>
+              </div>
             </div>
 
             {/* Update Balance */}
             <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,overflow:"hidden",marginBottom:14}}>
-              <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",alignItems:"center",gap:8}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:"#A78BFA"}}/>
-                <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>MANAGE BALANCES</span>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(167,139,250,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:"#A78BFA"}}/>
+                  <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>MANAGE BALANCES</span>
+                </div>
+                {depPlayers.length>0&&(
+                  <span style={{fontFamily:MO,fontSize:11,color:"#A78BFA"}}>{depPlayers.length} selected</span>
+                )}
               </div>
               <div style={{padding:"14px"}}>
-                <div style={{marginBottom:8}}>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:4}}>PLAYER</div>
-                  <select value={depPlayer} onChange={function(e){ setDepPlayer(e.target.value); setDepMsg(null); }}
-                    style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:DI,fontSize:13,letterSpacing:1,cursor:"pointer",appearance:"none",WebkitAppearance:"none"}}>
-                    <option value="">Select player...</option>
-                    {ALL_PLAYERS.map(function(p){ return <option key={p} value={p}>{p} (${parseFloat(bals[p]||0).toFixed(2)})</option>; })}
-                  </select>
+                {/* Player chip grid */}
+                <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:8}}>SELECT PLAYERS</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                  {ALL_PLAYERS.map(function(p){
+                    var sel = depPlayers.indexOf(p)>=0;
+                    var bal = parseFloat(bals[p]||0).toFixed(2);
+                    return (
+                      <button key={p} onClick={function(){
+                        setDepPlayers(function(prev){
+                          return sel ? prev.filter(function(x){ return x!==p; }) : prev.concat([p]);
+                        });
+                        setDepMsg(null);
+                      }} style={{padding:"7px 10px",borderRadius:8,cursor:"pointer",border:"none",
+                        background:sel?"rgba(167,139,250,0.25)":"rgba(255,255,255,0.06)",
+                        outline:sel?"1.5px solid #A78BFA":"1.5px solid transparent",
+                        display:"flex",flexDirection:"column",alignItems:"center",gap:1,transition:"all 0.12s"}}>
+                        <span style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:sel?"#A78BFA":"#fff"}}>{p}</span>
+                        <span style={{fontFamily:MO,fontSize:10,color:sel?"rgba(167,139,250,0.7)":"rgba(255,255,255,0.3)"}}>${bal}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div style={{marginBottom:10}}>
-                  <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:4}}>AMOUNT (use negative to deduct)</div>
-                  <input type="number" value={depAmt} onChange={function(e){ setDepAmt(e.target.value); setDepMsg(null); }} placeholder="e.g. 20 or -5"
-                    style={{width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,fontFamily:DI,fontSize:16,letterSpacing:1,boxSizing:"border-box"}}/>
+                {/* Select all / clear */}
+                <div style={{display:"flex",gap:6,marginBottom:12}}>
+                  <button onClick={function(){ setDepPlayers(ALL_PLAYERS.slice()); setDepMsg(null); }}
+                    style={{flex:1,padding:"7px",borderRadius:6,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.4)"}}>
+                    SELECT ALL
+                  </button>
+                  <button onClick={function(){ setDepPlayers([]); setDepMsg(null); }}
+                    style={{flex:1,padding:"7px",borderRadius:6,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.4)"}}>
+                    CLEAR
+                  </button>
                 </div>
-                {depMsg&&<div style={{marginBottom:8,padding:"7px 10px",borderRadius:6,background:depMsg.err?"rgba(255,80,80,0.1)":"rgba(168,255,120,0.1)",border:"1px solid "+(depMsg.err?"rgba(255,80,80,0.3)":"rgba(168,255,120,0.3)"),fontFamily:MO,fontSize:8,color:depMsg.err?"#FF8080":"#A8FF78",letterSpacing:1}}>{depMsg.txt}</div>}
+                {depMsg&&<div style={{marginBottom:10,padding:"7px 10px",borderRadius:6,background:depMsg.err?"rgba(255,80,80,0.1)":"rgba(168,255,120,0.1)",border:"1px solid "+(depMsg.err?"rgba(255,80,80,0.3)":"rgba(168,255,120,0.3)"),fontFamily:MO,fontSize:11,color:depMsg.err?"#FF8080":"#A8FF78"}}>{depMsg.txt}</div>}
+                {/* Add funds buttons */}
+                <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginBottom:6}}>ADD FUNDS</div>
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  {[5,10,20].map(function(amt){
+                    return (
+                      <button key={amt} onClick={function(){
+                        if(!depPlayers.length){ setDepMsg({err:true,txt:"Select at least one player."}); return; }
+                        setBalsFb(function(prev){
+                          var next=Object.assign({},prev);
+                          depPlayers.forEach(function(p){
+                            next[p]=parseFloat((parseFloat(prev[p]||0)+amt).toFixed(2));
+                          });
+                          return next;
+                        });
+                        setDepMsg({err:false,txt:"+$"+amt+" added to "+depPlayers.join(", ")+"."});
+                      }} style={{flex:1,padding:"12px 4px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.3)",fontFamily:DI,fontSize:16,letterSpacing:1,color:"#A78BFA"}}>
+                        +${amt}
+                      </button>
+                    );
+                  })}
+                </div>
                 <button onClick={function(){
-                  var amt=parseFloat(depAmt);
-                  if(!depPlayer||isNaN(amt)||amt===0){ setDepMsg({err:true,txt:"Select a player and enter an amount."}); return; }
-                  setBalsFb(function(prev){ var cur=parseFloat(prev[depPlayer]||0); var next=Object.assign({},prev); next[depPlayer]=parseFloat((cur+amt).toFixed(2)); return next; });
-                  setDepMsg({err:false,txt:(amt>0?"+ $"+amt.toFixed(2)+" added to ":"- $"+Math.abs(amt).toFixed(2)+" removed from ")+depPlayer+"'s balance."}); setDepAmt("");
-                }} style={{width:"100%",padding:"11px",borderRadius:8,cursor:"pointer",background:"rgba(167,139,250,0.2)",border:"1px solid rgba(167,139,250,0.4)",fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A78BFA"}}>UPDATE BALANCE</button>
+                  if(!depPlayers.length){ setDepMsg({err:true,txt:"Select at least one player."}); return; }
+                  setBalsFb(function(prev){
+                    var next=Object.assign({},prev);
+                    depPlayers.forEach(function(p){ next[p]=0; });
+                    return next;
+                  });
+                  setDepMsg({err:false,txt:"Reset "+depPlayers.join(", ")+" to $0."});
+                }} style={{width:"100%",padding:"11px",borderRadius:8,cursor:"pointer",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.25)",fontFamily:DI,fontSize:13,letterSpacing:2,color:"rgba(255,120,120,0.8)"}}>
+                  RESET TO $0
+                </button>
               </div>
             </div>
 
@@ -1607,33 +1545,59 @@ function App() {
                 return {name:p,total:total,count:wonBets.length};
               }).filter(function(p){ return p.total>0; }).sort(function(a,b){ return b.total-a.total; });
               var grandTotal=playerWinnings.reduce(function(s,p){ return s+p.total; },0);
+              var unsettledTotal=playerWinnings.filter(function(p){ return !settled[p.name]; }).reduce(function(s,p){ return s+p.total; },0);
               return (
                 <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(168,255,120,0.2)",borderRadius:12,overflow:"hidden"}}>
-                  <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(168,255,120,0.06)",display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
-                    <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>SETTLE WINNINGS</span>
+                  <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(168,255,120,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:"#A8FF78"}}/>
+                      <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>SETTLE WINNINGS</span>
+                    </div>
+                    {playerWinnings.length>0&&<span style={{fontFamily:MO,fontSize:11,color:"rgba(168,255,120,0.5)"}}>{playerWinnings.filter(function(p){ return settled[p.name]; }).length}/{playerWinnings.length} paid</span>}
                   </div>
                   {!playerWinnings.length?(
-                    <div style={{padding:"24px 14px",textAlign:"center",fontFamily:MO,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>No winning bets yet.</div>
+                    <div style={{padding:"24px 14px",textAlign:"center",fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>No winning bets yet.</div>
                   ):(
                     <div>
                       {playerWinnings.map(function(p,i){
+                        var isSettled=!!settled[p.name];
                         return (
-                          <div key={p.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:i<playerWinnings.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                          <div key={p.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:i<playerWinnings.length-1?"1px solid rgba(255,255,255,0.05)":"none",opacity:isSettled?0.45:1,transition:"opacity 0.2s"}}>
                             <div>
-                              <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:"#fff"}}>{p.name}</div>
-                              <div style={{fontFamily:MO,fontSize:7,color:"rgba(255,255,255,0.3)",marginTop:2}}>{p.count} winning bet{p.count!==1?"s":""}</div>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <div style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:isSettled?"rgba(255,255,255,0.4)":"#fff"}}>{p.name}</div>
+                                {isSettled&&<span style={{fontFamily:MO,fontSize:10,color:"#A8FF78",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.25)",borderRadius:4,padding:"1px 6px",letterSpacing:1}}>PAID</span>}
+                              </div>
+                              <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:2}}>{p.count} winning bet{p.count!==1?"s":""}</div>
                             </div>
-                            <div style={{fontFamily:DI,fontSize:22,color:"#A8FF78"}}>${p.total.toFixed(2)}</div>
+                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                              <div style={{fontFamily:DI,fontSize:22,color:isSettled?"rgba(168,255,120,0.4)":"#A8FF78"}}>${p.total.toFixed(2)}</div>
+                              <button onClick={function(){
+                                setSettledFb(function(prev){
+                                  var next=Object.assign({},prev);
+                                  if(next[p.name]) delete next[p.name];
+                                  else next[p.name]=true;
+                                  return next;
+                                });
+                              }} style={{padding:"6px 10px",borderRadius:6,cursor:"pointer",border:"none",
+                                background:isSettled?"rgba(168,255,120,0.1)":"rgba(255,255,255,0.08)",
+                                fontFamily:MO,fontSize:10,letterSpacing:1,
+                                color:isSettled?"#A8FF78":"rgba(255,255,255,0.4)"}}>
+                                {isSettled?"✓ PAID":"MARK PAID"}
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:"rgba(168,255,120,0.06)",borderTop:"1px solid rgba(168,255,120,0.2)"}}>
-                        <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>TOTAL PAYOUT</div>
-                        <div style={{fontFamily:DI,fontSize:24,color:"#A8FF78"}}>${grandTotal.toFixed(2)}</div>
+                        <div>
+                          <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#A8FF78"}}>STILL OWED</div>
+                          <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:2}}>Total: ${grandTotal.toFixed(2)}</div>
+                        </div>
+                        <div style={{fontFamily:DI,fontSize:24,color:"#A8FF78"}}>${unsettledTotal.toFixed(2)}</div>
                       </div>
                       <div style={{padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-                        <div style={{fontFamily:MO,fontSize:7,color:"rgba(168,255,120,0.4)",letterSpacing:1}}>Includes original stake + winnings</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(168,255,120,0.4)",letterSpacing:1}}>Includes original stake + winnings</div>
                       </div>
                     </div>
                   )}
