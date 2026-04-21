@@ -213,6 +213,11 @@ function App() {
   var slipOpenS = useState(false); var slipOpen = slipOpenS[0]; var setSlipOpen = slipOpenS[1];
   var amtS = useState(5); var slipAmt = amtS[0]; var setSlipAmt = amtS[1];
   var ledgerS = useState(false); var showLedger = ledgerS[0]; var setShowLedger = ledgerS[1];
+  var teamsOpenS = useState(false); var teamsOpen = teamsOpenS[0]; var setTeamsOpen = teamsOpenS[1];
+  // Auto-set teams open state based on draw — open before draw, closed after
+  useEffect(function(){
+    setTeamsOpen(!draw);
+  }, [!!draw]);
   var rulesS = useState(false); var showRules = rulesS[0]; var setShowRules = rulesS[1];
   var profileS = useState(false); var showProfile = profileS[0]; var setShowProfile = profileS[1];
   var balsS = useState({}); var bals = balsS[0]; var setBals = balsS[1];
@@ -1205,41 +1210,45 @@ function App() {
         {tab===0&&(
           <div style={{padding:"14px 12px"}}>
 
-            {/* Teams card */}
+            {/* Teams card — collapsible */}
             <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
-              <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <button onClick={function(){ setTeamsOpen(function(o){ return !o; }); }} style={{width:"100%",padding:"12px 14px",background:"none",border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#fff"}}>TEAMS</span>
-                <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>5 TEAMS</span>
-              </div>
-              <div style={{padding:"10px 14px"}}>
-                {TEAMS.map(function(team,i){
-                  var drawRole=null;
-                  if(draw&&draw.s3){
-                    if(team.id===draw.pi1t1||team.id===draw.pi1t2) drawRole={label:"PLAY-IN",color:"#FF6B35"};
-                    else if(team.id===draw.s1) drawRole={label:"BYE SEED 1",color:"#A78BFA"};
-                    else if(team.id===draw.s2) drawRole={label:"BYE SEED 2",color:"#34D399"};
-                    else if(team.id===draw.s3) drawRole={label:"BYE SEED 3",color:"#FBBF24"};
-                  }
-                  return (
-                    <div key={team.id} style={{paddingBottom:i<TEAMS.length-1?12:0,marginBottom:i<TEAMS.length-1?12:0,borderBottom:i<TEAMS.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <div style={{width:8,height:8,borderRadius:"50%",background:team.color,flexShrink:0}}/>
-                          <span style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:team.color}}>{team.label}</span>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>5 TEAMS</span>
+                  <span style={{fontFamily:MO,fontSize:14,color:"rgba(255,255,255,0.3)",lineHeight:1}}>{teamsOpen?"▲":"▼"}</span>
+                </div>
+              </button>
+              {teamsOpen&&(
+                <div style={{padding:"4px 14px 12px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                  {TEAMS.map(function(team,i){
+                    var drawRole=null;
+                    if(draw&&draw.s3){
+                      if(team.id===draw.pi1t1||team.id===draw.pi1t2) drawRole={label:"PLAY-IN",color:"#FF6B35"};
+                      else if(team.id===draw.s1) drawRole={label:"BYE SEED 1",color:"#A78BFA"};
+                      else if(team.id===draw.s2) drawRole={label:"BYE SEED 2",color:"#34D399"};
+                      else if(team.id===draw.s3) drawRole={label:"BYE SEED 3",color:"#FBBF24"};
+                    }
+                    return (
+                      <div key={team.id} style={{paddingBottom:i<TEAMS.length-1?12:0,marginBottom:i<TEAMS.length-1?12:0,marginTop:10,borderBottom:i<TEAMS.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div style={{width:8,height:8,borderRadius:"50%",background:team.color,flexShrink:0}}/>
+                            <span style={{fontFamily:DI,fontSize:14,letterSpacing:1,color:team.color}}>{team.label}</span>
+                          </div>
+                          {drawRole&&<span style={{fontFamily:MO,fontSize:10,letterSpacing:1,color:drawRole.color,background:drawRole.color+"18",border:"1px solid "+drawRole.color+"40",borderRadius:4,padding:"2px 6px"}}>{drawRole.label}</span>}
                         </div>
-                        {drawRole&&<span style={{fontFamily:MO,fontSize:10,letterSpacing:1,color:drawRole.color,background:drawRole.color+"18",border:"1px solid "+drawRole.color+"40",borderRadius:4,padding:"2px 6px"}}>{drawRole.label}</span>}
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingLeft:16}}>
+                          {team.players.map(function(p){ return <span key={p} style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"3px 7px"}}>{p}</span>; })}
+                        </div>
                       </div>
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingLeft:16}}>
-                        {team.players.map(function(p){ return <span key={p} style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"3px 7px"}}>{p}</span>; })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Draw section - Seth only */}
-            {/* Draw results - visible to everyone */}
+            {/* Draw results - visible to non-Seth */}
             {draw&&draw.s3&&!isSeth&&(
               <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,marginBottom:14,overflow:"hidden"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800"}}>DRAW RESULTS</span></div>
@@ -1269,52 +1278,60 @@ function App() {
               </div>
             )}
 
-            {/* Bracket games */}
+            {/* Bracket games with live scores */}
             {[
-              {label:"PLAY-IN",sublabel:"Winner advances · Loser eliminated",match:pi1,ac:"#FF6B35",cap:7},
-              {label:"SEMIFINAL 1",sublabel:"Play-In Winner vs Bye Seed 1",match:sf1,ac:"#A78BFA",cap:7},
-              {label:"SEMIFINAL 2",sublabel:"Bye Seed 2 vs Bye Seed 3",match:sf2,ac:"#A78BFA",cap:7},
-              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,ac:"#FFB800",cap:11},
+              {label:"PLAY-IN",sublabel:"Winner advances · Loser eliminated",match:pi1,gid:"pi1",ac:"#FF6B35",cap:7},
+              {label:"SEMIFINAL 1",sublabel:"Play-In Winner vs Bye Seed 1",match:sf1,gid:"sf1",ac:"#A78BFA",cap:7},
+              {label:"SEMIFINAL 2",sublabel:"Bye Seed 2 vs Bye Seed 3",match:sf2,gid:"sf2",ac:"#A78BFA",cap:7},
+              {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,gid:"fin",ac:"#FFB800",cap:11},
             ].map(function(row,ri){
               var t1=row.match.t1?getTeam(row.match.t1):null;
               var t2=row.match.t2?getTeam(row.match.t2):null;
               if(t1&&!t1.color) t1=null;
               if(t2&&!t2.color) t2=null;
-              var done=!!row.match.w; var s1=row.match.s1||0,s2=row.match.s2||0;
+              var done=!!row.match.w;
               var isFinal=row.cap===11;
+              var live=t1&&t2&&isGameStarted(row.gid)&&!done;
+              var s1=t1?liveTP(row.gid,row.match.t1):0;
+              var s2=t2?liveTP(row.gid,row.match.t2):0;
               return (
-                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:14,overflow:"hidden"}}>
-                  <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
-                    <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:row.ac}}>{row.label}</span>
+                <div key={ri} style={{background:"rgba(255,255,255,0.04)",border:"1px solid "+(live?"rgba(255,107,53,0.35)":isFinal?"rgba(255,184,0,0.2)":"rgba(255,255,255,0.08)"),borderRadius:12,marginBottom:14,overflow:"hidden"}}>
+                  {/* Header */}
+                  <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",background:live?"rgba(255,107,53,0.06)":isFinal?"rgba(255,184,0,0.04)":"transparent"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:DI,fontSize:14,letterSpacing:2,color:live?"#FF6B35":row.ac}}>{row.label}</span>
+                      {live&&<span style={{fontFamily:MO,fontSize:10,color:"#FF6B35",background:"rgba(255,107,53,0.15)",border:"1px solid rgba(255,107,53,0.4)",borderRadius:4,padding:"2px 7px",letterSpacing:1}}>🟢 LIVE</span>}
+                      {done&&<span style={{fontFamily:MO,fontSize:10,color:"#A8FF78",background:"rgba(168,255,120,0.1)",border:"1px solid rgba(168,255,120,0.3)",borderRadius:4,padding:"2px 7px",letterSpacing:1}}>FINAL</span>}
+                    </div>
                     <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>TO {row.cap} · WIN BY 2</span>
                   </div>
                   {!t1||!t2?(
                     <div style={{padding:"16px",fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>{!draw?"AWAITING DRAW":"AWAITING PREVIOUS RESULT"}</div>
                   ):(
-                    <div style={{padding:"14px 16px 16px",display:"flex",alignItems:"center",gap:12}}>
-                      <div style={{flex:1}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                    <div style={{padding:"14px 16px 16px"}}>
+                      {/* Team 1 */}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
                           <div style={{width:8,height:8,borderRadius:"50%",background:t1.color,flexShrink:0}}/>
-                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:done&&row.match.w===t1.id?t1.color:"#fff"}}>{t1.label}</span>
+                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:(done&&row.match.w===t1.id)||(live&&s1>s2)?t1.color:"#fff"}}>{t1.label}</span>
                           {done&&row.match.w===t1.id&&<span style={{fontFamily:MO,fontSize:11,color:t1.color,letterSpacing:1}}>{isFinal?"🏆 CHAMP":"W"}</span>}
                         </div>
+                        <span style={{fontFamily:DI,fontSize:32,color:done?(row.match.w===t1.id?t1.color:"rgba(255,255,255,0.35)"):(live&&s1>s2?t1.color:"#fff"),lineHeight:1}}>{s1}</span>
+                      </div>
+                      {/* Divider */}
+                      <div style={{height:1,background:"rgba(255,255,255,0.06)",marginBottom:10}}/>
+                      {/* Team 2 */}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                           <div style={{width:8,height:8,borderRadius:"50%",background:t2.color,flexShrink:0}}/>
-                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:done&&row.match.w===t2.id?t2.color:"#fff"}}>{t2.label}</span>
+                          <span style={{fontFamily:DI,fontSize:15,letterSpacing:1,color:(done&&row.match.w===t2.id)||(live&&s2>s1)?t2.color:"#fff"}}>{t2.label}</span>
                           {done&&row.match.w===t2.id&&<span style={{fontFamily:MO,fontSize:11,color:t2.color,letterSpacing:1}}>{isFinal?"🏆 CHAMP":"W"}</span>}
                         </div>
+                        <span style={{fontFamily:DI,fontSize:32,color:done?(row.match.w===t2.id?t2.color:"rgba(255,255,255,0.35)"):(live&&s2>s1?t2.color:"#fff"),lineHeight:1}}>{s2}</span>
                       </div>
-                      <div style={{flexShrink:0,textAlign:"right"}}>
-                        {done?(
-                          <div style={{fontFamily:DI,fontSize:32,lineHeight:1}}>
-                            <span style={{color:row.match.w===t1.id?t1.color:"rgba(255,255,255,0.4)"}}>{s1}</span>
-                            <span style={{color:"rgba(255,255,255,0.18)",fontSize:16,margin:"0 6px"}}>-</span>
-                            <span style={{color:row.match.w===t2.id?t2.color:"rgba(255,255,255,0.4)"}}>{s2}</span>
-                          </div>
-                        ):(
-                          <span style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>PENDING</span>
-                        )}
-                      </div>
+                      {/* Live caption */}
+                      {!done&&!live&&<div style={{marginTop:10,fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:1,textAlign:"center"}}>PENDING</div>}
+                      {live&&s1===s2&&s1>=row.cap-1&&<div style={{marginTop:10,fontFamily:MO,fontSize:11,color:"#FFB800",letterSpacing:1,textAlign:"center"}}>OVERTIME</div>}
                     </div>
                   )}
                 </div>
