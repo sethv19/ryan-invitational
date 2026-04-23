@@ -761,79 +761,73 @@ function App() {
               <span style={{fontFamily:DI,fontSize:16,letterSpacing:2,color:"#FF6B35"}}>HELP</span>
               <button onClick={function(){ setShowRules(false); }} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:20,lineHeight:1,padding:"0 2px"}}>✕</button>
             </div>
-            <div style={{overflowY:"auto",padding:"18px"}}>
+            <div style={{overflowY:"auto",padding:"16px"}}>
 
-              {/* BETTING BASICS */}
-              <div style={{marginBottom:22}}>
-                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FBBF24",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:15}}>🎰</span> BETTING BASICS
+              {/* BETTING */}
+              <div style={{marginBottom:16}}>
+                <div style={{fontFamily:DI,fontSize:11,letterSpacing:3,color:"#FBBF24",marginBottom:10}}>🎰 BETTING</div>
+                <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)"}}>
+                  {[
+                    {q:"How do I start?",    a:"Pay Seth $5 cash per game. He loads your balance. No balance, no bets."},
+                    {q:"How much per bet?",   a:"$5 fixed. No exceptions."},
+                    {q:"How many bets?",      a:"Up to 2 bets per game — any combo of straight or parlay."},
+                    {q:"What are the odds?",  a:"Negative (-130) = favorite, lower payout. Positive (+100) = underdog, higher payout. Your slip shows exactly what you'd collect."},
+                    {q:"Straight bet",        a:"One pick — a team to win or a player prop. Simplest bet."},
+                    {q:"Parlay",              a:"2 or 3 picks combined. All must win. Higher risk, bigger reward."},
+                    {q:"What is the LINE?",   a:"The points target for a player prop. Jacob at 3.5 — OVER means 4+, UNDER means 3 or fewer."},
+                    {q:"Grey buttons?",       a:"2 bets placed, or game already started. You're locked in."},
+                    {q:"Getting paid",        a:"Seth pays cash after each game. Check Profile for your winnings."},
+                  ].map(function(item,i,arr){
+                    return (
+                      <div key={i} style={{padding:"10px 14px",borderBottom:i<arr.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                        <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:2}}>{item.q}</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.5}}>{item.a}</div>
+                      </div>
+                    );
+                  })}
                 </div>
-                {[
-                  {label:"Getting started",desc:"Pay Seth $5 cash before each game. He'll load your balance in the app. No balance, no bets. All bets are $5 — fixed."},
-                  {label:"How to place a bet",desc:"Go to the Betting tab, pick a game, and tap any orange button to add it to your slip. You'll see exactly how much you'd collect if you win. Tap PLACE BET when you're ready."},
-                  {label:"How many bets can I place?",desc:"Up to 2 bets per game. Mix and match however you like — two straight bets, two parlays, or one of each."},
-                  {label:"What are the odds numbers?",desc:"The number on each button (like -130 or +100) tells you how much you win on a $5 bet. Negative means the team is the favorite and pays less. Positive means the underdog and pays more. The collect amount in your slip is what actually matters — that's your $5 back plus your winnings."},
-                  {label:"Straight bet",desc:"The simplest bet — one pick. Either a team to win (moneyline) or a player to go over or under their point total. Tap one button, place your bet."},
-                  {label:"Parlay",desc:"Combine 2 or 3 picks into one bet for a bigger payout. The catch — every single pick must win or you get nothing. Higher risk, higher reward."},
-                  {label:"Player props — what is the line?",desc:"The LINE is the points target for that player. For example, Jacob at 3.5 means: OVER = he scores 4 or more, UNDER = he scores 3 or fewer. Tap OVER or UNDER to bet."},
-                  {label:"Why are some buttons greyed out?",desc:"Once you've placed 2 bets on a game, all buttons grey out — you're done for that game. Buttons also grey out if the game has already started."},
-                  {label:"Getting paid",desc:"Seth settles after each game. Check your Profile tab to see your winnings. Seth pays you cash."},
-                ].map(function(item,i){
-                  return (
-                    <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(251,191,36,0.3)"}}>
-                      <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:3}}>{item.label}</div>
-                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
-                    </div>
-                  );
-                })}
               </div>
-
-              <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:22}}/>
 
               {/* FORMAT */}
-              <div style={{marginBottom:22}}>
-                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#FFB800",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:15}}>🏀</span> TOURNAMENT FORMAT
+              <div style={{marginBottom:16}}>
+                <div style={{fontFamily:DI,fontSize:11,letterSpacing:3,color:"#FFB800",marginBottom:10}}>🏀 FORMAT</div>
+                <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)"}}>
+                  {[
+                    {q:"The Draw",       a:"Seth randomly assigns 2 teams to the Play-In. 3 teams get byes as Seeds 1–3."},
+                    {q:"Play-In",        a:"2 teams play. Winner advances to SF1. Loser goes home. First to 7, win by 2."},
+                    {q:"Semifinal 1",    a:"Play-In winner vs Seed 1. First to 7, win by 2."},
+                    {q:"Semifinal 2",    a:"Seed 2 vs Seed 3. First to 7, win by 2."},
+                    {q:"Championship",  a:"SF1 winner vs SF2 winner. First to 11, win by 2. Glory on the line."},
+                  ].map(function(item,i,arr){
+                    return (
+                      <div key={i} style={{padding:"10px 14px",borderBottom:i<arr.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                        <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:2}}>{item.q}</div>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.5}}>{item.a}</div>
+                      </div>
+                    );
+                  })}
                 </div>
-                {[
-                  {label:"The Draw",desc:"Seth randomly draws 2 teams to compete in the Play-In. The remaining 3 teams get byes into the bracket as Seeds 1, 2, and 3."},
-                  {label:"Play-In",desc:"2 drawn teams play each other. Winner advances to Semifinal 1. Loser is eliminated. First to 7 points, win by 2."},
-                  {label:"Semifinal 1",desc:"Play-In winner vs Bye Seed 1. First to 7, win by 2."},
-                  {label:"Semifinal 2",desc:"Bye Seed 2 vs Bye Seed 3. First to 7, win by 2."},
-                  {label:"Championship",desc:"Semifinal 1 winner vs Semifinal 2 winner. First to 11 points, win by 2. Glory on the line."},
-                ].map(function(item,i){
-                  return (
-                    <div key={i} style={{marginBottom:12,paddingLeft:10,borderLeft:"2px solid rgba(255,184,0,0.3)"}}>
-                      <div style={{fontFamily:DI,fontSize:12,letterSpacing:1,color:"#fff",marginBottom:3}}>{item.label}</div>
-                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item.desc}</div>
-                    </div>
-                  );
-                })}
               </div>
 
-              <div style={{height:1,background:"rgba(255,255,255,0.07)",marginBottom:22}}/>
-
               {/* COURT RULES */}
-              <div>
-                <div style={{fontFamily:DI,fontSize:13,letterSpacing:2,color:"#4ECDC4",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:15}}>📋</span> COURT RULES
-                </div>
-                {[
-                  "Check the ball after each score.",
-                  "Pass the ball in to begin each possession.",
-                  "Possession switches after each made bucket or when the opposing team grabs a defensive rebound.",
-                  "After grabbing a defensive rebound, the team must take the ball back out to the 3-point line before scoring.",
-                  "Fouls are called by the ref. Ref's call is final.",
-                ].map(function(rule,i){
-                  return (
-                    <div key={i} style={{display:"flex",gap:10,marginBottom:10,alignItems:"flex-start"}}>
-                      <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(78,205,196,0.15)",border:"1px solid rgba(78,205,196,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
-                        <span style={{fontFamily:DI,fontSize:11,color:"#4ECDC4"}}>{i+1}</span>
+              <div style={{marginBottom:4}}>
+                <div style={{fontFamily:DI,fontSize:11,letterSpacing:3,color:"#4ECDC4",marginBottom:10}}>📋 COURT RULES</div>
+                <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)"}}>
+                  {[
+                    "Check the ball after each score.",
+                    "Pass the ball in to begin each possession.",
+                    "Possession switches on a make or defensive rebound.",
+                    "After a defensive rebound, clear the ball to the 3-point line.",
+                    "Every player must score at least 1 point in their game.",
+                  ].map(function(rule,i,arr){
+                    return (
+                      <div key={i} style={{padding:"10px 14px",borderBottom:i<arr.length-1?"1px solid rgba(255,255,255,0.05)":"none",display:"flex",alignItems:"flex-start",gap:10}}>
+                        <span style={{fontFamily:DI,fontSize:12,color:"#4ECDC4",flexShrink:0,minWidth:16}}>{i+1}.</span>
+                        <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.5}}>{rule}</div>
                       </div>
-                      <div style={{fontFamily:MO,fontSize:11,color:"rgba(255,255,255,0.6)",lineHeight:1.6,paddingTop:2}}>{rule}</div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
 
             </div>
