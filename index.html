@@ -50,7 +50,7 @@ var TEAMS = [
   {id:5, label:"Team 5", players:["Joe","Thomas","Matthew"],  color:"#FBBF24"},
 ];
 // Format: 1 Play-In (2 random teams). Winner -> bracket. Loser eliminated.
-// Bracket: SF1 = PI winner vs Bye 1, SF2 = Bye 2 vs Bye 3, Final = SF1w vs SF2w
+// Bracket: SF1 = Bye 2 vs Bye 3, SF2 = PI winner vs Bye 1, Final = SF1w vs SF2w
 // Play-In and Semifinal games first to 7 win by 2. Final first to 11 win by 2.
 var ALL_PLAYERS = ["Adam","Cam","Chappy","Dan","Jack","Jacob","Joaquin","Joe","Jordan","Liam","Matthew","Nathan","Ryan","Seth","Thomas","Tony"];
 var STRENGTH = {1:7.5, 2:7.0, 3:8.0, 4:8.5, 5:7.5};
@@ -285,12 +285,12 @@ function App() {
   function doDraw(){
     var ids=[1,2,3,4,5];
     for(var i=ids.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=ids[i]; ids[i]=ids[j]; ids[j]=tmp; }
-    // ids[0],ids[1] = play-in teams; ids[2]=bye1 (SF1), ids[3]=bye2 (SF2 t1), ids[4]=bye3 (SF2 t2)
+    // ids[0],ids[1] = play-in teams; ids[2]=bye1 (SF2), ids[3]=bye2 (SF1 t1), ids[4]=bye3 (SF1 t2)
     var d={pi1t1:ids[0],pi1t2:ids[1],s1:ids[2],s2:ids[3],s3:ids[4]};
     setDrawFb(d);
     setPi1Fb({t1:ids[0],t2:ids[1],s1:0,s2:0,w:null});
-    setSf1Fb({t1:null,t2:ids[2],s1:0,s2:0,w:null});
-    setSf2Fb({t1:ids[3],t2:ids[4],s1:0,s2:0,w:null});
+    setSf1Fb({t1:ids[3],t2:ids[4],s1:0,s2:0,w:null});
+    setSf2Fb({t1:null,t2:ids[2],s1:0,s2:0,w:null});
     setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
     setPStatsFb({});
   }
@@ -317,9 +317,9 @@ function App() {
     setPStatsFb(function(prev){ var next=Object.assign({},prev); allP.forEach(function(p){ next[skKey(gid,p)]={pts:0}; }); return next; });
     setMatchFb(gid,function(mm){ return Object.assign({},mm,{s1:0,s2:0,w:null}); });
     if(gid==="pi1"){
-      setSf1Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
+      setSf2Fb(function(mm){ return Object.assign({},mm,{t1:null,s1:0,s2:0,w:null}); });
       setFinFb({t1:null,t2:null,s1:0,s2:0,w:null});
-      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["sf1","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0}; }); }); return next; });
+      setPStatsFb(function(prev){ var next=Object.assign({},prev); ["sf2","fin"].forEach(function(g){ ALL_PLAYERS.forEach(function(p){ next[skKey(g,p)]={pts:0}; }); }); return next; });
     }
     if(gid==="sf1"||gid==="sf2"){
       setFinFb(function(mm){ return Object.assign({},mm,{t1:null,t2:null,s1:0,s2:0,w:null}); });
@@ -353,10 +353,10 @@ function App() {
     });
   },[pStats,pi1.t1,pi1.t2,sf1.t1,sf1.t2,sf2.t1,sf2.t2,fin.t1,fin.t2]);
 
-  // Auto-advance: PI1 winner -> SF1 t1
+  // Auto-advance: PI1 winner -> SF2 t1
   useEffect(function(){
     if(!pi1.w) return;
-    if(sf1.t1!==pi1.w) setSf1Fb(function(m){ return Object.assign({},m,{t1:pi1.w}); });
+    if(sf2.t1!==pi1.w) setSf2Fb(function(m){ return Object.assign({},m,{t1:pi1.w}); });
   },[pi1.w]);
   useEffect(function(){ if(sf1.w&&fin.t1!==sf1.w) setFinFb(function(m){ return Object.assign({},m,{t1:sf1.w}); }); },[sf1.w]);
   useEffect(function(){ if(sf2.w&&fin.t2!==sf2.w) setFinFb(function(m){ return Object.assign({},m,{t2:sf2.w}); }); },[sf2.w]);
@@ -795,8 +795,8 @@ function App() {
                   {[
                     {q:"The Draw",       a:"Seth randomly assigns 2 teams to the Play-In. 3 teams get byes as Seeds 1–3."},
                     {q:"Play-In",        a:"2 teams play. Winner advances to SF1. Loser goes home. First to 7, win by 2."},
-                    {q:"Semifinal 1",    a:"Play-In winner vs Seed 1. First to 7, win by 2."},
-                    {q:"Semifinal 2",    a:"Seed 2 vs Seed 3. First to 7, win by 2."},
+                    {q:"Semifinal 1",    a:"Seed 2 vs Seed 3. First to 7, win by 2."},
+                    {q:"Semifinal 2",    a:"Play-In winner vs Seed 1. First to 7, win by 2."},
                     {q:"Championship",  a:"SF1 winner vs SF2 winner. First to 11, win by 2. Glory on the line."},
                   ].map(function(item,i,arr){
                     return (
@@ -1189,8 +1189,8 @@ function App() {
             {/* Bracket games with live scores */}
             {[
               {label:"PLAY-IN",sublabel:"Winner advances · Loser eliminated",match:pi1,gid:"pi1",ac:"#FF6B35",cap:7},
-              {label:"SEMIFINAL 1",sublabel:"Play-In Winner vs Bye Seed 1",match:sf1,gid:"sf1",ac:"#A78BFA",cap:7},
-              {label:"SEMIFINAL 2",sublabel:"Bye Seed 2 vs Bye Seed 3",match:sf2,gid:"sf2",ac:"#A78BFA",cap:7},
+              {label:"SEMIFINAL 1",sublabel:"Bye Seed 2 vs Bye Seed 3",match:sf1,gid:"sf1",ac:"#A78BFA",cap:7},
+              {label:"SEMIFINAL 2",sublabel:"Play-In Winner vs Bye Seed 1",match:sf2,gid:"sf2",ac:"#A78BFA",cap:7},
               {label:"CHAMPIONSHIP",sublabel:"Winner takes all",match:fin,gid:"fin",ac:"#FFB800",cap:11},
             ].map(function(row,ri){
               var t1=row.match.t1?getTeam(row.match.t1):null;
